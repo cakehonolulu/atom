@@ -3,7 +3,7 @@
 .global bootstrap				# Make our function globally available
 
 bootstrap:						# bootstrap function
-	mov $2stagemsg, %si            
+	mov $stage2msg, %si            
 	mov $0x0E, %ah          
 .loop:
 	lodsb       
@@ -26,7 +26,7 @@ continue:
 	int $0x13
 	ljmp $0x0, $0x1000
 
-2stagemsg: .asciz "Ferrum: Loading Second Stage..."
+stage2msg: .asciz "Ferrum: Loading Second Stage..."
 
 .fill 510-(.-bootstrap), 1, 0	# Preprocessor directive from GNU as that fills 'x'
 								# count of bytes, with a 'y' size that has 'z' value.
