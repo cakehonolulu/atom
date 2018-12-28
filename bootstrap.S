@@ -3,10 +3,18 @@
 .global bootstrap				# Make our function globally available
 
 bootstrap:						# bootstrap function
-	cli							# Disable interrupts
-.hlt:							# .hlt function
-	hlt							# Halt the system
-	jmp .hlt					# Repeat the function endlessly
+	mov $0, %dl
+	mov $2, %ah
+	mov $1, %al
+	mov $0, %ch
+	mov $0, %dh
+	mov $2, %cl
+	mov $0, %dl
+	mov $0, %bx
+	mov %bx, %es
+	mov $0x1000, %bx
+	int $0x13
+	ljmp $0x0, $0x1000
 
 .fill 510-(.-bootstrap), 1, 0	# Preprocessor directive from GNU as that fills 'x'
 								# count of bytes, with a 'y' size that has 'z' value.
