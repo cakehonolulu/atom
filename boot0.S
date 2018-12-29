@@ -46,6 +46,8 @@ boot0:						# boot0 function
 							# operations increment the segment registers (Such as SI & DI).
 							# Invoking a CLD instruction, also makes us aware of the DF's flag
 							# contents, in order to make 0 assumptions on how the BIOS leaves this value.
+	call boot0resetdrive	# Reset floppy drive to ensure everything is working.
+
 	mov $0, %dl
 	mov $2, %ah
 	mov $1, %al
@@ -58,6 +60,14 @@ boot0:						# boot0 function
 	mov $0x0, %bx
 	int $0x13
 	ljmp $0x1000, $0x0
+
+boot0resetdrive:
+.reset:
+	mov		$0, %ah
+	mov		$0, %dl
+	int		$0x13
+	jc		.reset
+	ret
 
 .fill 510-(.-init0), 1, 0	# Preprocessor directive from GNU as that fills 'x'
 								# count of bytes, with a 'y' size that has 'z' value.
