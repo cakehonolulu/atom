@@ -50,61 +50,7 @@ boot0:						# boot0 function
 	mov $0x3, %ax			# Use VGA Text Mode
 	int $0x10				# Call BIOS interrupt 13.
 
-boot0Init:
-	movb $'E' , %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'n' , %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'t' , %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'e' , %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'r' , %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'e' , %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'d' , %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $' ' , %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'1' , %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'s' , %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'t' , %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $' ' , %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'s' , %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'t' , %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'a' , %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'g' , %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'e' , %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'\n' , %al
-	movb $0x0e, %ah
-	int  $0x10
+	call boot0LoadedMessage
 
 boot0CheckINT13:			# Function that checks if INT13 BIOS extensions are present. If not, we can't boot.
 	mov $0x80, %dl			# Move 0x80 to dl register.
@@ -134,32 +80,89 @@ boot0ResetDrive:			# Function to reset floppy drive in order to ensure it's work
 	ljmp $0x1000, $0x0 		# Long jump into our stage 2 bootloader. [0x1000:0x0] -> CS=0x1000; IP=0x0
 
 boot0NoINT13:
-	movb $'N' , %al
+	movb $'N', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'o' , %al
+	movb $'o', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $' ' , %al
+	movb $' ', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'I' , %al
+	movb $'I', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'N' , %al
+	movb $'N', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'T' , %al
+	movb $'T', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'1' , %al
+	movb $'1', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'3' , %al
+	movb $'3', %al
 	movb $0x0e, %ah
 	int  $0x10
 	cli
 	hlt
+
+boot0LoadedMessage:
+	movb $'E', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'n', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'t', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'e', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'r', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'e', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'d', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $' ', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'1', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'s', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'t', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $' ', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'s', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'t', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'a', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'g', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'e', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'\n', %al
+	movb $0x0e, %ah
+	int  $0x10
+	ret
 
 .fill 510-(.-init0), 1, 0	# Preprocessor directive from GNU as that fills 'x'
 							# count of bytes, with a 'y' size that has 'z' value.
