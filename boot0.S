@@ -27,13 +27,15 @@ boot0:						# boot0 function
 							# Note: We'll be avoiding FS and GS registers in order to
 							# make our bootloader as compatible as we can.
 							# Thoose 2 registers were added to 80386+ CPU's.
-	mov $0x07C0, %ax		# Move 0x07C0 to ax.
-	mov %ax, %ds			# Move 0x07C0 to the data segment register.
+	xor %ax, %ax			# Xor'ing ax to ax, results in a 0, as xor'ing two
+	mov %ax, %ds			# Move 0x0 to the data segment register.
+							# We null the data segment, because if we don't, it can overlap
+							# with the code segment.
+	mov %ax, %es			# Null extra segment too.
 	mov $0x8000, %bx		# Move 0x8000 to bx.
 	cli						# Disable interrupts to circumvent a bug present on
 							# early 8088 CPU's.
 	mov %bx, %ss			# Move 0x8000 to the stack segment.
-	xor %ax, %ax			# Xor'ing ax to ax, results in a 0, as xor'ing two
 							# registers that contain the same, will always result in 0.
 	mov %ax, %sp			# Move ax (Which now is 0) to the stack pointer register.
 							# Stack Dissasembly:
