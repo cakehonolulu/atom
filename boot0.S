@@ -62,11 +62,10 @@ boot0:						# boot0 function
 	ljmp $0x1000, $0x0
 
 boot0resetdrive:
-.reset:
 	mov		$0, %ah
 	mov		$0, %dl
 	int		$0x13
-	jc		.reset
+	jc		boot0resetdrive
 	ret
 
 .fill 510-(.-init0), 1, 0	# Preprocessor directive from GNU as that fills 'x'
