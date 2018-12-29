@@ -88,110 +88,110 @@ boot1CheckA20LineState:
 	ret
 
 .boot1A20HasBeenEnabled:
-	movb $'A' , %al
+	movb $'A', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'2' , %al
+	movb $'2', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'0' , %al
+	movb $'0', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $' ' , %al
+	movb $' ', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'L' , %al
+	movb $'L', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'i' , %al
+	movb $'i', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'n' , %al
+	movb $'n', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'e' , %al
+	movb $'e', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $' ' , %al
+	movb $' ', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'E' , %al
+	movb $'E', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'n' , %al
+	movb $'n', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'a' , %al
+	movb $'a', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'b' , %al
+	movb $'b', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'l' , %al
+	movb $'l', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'e' , %al
+	movb $'e', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'d' , %al
+	movb $'d', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'\n' , %al
+	movb $'\n', %al
 	ret
 
 boot1LoadedMessage:
-	movb $'E' , %al
+	movb $'E', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'n' , %al
+	movb $'n', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'t' , %al
+	movb $'t', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'e' , %al
+	movb $'e', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'r' , %al
+	movb $'r', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'e' , %al
+	movb $'e', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'d' , %al
+	movb $'d', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $' ' , %al
+	movb $' ', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'2' , %al
+	movb $'2', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'n' , %al
+	movb $'n', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'d' , %al
+	movb $'d', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $' ' , %al
+	movb $' ', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'s' , %al
+	movb $'s', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'t' , %al
+	movb $'t', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'a' , %al
+	movb $'a', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'g' , %al
+	movb $'g', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'e' , %al
+	movb $'e', %al
 	movb $0x0e, %ah
 	int  $0x10
-	movb $'\n' , %al
+	movb $'\n', %al
 	movb $0x0e, %ah
 	int  $0x10
 	ret
