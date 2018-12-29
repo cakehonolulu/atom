@@ -105,12 +105,14 @@ boot0enter:
 	int  $0x10
 
 boot0checkint13:			# Function that checks if INT13 BIOS extensions are present. If not, we can't boot.
+	mov $0x80, %dl			# Move 0x80 to dl register.
 	mov $0x41, %ah			# Set ah to 41 (AH=0x41 -> Check Extensions Present).
-	mov $0xAA55, %bx		# Move 0xAA55 to the bx register.
+	mov $0x55AA, %bx		# Move 0xAA55 to the bx register.
+	clc						# Clear carry bit.
 	int $0x13				# Call BIOS interrupt 13.
 	jc boot0noint13			# AH=0x41->INT13: If Carry Flag is set to 1, there's no compatibility with BIOS extensions.
-	cmp $0x55AA, %bx		# Compare 0x55AA with the bx register...
-	jnz boot0noint13		# ...if not the same, BIOS hasn't even got INT13 support, inform the user.
+	cmp $0xAA55, %bx		# Compare 0x55AA with the bx register...
+	jne boot0noint13		# ...if not the same, BIOS hasn't even got INT13 support, inform the user.
 
 boot0resetdrive:			# Function to reset floppy drive in order to ensure it's working correctly.
 	mov		$0x00, %ah		# Set ah to 0 (AH=0x00 -> Reset Disk Function).
