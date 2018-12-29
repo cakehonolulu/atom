@@ -44,17 +44,6 @@ boot0:						# boot0 function
 							# operations increment the segment registers (Such as SI & DI).
 							# Invoking a CLD instruction, also makes us aware of the DF's flag
 							# contents, in order to make 0 assumptions on how the BIOS leaves this value.
-
-	mov $stage2msg, %si            
-	mov $0x0E, %ah          
-.loop:
-	lodsb       
-	or %al, %al
-	jz continue             
-	int $0x10           
-	jmp .loop    
-
-continue:
 	mov $0, %dl
 	mov $2, %ah
 	mov $1, %al
@@ -67,8 +56,6 @@ continue:
 	mov $0x0, %bx
 	int $0x13
 	ljmp $0x1000, $0x0
-
-stage2msg: .asciz "Ferrum: Loading Second Stage..."
 
 .fill 510-(.-init0), 1, 0	# Preprocessor directive from GNU as that fills 'x'
 								# count of bytes, with a 'y' size that has 'z' value.
