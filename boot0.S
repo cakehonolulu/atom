@@ -39,6 +39,7 @@ boot0:						# boot0 function
 							# Stack Dissasembly:
 							# Top stack adress:		-> 0x8000
 							# Bottom stack adress:	-> 0x8FFF
+	sti						# Re-enable interrupts
 	cld						# CLD sets EFLAG's register DF flag to 0, this way, string
 							# operations increment the segment registers (Such as SI & DI).
 							# Invoking a CLD instruction, also makes us aware of the DF's flag
