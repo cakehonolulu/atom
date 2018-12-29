@@ -61,5 +61,5 @@ boot0:						# boot0 function
 								# count of bytes, with a 'y' size that has 'z' value.
 								# args: count, size, value
 
-.word 0xaa55					# BIOS 2-byte magic number that enables the proper
+.word 0xAA55					# BIOS 2-byte magic number that enables the proper
 								# booting of this bootloader
