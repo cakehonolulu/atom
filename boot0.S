@@ -50,7 +50,7 @@ boot0:						# boot0 function
 	mov $0x3, %ax			# Use VGA Text Mode
 	int $0x10				# Call BIOS interrupt 13.
 
-boot0enter:
+boot0Init:
 	movb $'E' , %al
 	movb $0x0e, %ah
 	int  $0x10
@@ -106,21 +106,21 @@ boot0enter:
 	movb $0x0e, %ah
 	int  $0x10
 
-boot0checkint13:			# Function that checks if INT13 BIOS extensions are present. If not, we can't boot.
+boot0CheckINT13:			# Function that checks if INT13 BIOS extensions are present. If not, we can't boot.
 	mov $0x80, %dl			# Move 0x80 to dl register.
 	mov $0x41, %ah			# Set ah to 41 (AH=0x41 -> Check Extensions Present).
 	mov $0x55AA, %bx		# Move 0xAA55 to the bx register.
 	clc						# Clear carry bit.
 	int $0x13				# Call BIOS interrupt 13.
-	jc boot0noint13			# AH=0x41->INT13: If Carry Flag is set to 1, there's no compatibility with BIOS extensions.
+	jc boot0NoINT13			# AH=0x41->INT13: If Carry Flag is set to 1, there's no compatibility with BIOS extensions.
 	cmp $0xAA55, %bx		# Compare 0x55AA with the bx register...
-	jne boot0noint13		# ...if not the same, BIOS hasn't even got INT13 support, inform the user.
+	jne boot0NoINT13		# ...if not the same, BIOS hasn't even got INT13 support, inform the user.
 
-boot0resetdrive:			# Function to reset floppy drive in order to ensure it's working correctly.
+boot0ResetDrive:			# Function to reset floppy drive in order to ensure it's working correctly.
 	mov		$0x00, %ah		# Set ah to 0 (AH=0x00 -> Reset Disk Function).
 	mov		$0x00, %dl		# Set dl to 0 (DL=0x00 -> Disk Drive Number).
 	int		$0x13			# Call BIOS interrupt 13.
-	jc		boot0resetdrive	# If Carry Flag is set (CF=1) an error has ocurred, run the function again.
+	jc		boot0ResetDrive	# If Carry Flag is set (CF=1) an error has ocurred, run the function again.
 
 							# On this part we'll load our stage 2 bootloader onto 0x1000 and jump to it.
 	mov $0x02, %ah			# Set ah to 2 (AH=0x02 -> Disk Read Function).
@@ -133,7 +133,7 @@ boot0resetdrive:			# Function to reset floppy drive in order to ensure it's work
 	int $0x13				# Call BIOS interrupt 13.
 	ljmp $0x1000, $0x0 		# Long jump into our stage 2 bootloader. [0x1000:0x0] -> CS=0x1000; IP=0x0
 
-boot0noint13:
+boot0NoINT13:
 	movb $'N' , %al
 	movb $0x0e, %ah
 	int  $0x10
