@@ -46,7 +46,11 @@ boot0:						# boot0 function
 							# operations increment the segment registers (Such as SI & DI).
 							# Invoking a CLD instruction, also makes us aware of the DF's flag
 							# contents, in order to make 0 assumptions on how the BIOS leaves this value.
-	call boot0resetdrive	# Reset floppy drive to ensure everything is working.
+boot0resetdrive:			# Function to reset floppy drive in order to ensure it's working correctly.
+	mov		$0x00, %ah		# Set ah to 0 (AH=0x00 -> Reset Disk Function).
+	mov		$0x00, %dl		# Set dl to 0 (DL=0x00 -> Disk Drive Number).
+	int		$0x13			# Call BIOS interrupt 13.
+	jc		boot0resetdrive	# If Carry Flag is set (CF=1) an error has ocurred, run the function again.
 
 	mov $0, %dl
 	mov $2, %ah
@@ -60,13 +64,6 @@ boot0:						# boot0 function
 	mov $0x0, %bx
 	int $0x13
 	ljmp $0x1000, $0x0
-
-boot0resetdrive:
-	mov		$0, %ah
-	mov		$0, %dl
-	int		$0x13
-	jc		boot0resetdrive
-	ret
 
 .fill 510-(.-init0), 1, 0	# Preprocessor directive from GNU as that fills 'x'
 								# count of bytes, with a 'y' size that has 'z' value.
