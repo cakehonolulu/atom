@@ -1,4 +1,4 @@
-ENTRY(boot)
+ENTRY(boot1)
 
 OUTPUT_FORMAT("binary")
 
@@ -6,11 +6,8 @@ OUTPUT_ARCH(i386)
 
 SECTIONS {
 
-    . = 0x1000;
-
     .text :
     {
-        *(.boot)
         *(.text)
     }
 

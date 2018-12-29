@@ -1,10 +1,11 @@
 .code16
 
-.global boot
+.global boot1
 
-boot:
+boot1:
 	movb $'X' , %al
 	movb $0x0e, %ah
 	int  $0x10
 	cli
 	hlt
+
