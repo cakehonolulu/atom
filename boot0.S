@@ -47,6 +47,71 @@ boot0:						# boot0 function
 							# operations increment the segment registers (Such as SI & DI).
 							# Invoking a CLD instruction, also makes us aware of the DF's flag
 							# contents, in order to make 0 assumptions on how the BIOS leaves this value.
+
+boot0enter:
+	movb $'E' , %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'n' , %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'t' , %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'e' , %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'r' , %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'e' , %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'d' , %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $' ' , %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'1' , %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'s' , %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'t' , %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $' ' , %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'s' , %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'t' , %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'a' , %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'g' , %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'e' , %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'\n' , %al
+	movb $0x0e, %ah
+	int  $0x10
+
+boot0checkint13:			# Function that checks if INT13 BIOS extensions are present. If not, we can't boot.
+	mov $0x41, %ah			# Set ah to 41 (AH=0x41 -> Check Extensions Present).
+	mov $0xAA55, %bx		# Move 0xAA55 to the bx register.
+	int $0x13				# Call BIOS interrupt 13.
+	jc boot0noint13			# AH=0x41->INT13: If Carry Flag is set to 1, there's no compatibility with BIOS extensions.
+	cmp $0x55AA, %bx		# Compare 0x55AA with the bx register...
+	jnz boot0noint13		# ...if not the same, BIOS hasn't even got INT13 support, inform the user.
+
 boot0resetdrive:			# Function to reset floppy drive in order to ensure it's working correctly.
 	mov		$0x00, %ah		# Set ah to 0 (AH=0x00 -> Reset Disk Function).
 	mov		$0x00, %dl		# Set dl to 0 (DL=0x00 -> Disk Drive Number).
@@ -63,6 +128,34 @@ boot0resetdrive:			# Function to reset floppy drive in order to ensure it's work
 	mov %bx, %es			# Move bx onto our extra segment register to prepare the jump.
 	int $0x13				# Call BIOS interrupt 13.
 	ljmp $0x1000, $0x0 		# Long jump into our stage 2 bootloader. [0x1000:0x0] -> CS=0x1000; IP=0x0
+
+boot0noint13:
+	movb $'N' , %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'o' , %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $' ' , %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'I' , %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'N' , %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'T' , %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'1' , %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'3' , %al
+	movb $0x0e, %ah
+	int  $0x10
+	cli
+	hlt
 
 .fill 510-(.-init0), 1, 0	# Preprocessor directive from GNU as that fills 'x'
 							# count of bytes, with a 'y' size that has 'z' value.
