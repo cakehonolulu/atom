@@ -1,11 +1,14 @@
 .code16
 
-.global boot1
+.global init1
 
-boot1:
-	movb $'X' , %al
-	movb $0x0e, %ah
-	int  $0x10
+.section .text
+
+init1:
+	mov $0x2, %ah
+	mov $0x1, %dh
+	mov $0x0, %dl
+	mov $0x0, %bh
+	int $0x10
 	cli
 	hlt
-
