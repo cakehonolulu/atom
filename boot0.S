@@ -1,6 +1,6 @@
 .code16						# Produce 16-Bit Code (For Real Mode).
 
-.section .text				# Make our function globally available.
+.section .text				# Text section.
 
 .global init0				# Make our function globally available.
 .global boot0				# Make our function globally available.
@@ -27,7 +27,8 @@ boot0:						# boot0 function
 							# Note: We'll be avoiding FS and GS registers in order to
 							# make our bootloader as compatible as we can.
 							# Thoose 2 registers were added to 80386+ CPU's.
-	xor %ax, %ax			# Xor'ing ax to ax, results in a 0, as xor'ing two
+	xor %ax, %ax			# Xor'ing ax to ax, results in a 0, as xor'ing two registers with
+							# the same value always results in 0.
 	mov %ax, %ds			# Move 0x0 to the data segment register.
 							# We null the data segment, because if we don't, it can overlap
 							# with the code segment.
@@ -52,22 +53,20 @@ boot0resetdrive:			# Function to reset floppy drive in order to ensure it's work
 	int		$0x13			# Call BIOS interrupt 13.
 	jc		boot0resetdrive	# If Carry Flag is set (CF=1) an error has ocurred, run the function again.
 
-	mov $0, %dl
-	mov $2, %ah
-	mov $1, %al
-	mov $0, %ch
-	mov $0, %dh
-	mov $2, %cl
-	mov $0, %dl
-	mov $0x1000, %bx
-	mov %bx, %es
-	mov $0x0, %bx
-	int $0x13
-	ljmp $0x1000, $0x0
+							# On this part we'll load our stage 2 bootloader onto 0x1000 and jump to it.
+	mov $0x02, %ah			# Set ah to 2 (AH=0x02 -> Disk Read Function).
+	mov $0x14, %al			# Set al to 14 (AL=0x14) -> Sectors to be readed.
+	mov $0x00, %ch			# Set ch to 0 (CH=0x00) -> Track 0 of the drive.
+	mov $0x02, %cl			# Set cl to 2 (CL=0x02) -> Sector of the drive from which we start reading from.
+	mov $0x00, %dh			# Set dh to 0 (DH=0x00) -> Head 0 of the drive.
+	mov $0x1000, %bx		# Set our bx register with the adress we'll jump to.
+	mov %bx, %es			# Move bx onto our extra segment register to prepare the jump.
+	int $0x13				# Call BIOS interrupt 13.
+	ljmp $0x1000, $0x0 		# Long jump into our stage 2 bootloader. [0x1000:0x0] -> CS=0x1000; IP=0x0
 
 .fill 510-(.-init0), 1, 0	# Preprocessor directive from GNU as that fills 'x'
-								# count of bytes, with a 'y' size that has 'z' value.
-								# args: count, size, value
+							# count of bytes, with a 'y' size that has 'z' value.
+							# args: count, size, value
 
-.word 0xAA55					# BIOS 2-byte magic number that enables the proper
-								# booting of this bootloader
+.word 0xAA55				# BIOS 2-byte magic number that enables the proper
+							# booting of this bootloader
