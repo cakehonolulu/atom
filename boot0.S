@@ -47,6 +47,8 @@ boot0:						# boot0 function
 							# operations increment the segment registers (Such as SI & DI).
 							# Invoking a CLD instruction, also makes us aware of the DF's flag
 							# contents, in order to make 0 assumptions on how the BIOS leaves this value.
+	mov $0x3, %ax			# Use VGA Text Mode
+	int $0x10				# Call BIOS interrupt 13.
 
 boot0enter:
 	movb $'E' , %al
