@@ -62,11 +62,11 @@ continue:
 	mov $0, %dh
 	mov $2, %cl
 	mov $0, %dl
-	mov $0, %bx
-	mov %bx, %es
 	mov $0x1000, %bx
+	mov %bx, %es
+	mov $0x0, %bx
 	int $0x13
-	ljmp $0x0, $0x1000
+	ljmp $0x1000, $0x0
 
 stage2msg: .asciz "Ferrum: Loading Second Stage..."
 
