@@ -1,4 +1,4 @@
-ENTRY(boot1)
+ENTRY(init1)
 
 OUTPUT_FORMAT("binary")
 
