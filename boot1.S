@@ -17,11 +17,12 @@ init1:
 	mov $0x0, %bh
 	int $0x10
 	call boot1EnableA20
-	mov $0x3, %ah
-	mov $0x1, %dh
+	mov $0x2, %ah
+	mov $0x3, %dh
 	mov $0x0, %dl
 	mov $0x0, %bh
 	int $0x10
+	call boot1LoadGDT
 	cli
 	hlt
 
@@ -86,6 +87,46 @@ boot1CheckA20LineState:
 	popw %es
 	popw %ds
 	ret
+
+boot1LoadGDT:
+	cli
+	pusha
+	lgdt gdt
+	sti
+	popa
+	call boot1LoadedGDTMessage
+	ret
+
+#define	CODE_SEG	gdt_code - gdt_start
+#define	DATA_SEG	gdt_data - gdt_start
+
+gdt_start:
+
+gdt_null:
+	.long 0
+	.long 0
+
+gdt_code:
+	.word 0xffff
+	.word 0x0
+	.byte 0x0
+	.byte 0b10011010
+	.byte 0b11001111
+	.byte 0x0
+
+gdt_data:
+	.word 0xffff
+	.word 0x0
+	.byte 0x0
+	.byte 0b10010010
+	.byte 0b11001111
+	.byte 0x0
+
+gdt_end:
+
+gdt:
+	.word (gdt_end - gdt_start - 1)
+	.long gdt_start
 
 .boot1A20HasBeenEnabled:
 	movb $'A', %al
@@ -192,6 +233,39 @@ boot1LoadedMessage:
 	movb $0x0e, %ah
 	int  $0x10
 	movb $'\n', %al
+	movb $0x0e, %ah
+	int  $0x10
+	ret
+
+boot1LoadedGDTMessage:
+	movb $'G', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'D', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'T', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $' ', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'L', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'o', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'a', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'d', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'e', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'d', %al
 	movb $0x0e, %ah
 	int  $0x10
 	ret
