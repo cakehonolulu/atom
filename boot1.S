@@ -31,7 +31,7 @@ init1:
 
 boot1EnableA20:
 	call boot1CheckA20LineState			# Check if A20 Line is enabled.
-	jnz .boot1A20HasBeenEnabled			# Jump if condition is met.
+	jnz .boot1A20HasAlreadyBeenEnabled	# Jump if condition is met.
 
 	movw $0x2401, %ax					# Enable A20 Line using the BIOS Method.
 	stc									# Set carry flag.
@@ -160,6 +160,109 @@ gdt:
 	movb $0x0e, %ah
 	int  $0x10
 	movb $'E', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'n', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'a', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'b', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'l', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'e', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'d', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'\n', %al
+	ret
+
+.boot1A20HasAlreadyBeenEnabled:
+	movb $'A', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'2', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'0', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $' ', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'L', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'i', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'n', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'e', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $' ', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'h', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'a', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'s', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $' ', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'a', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'l', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'r', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'e', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'a', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'d', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'y', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $' ', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'b', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'e', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'e', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'n', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $' ', %al
+	movb $0x0e, %ah
+	int  $0x10
+	movb $'e', %al
 	movb $0x0e, %ah
 	int  $0x10
 	movb $'n', %al
