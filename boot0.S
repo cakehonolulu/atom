@@ -19,7 +19,9 @@ init0:								# init0 function
 
 boot0:								# boot0 function
 									# Note: We'll be avoiding FS and GS registers in order to
-									# make our bootloader as compatible as we can.
+									# make our bootloader as compatible as we can until we
+									# reach 32-bits, where they are used and that, makes them uncompatible
+									# with pre-80386+ processors.
 									# Thoose 2 registers were added to 80386+ CPU's.
 	xor %ax, %ax					# Xor'ing ax to ax, results in a 0, as xor'ing two registers with
 									# the same value always results in 0.
