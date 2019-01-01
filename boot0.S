@@ -29,7 +29,7 @@ boot0:								# boot0 function
 									# We null the data segment, because if we don't, it can overlap
 									# with the code segment.
 	mov %ax, %es					# Null extra segment too.
-	mov $0x8000, %bx				# Move 0x8000 to bx.
+	mov $0x7000, %bx				# Move 0x8000 to bx.
 	cli								# Disable interrupts to circumvent a bug present on
 									# early 8088 CPU's.
 	mov %bx, %ss					# Move 0x8000 to the stack segment.
@@ -46,7 +46,7 @@ boot0:								# boot0 function
 	mov $0x3, %ax					# Use VGA Text Mode
 	int $0x10						# Call BIOS interrupt 13.
 
-	call boot0LoadedMessage
+	call .boot0Loaded
 
 boot0CheckINT13:					# Function that checks if INT13 BIOS extensions are present. If not, we can't boot.
 	mov $0x80, %dl					# Move 0x80 to dl register.
@@ -54,9 +54,9 @@ boot0CheckINT13:					# Function that checks if INT13 BIOS extensions are present
 	mov $0x55AA, %bx				# Move 0xAA55 to the bx register.
 	clc								# Clear carry bit.
 	int $0x13						# Call BIOS interrupt 13.
-	jc boot0NoINT13					# AH=0x41->INT13: If Carry Flag is set to 1, there's no compatibility with BIOS extensions.
+	jc .boot0NoINT13					# AH=0x41->INT13: If Carry Flag is set to 1, there's no compatibility with BIOS extensions.
 	cmp $0xAA55, %bx				# Compare 0x55AA with the bx register...
-	jne boot0NoINT13				# ...if not the same, BIOS hasn't even got INT13 support, inform the user.
+	jne .boot0NoINT13				# ...if not the same, BIOS hasn't even got INT13 support, inform the user.
 
 boot0ResetDrive:					# Function to reset floppy drive in order to ensure it's working correctly.
 	mov		$0x00, %ah				# Set ah to 0 (AH=0x00 -> Reset Disk Function).
@@ -75,90 +75,30 @@ boot0ResetDrive:					# Function to reset floppy drive in order to ensure it's wo
 	int $0x13						# Call BIOS interrupt 13.
 	ljmp $0x1000, $0x0 				# Long jump into our stage 2 bootloader. [0x1000:0x0] -> CS=0x1000; IP=0x0
 
-boot0NoINT13:
-	movb $'N', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'o', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $' ', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'I', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'N', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'T', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'1', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'3', %al
-	movb $0x0e, %ah
-	int  $0x10
+boot0print:
+	mov $0x0E, %ah
+.boot0printchar:
+	lodsb
+	cmp $0, %al
+	je .boot0printdone
+	int $0x10
+	jmp .boot0printchar
+.boot0printdone:
+	ret
+
+.boot0NoINT13:
+	mov $boot0NoINT13Message, %si
+	call boot0print
 	cli
 	hlt
 
-boot0LoadedMessage:
-	movb $'E', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'n', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'t', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'e', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'r', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'e', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'d', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $' ', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'1', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'s', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'t', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $' ', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'s', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'t', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'a', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'g', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'e', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'\n', %al
-	movb $0x0e, %ah
-	int  $0x10
+.boot0Loaded:
+	mov $boot0LoadedMessage, %si
+	call boot0print
 	ret
+
+boot0LoadedMessage: .asciz "Entered 1st Stage"
+boot0NoINT13Message: .asciz "No BIOS INT13"
 
 .fill 510-(.-init0), 1, 0			# Preprocessor directive from GNU as that fills 'x'
 									# count of bytes, with a 'y' size that has 'z' value.
