@@ -24,6 +24,9 @@ init1:
 	int $0x10
 	call boot1LoadGDT
 	cli
+	mov %cr0, %eax
+	or $1, %eax
+	mov %eax, %cr0
 	hlt
 
 boot1EnableA20:
