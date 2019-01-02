@@ -31,7 +31,7 @@ init1:
 
 boot1EnableA20:
 	call boot1CheckA20LineState			# Check if A20 Line is enabled.
-	jnz .boot1A20HasAlreadyBeenEnabled	# Jump if condition is met.
+	jnz boot1A20HasAlreadyBeenEnabled	# Jump if condition is met.
 
 	movw $0x2401, %ax					# Enable A20 Line using the BIOS Method.
 	stc									# Set carry flag.
@@ -40,7 +40,7 @@ boot1EnableA20:
 	testb %ah, %ah						# Compares both registers.
 	jne 1f								# Jumps if they're not equal.
 	call boot1CheckA20LineState			# Check if A20 Line is enabled.
-	jnz .boot1A20HasBeenEnabled			# Jump if condition is met.
+	jnz boot1A20HasBeenEnabled			# Jump if condition is met.
 1:										# Enable A20 Line using Intel's 8042 Controller Method.
 	call .boot1_8042_wait				# Wait for Intel's 8042 controller to be ready.
 	movb $0xd1, %al						# Prepare the 8042 port write.
@@ -50,7 +50,7 @@ boot1EnableA20:
 	outb %al, $0x60						# Enable A20 Line.
 	call .boot1_8042_wait				# Wait for Intel's 8042 controller to be ready.
 	call boot1CheckA20LineState			# Check if A20 Line is enabled.
-	jnz	.boot1A20HasBeenEnabled			# Jump if condition is met.
+	jnz	boot1A20HasBeenEnabled			# Jump if condition is met.
 										# Enable A20 Line using the 'Fast' Method.
 	inb $0x92, %al						# Try the computer's Fast A20 Gate.
 	testb $0x02, %al 					# Compare both values.
@@ -60,7 +60,7 @@ boot1EnableA20:
 	outb %al, $0x92						# Enable the A20 Line using the Fast Gate.
 1:
 	call boot1CheckA20LineState			# Check if A20 Line is enabled.
-	jnz .boot1A20HasBeenEnabled			# Jump if condition is met.
+	jnz boot1A20HasBeenEnabled			# Jump if condition is met.
 	jmp 1b								# Check until A20 Line is set.
 
 .boot1_8042_wait:						# Function that waits for Intel's 8042 controller to be ready.
@@ -100,6 +100,38 @@ boot1LoadGDT:
 	call boot1LoadedGDTMessage
 	ret
 
+boot1A20HasBeenEnabled:
+	mov $.boot1A20HasBeenEnabled, %si
+	call boot1print
+	ret
+
+boot1A20HasAlreadyBeenEnabled:
+	mov $.boot1A20HasAlreadyBeenEnabled, %si
+	call boot1print
+	ret
+
+boot1LoadedMessage:
+	mov $.boot1LoadedMessage, %si
+	call boot1print
+	ret
+
+boot1LoadedGDTMessage: 
+	mov $.boot1LoadedGDTMessage, %si
+	call boot1print
+	ret
+
+boot1print:
+	mov $0x0E, %ah
+.boot1printchar:
+	lodsb
+	cmp $0, %al
+	je .boot1printdone
+	int $0x10
+	jmp .boot1printchar
+.boot1printdone:
+	ret
+
+
 #define	CODE_SEG	gdt_code - gdt_start
 #define	DATA_SEG	gdt_data - gdt_start
 
@@ -131,247 +163,7 @@ gdt:
 	.word (gdt_end - gdt_start - 1)
 	.long gdt_start
 
-.boot1A20HasBeenEnabled:
-	movb $'A', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'2', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'0', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $' ', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'L', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'i', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'n', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'e', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $' ', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'E', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'n', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'a', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'b', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'l', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'e', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'d', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'\n', %al
-	ret
-
-.boot1A20HasAlreadyBeenEnabled:
-	movb $'A', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'2', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'0', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $' ', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'L', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'i', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'n', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'e', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $' ', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'h', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'a', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'s', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $' ', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'a', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'l', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'r', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'e', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'a', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'d', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'y', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $' ', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'b', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'e', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'e', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'n', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $' ', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'e', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'n', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'a', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'b', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'l', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'e', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'d', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'\n', %al
-	ret
-
-boot1LoadedMessage:
-	movb $'E', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'n', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'t', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'e', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'r', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'e', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'d', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $' ', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'2', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'n', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'d', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $' ', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'s', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'t', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'a', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'g', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'e', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'\n', %al
-	movb $0x0e, %ah
-	int  $0x10
-	ret
-
-boot1LoadedGDTMessage:
-	movb $'G', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'D', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'T', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $' ', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'L', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'o', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'a', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'d', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'e', %al
-	movb $0x0e, %ah
-	int  $0x10
-	movb $'d', %al
-	movb $0x0e, %ah
-	int  $0x10
-	ret
+.boot1A20HasAlreadyBeenEnabled: .asciz "A20 Line has already been enabled"
+.boot1A20HasBeenEnabled: .asciz "A20 Line Enabled"
+.boot1LoadedMessage: .asciz "Entered 2nd Stage"
+.boot1LoadedGDTMessage: .asciz "GDT Loaded"
