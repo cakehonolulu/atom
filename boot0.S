@@ -57,6 +57,7 @@ boot0ResetDrive:					# Function to reset floppy drive in order to ensure it's wo
 	jc boot0ResetDrive				# If Carry Flag is set (CF=1) an error has ocurred, run the function again.
 
 									# On this part we'll load our stage 2 bootloader onto 0x1000 and jump to it.
+	push %dx
 	mov boot0bootdrive, %dl			# Move boot0bootdrive value back into dl in case INT13 messes with it.
 	mov $0x02, %ah					# Set ah to 2 (AH=0x02 -> Disk Read Function).
 	mov $0x14, %al					# Set al to 14 (AL=0x14) -> Sectors to be readed.
@@ -67,6 +68,7 @@ boot0ResetDrive:					# Function to reset floppy drive in order to ensure it's wo
 	mov %bx, %es					# Move bx onto our extra segment register to prepare the jump.
 	xor %bx, %bx					# Set bx to 0.
 	int $0x13						# Call BIOS interrupt 13.
+	jc boot0diskerror
 	ljmp $0x1000, $0x0 				# Long jump into our stage 2 bootloader. [0x1000:0x0] -> CS=0x1000; IP=0x0
 	cli
 .hlt:
@@ -103,8 +105,16 @@ boot0printnl:
 	call boot0printnl
 	ret
 
+boot0diskerror:
+	mov $boot0DiskErrorMessage, %bx
+	call boot0print
+	call boot0printnl
+	mov %ah, %dh 					# TODO: Print in hex what kind of error we've got.
+	jmp .hlt
+
 boot0bootdrive: .byte 0
 boot0LoadedMessage: .asciz "Entered 1st Stage"
+boot0DiskErrorMessage: .asciz "Disk Read Error!"
 
 .fill 510-(.-init0), 1, 0			# Preprocessor directive from GNU as that fills 'x'
 									# count of bytes, with a 'y' size that has 'z' value.
