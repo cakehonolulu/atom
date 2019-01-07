@@ -4,6 +4,8 @@
 
 .set BOOT1CODESEGMENT, 0x1000
 .set BOOT1PMSTACK, 0x9c000
+.set BOOT1PMVMEM, 0xb8000
+.set BOOT1PMVMEMC, 0x0f
 
 .section .data
 gdt_start:
@@ -40,6 +42,7 @@ gdt:
 .boot1A20HasBeenEnabled: .asciz "A20 Line Enabled"
 .boot1LoadedMessage: .asciz "Entered 2nd Stage"
 .boot1LoadedGDTMessage: .asciz "GDT Loaded"
+.boot1LoadedPMMessage: .asciz "Entered Protected Mode"
 
 .section .text
 
@@ -187,7 +190,25 @@ boot1Start32:
         mov %eax, %gs
         mov %eax, %ss
         mov $BOOT1PMSTACK, %esp                 # Set the stack pointer. I place it below the EBDA
+		mov $.boot1LoadedPMMessage, %ebx
+    	call boot1pmprintstring
 
 .end_loop:
         hlt
         jmp .end_loop
+
+boot1pmprintstring:
+	pusha
+	mov $BOOT1PMVMEM, %edx
+.boot1pmprintstringloop:
+	mov (%ebx), %al
+	mov $BOOT1PMVMEMC, %ah
+	cmp $0x0, %al
+	je .boot1pmprintstringdone
+	mov %ax, (%edx)
+	add $0x1, %ebx
+	add $0x2, %edx
+	jmp .boot1pmprintstringloop
+.boot1pmprintstringdone:
+	popa
+	ret
