@@ -48,16 +48,6 @@ boot0:								# boot0 function
 
 	call .boot0Loaded
 
-boot0CheckINT13:					# Function that checks if INT13 BIOS extensions are present. If not, we can't boot.
-	mov $0x80, %dl					# Move 0x80 to dl register.
-	mov $0x41, %ah					# Set ah to 41 (AH=0x41 -> Check Extensions Present).
-	mov $0x55AA, %bx				# Move 0xAA55 to the bx register.
-	clc								# Clear carry bit.
-	int $0x13						# Call BIOS interrupt 13.
-	jc .boot0NoINT13					# AH=0x41->INT13: If Carry Flag is set to 1, there's no compatibility with BIOS extensions.
-	cmp $0xAA55, %bx				# Compare 0x55AA with the bx register...
-	jne .boot0NoINT13				# ...if not the same, BIOS hasn't even got INT13 support, inform the user.
-
 boot0ResetDrive:					# Function to reset floppy drive in order to ensure it's working correctly.
 	mov		$0x00, %ah				# Set ah to 0 (AH=0x00 -> Reset Disk Function).
 	mov		$0x00, %dl				# Set dl to 0 (DL=0x00 -> Disk Drive Number).
@@ -86,19 +76,12 @@ boot0print:
 .boot0printdone:
 	ret
 
-.boot0NoINT13:
-	mov $boot0NoINT13Message, %si
-	call boot0print
-	cli
-	hlt
-
 .boot0Loaded:
 	mov $boot0LoadedMessage, %si
 	call boot0print
 	ret
 
 boot0LoadedMessage: .asciz "Entered 1st Stage"
-boot0NoINT13Message: .asciz "No BIOS INT13"
 
 .fill 510-(.-init0), 1, 0			# Preprocessor directive from GNU as that fills 'x'
 									# count of bytes, with a 'y' size that has 'z' value.
