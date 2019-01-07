@@ -67,6 +67,10 @@ boot0ResetDrive:					# Function to reset floppy drive in order to ensure it's wo
 	mov %bx, %es					# Move bx onto our extra segment register to prepare the jump.
 	int $0x13						# Call BIOS interrupt 13.
 	ljmp $0x1000, $0x0 				# Long jump into our stage 2 bootloader. [0x1000:0x0] -> CS=0x1000; IP=0x0
+	cli
+.hlt:
+	hlt
+	jmp .hlt
 
 boot0print:
 	mov $0x0E, %ah
