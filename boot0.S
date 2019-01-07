@@ -79,7 +79,6 @@ boot0print:
 	mov (%bx), %al
 	cmp $0x0, %al
 	je .boot0printdone
-
 	mov $0x0E, %ah
 	int $0x10
 	add $0x1, %bx
@@ -88,9 +87,20 @@ boot0print:
 	popa
 	ret
 
+boot0printnl:
+    pusha
+    mov $0x0E, %ah
+    mov $0x0A, %al
+    int $0x10
+    mov $0x0D, %al
+    int $0x10
+    popa
+    ret
+
 .boot0Loaded:
 	mov $boot0LoadedMessage, %bx
 	call boot0print
+	call boot0printnl
 	ret
 
 boot0bootdrive: .byte 0
