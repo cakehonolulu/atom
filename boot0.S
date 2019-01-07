@@ -5,11 +5,6 @@
 .global init0						# Make our function globally available.
 .global boot0						# Make our function globally available.
 
-.section .data
-boot0bootdrive: .byte 0
-boot0LoadedMessage: .asciz "Entered 1st Stage"
-boot0DiskErrorMessage: .asciz "Disk Read Error!"
-
 .section .text
 init0:								# init0 function
 	ljmp $0, $boot0					# [CS : IP] We long jump to CS=0x0 and IP=boot0,
@@ -117,6 +112,10 @@ boot0diskerror:
 	call boot0printnl
 	mov %ah, %dh 					# TODO: Print in hex what kind of error we've got.
 	jmp .hlt
+
+boot0bootdrive: .byte 0
+boot0LoadedMessage: .asciz "Entered 1st Stage"
+boot0DiskErrorMessage: .asciz "Disk Read Error!"
 
 .fill 510-(.-init0), 1, 0			# Preprocessor directive from GNU as that fills 'x'
 									# count of bytes, with a 'y' size that has 'z' value.
