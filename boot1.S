@@ -12,7 +12,10 @@ init1:
 	mov %cr0, %eax
 	or $1, %eax
 	mov %eax, %cr0
+	cli
+.hlt:
 	hlt
+	jmp .hlt
 
 boot1EnableA20:
 	call boot1CheckA20LineState			# Check if A20 Line is enabled.
