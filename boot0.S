@@ -29,15 +29,15 @@ boot0:								# boot0 function
 									# We null the data segment, because if we don't, it can overlap
 									# with the code segment.
 	mov %ax, %es					# Null extra segment too.
-	mov $0x2000, %bx				# Move 0x8000 to bx.
+	mov $0x7C00, %bx				# Move 0x7C00 to bx.
 	cli								# Disable interrupts to circumvent a bug present on
 									# early 8088 CPU's.
-	mov %ax, %ss					# Move 0x8000 to the stack segment.
+	mov %ax, %ss					# Move ax (Which now is 0) to the stack segment register.
 									# registers that contain the same, will always result in 0.
-	mov %bx, %sp					# Move ax (Which now is 0) to the stack pointer register.
+	mov %bx, %sp					# Set the stack pointer register with 0x7C00.
 									# Stack Dissasembly:
-									# Top stack adress:		-> 0x8000
-									# Bottom stack adress:	-> 0x8FFF
+									# Top stack adress:		-> 0x7C00
+	mov %sp, %bp					# Move sp (Which now is 0x7C00) to the base pointer register.
 	sti								# Re-enable interrupts
 	cld								# CLD sets EFLAG's register DF flag to 0, this way, string
 									# operations increment the segment registers (Such as SI & DI).
