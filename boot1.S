@@ -131,35 +131,52 @@ boot1LoadGDT:
 	ret
 
 boot1A20HasBeenEnabled:
-	mov $.boot1A20HasBeenEnabled, %si
+	mov $.boot1A20HasBeenEnabled, %bx
 	call boot1print
+	call boot1printnl
 	ret
 
 boot1A20HasAlreadyBeenEnabled:
-	mov $.boot1A20HasAlreadyBeenEnabled, %si
+	mov $.boot1A20HasAlreadyBeenEnabled, %bx
 	call boot1print
+	call boot1printnl
 	ret
 
 boot1LoadedMessage:
-	mov $.boot1LoadedMessage, %si
+	mov $.boot1LoadedMessage, %bx
 	call boot1print
+	call boot1printnl
 	ret
 
 boot1LoadedGDTMessage: 
-	mov $.boot1LoadedGDTMessage, %si
+	mov $.boot1LoadedGDTMessage, %bx
 	call boot1print
+	call boot1printnl
 	ret
 
 boot1print:
-	mov $0x0E, %ah
+	pusha
 .boot1printchar:
-	lodsb
-	cmp $0, %al
+	mov (%bx), %al
+	cmp $0x0, %al
 	je .boot1printdone
+	mov $0x0E, %ah
 	int $0x10
+	add $0x1, %bx
 	jmp .boot1printchar
 .boot1printdone:
+	popa
 	ret
+
+boot1printnl:
+    pusha
+    mov $0x0E, %ah
+    mov $0x0A, %al
+    int $0x10
+    mov $0x0D, %al
+    int $0x10
+    popa
+    ret
 
 .code32
 boot1Start32:
