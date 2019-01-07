@@ -6,7 +6,7 @@
 .global boot0						# Make our function globally available.
 
 init0:								# init0 function
-	ljmp $0, $(boot0-init0+0x7c00)	# [CS : IP] We long jump to CS=0x0 and IP=boot0-init0+0x7c00,
+	ljmp $0, $boot0					# [CS : IP] We long jump to CS=0x0 and IP=boot0,
 									# where our bootloader starts. That way, we don't assume
 									# segments which, on some computers can result in strange errors,
 									# as BIOSes might set CS=0x7C00 and IP=0x0000 [ 0x7C00 = 0x0000 ]
