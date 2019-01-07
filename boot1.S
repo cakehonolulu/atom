@@ -5,23 +5,8 @@
 .section .text
 
 init1:
-	mov $0x2, %ah
-	mov $0x1, %dh
-	mov $0x0, %dl
-	mov $0x0, %bh
-	int $0x10
 	call boot1LoadedMessage
-	mov $0x2, %ah
-	mov $0x2, %dh
-	mov $0x0, %dl
-	mov $0x0, %bh
-	int $0x10
 	call boot1EnableA20
-	mov $0x2, %ah
-	mov $0x3, %dh
-	mov $0x0, %dl
-	mov $0x0, %bh
-	int $0x10
 	call boot1LoadGDT
 	cli
 	mov %cr0, %eax
