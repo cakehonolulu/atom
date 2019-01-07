@@ -5,6 +5,8 @@
 .section .text
 
 init1:
+	mov $0x1000, %ax
+	mov %ax, %ds
 	call boot1LoadedMessage
 	call boot1EnableA20
 	call boot1LoadGDT
