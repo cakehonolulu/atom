@@ -58,19 +58,18 @@ boot0ResetDrive:					# Function to reset floppy drive in order to ensure it's wo
 	jc boot0ResetDrive				# If Carry Flag is set (CF=1) an error has ocurred, run the function again.
 
 									# On this part we'll load our stage 2 bootloader onto 0x1000 and jump to it.
-	push %dx
 	mov boot0bootdrive, %dl			# Move boot0bootdrive value back into dl in case INT13 messes with it.
 	mov $0x02, %ah					# Set ah to 2 (AH=0x02 -> Disk Read Function).
 	mov $0x14, %al					# Set al to 14 (AL=0x14) -> Sectors to be readed.
 	mov $0x00, %ch					# Set ch to 0 (CH=0x00) -> Track 0 of the drive.
 	mov $0x02, %cl					# Set cl to 2 (CL=0x02) -> Sector of the drive from which we start reading from.
 	mov $0x00, %dh					# Set dh to 0 (DH=0x00) -> Head 0 of the drive.
-	mov $0x1000, %bx				# Set our bx register with the adress we'll jump to.
-	mov %bx, %es					# Move bx onto our extra segment register to prepare the jump.
 	xor %bx, %bx					# Set bx to 0.
+	mov %bx, %es					# Move bx onto our extra segment register to prepare the jump.
+	mov $0x7E00, %bx					# Set our bx register with the adress we'll jump to.
 	int $0x13						# Call BIOS interrupt 13.
 	jc boot0diskerror
-	ljmp $0x1000, $0x0 				# Long jump into our stage 2 bootloader. [0x1000:0x0] -> CS=0x1000; IP=0x0
+	ljmp $0x0, $0x7E00				# Long jump into our stage 2 bootloader. [0x1000:0x0] -> CS=0x1000; IP=0x0
 	cli
 .hlt:
 	hlt

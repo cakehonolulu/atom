@@ -2,7 +2,7 @@
 
 .global init1
 
-.set BOOT1CODESEGMENT, 0x1000
+.set BOOT1CODESEGMENT, 0x7E00
 .set BOOT1PMSTACK, 0x9c000
 .set BOOT1PMVMEM, 0xb8000
 .set BOOT1PMVMEMC, 0x0f
@@ -36,7 +36,7 @@ gdt_end:
 
 gdt:
         .word (gdt_end - gdt_start - 1)
-        .long BOOT1CODESEGMENT << 4 + gdt_start
+        .long gdt_start
 
 .boot1A20HasAlreadyBeenEnabled: .asciz "A20 Line has already been enabled"
 .boot1A20HasBeenEnabled: .asciz "A20 Line Enabled"
@@ -47,7 +47,7 @@ gdt:
 .section .text
 
 init1:
-	mov $BOOT1CODESEGMENT, %ax
+	xor %ax, %ax
 	mov %ax, %ds
 	call boot1LoadedMessage
 	call boot1EnableA20
@@ -57,7 +57,7 @@ init1:
 	or $1, %eax
 	mov %eax, %cr0
 	cli
-	ljmpl $CODE_SEG, $(BOOT1CODESEGMENT << 4 + boot1Start32)
+	ljmpl $CODE_SEG, $boot1Start32
 .hlt:
 	hlt
 	jmp .hlt
