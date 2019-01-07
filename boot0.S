@@ -46,15 +46,18 @@ boot0:								# boot0 function
 	mov $0x3, %ax					# Use VGA Text Mode
 	int $0x10						# Call BIOS interrupt 13.
 
-	call .boot0Loaded
+	call .boot0Loaded				# Call a function that displays a message on-screen.
+
+	mov %dl, boot0bootdrive			# Store BIOS dl value containing the boot drive number.
 
 boot0ResetDrive:					# Function to reset floppy drive in order to ensure it's working correctly.
-	mov		$0x00, %ah				# Set ah to 0 (AH=0x00 -> Reset Disk Function).
-	mov		$0x00, %dl				# Set dl to 0 (DL=0x00 -> Disk Drive Number).
-	int		$0x13					# Call BIOS interrupt 13.
-	jc		boot0ResetDrive			# If Carry Flag is set (CF=1) an error has ocurred, run the function again.
+	mov	$0x00, %ah					# Set ah to 0 (AH=0x00 -> Reset Disk Function).
+	mov boot0bootdrive, %dl			# Move boot0bootdrive value back into dl.
+	int	$0x13						# Call BIOS interrupt 13.
+	jc boot0ResetDrive				# If Carry Flag is set (CF=1) an error has ocurred, run the function again.
 
 									# On this part we'll load our stage 2 bootloader onto 0x1000 and jump to it.
+	mov boot0bootdrive, %dl			# Move boot0bootdrive value back into dl in case INT13 messes with it.
 	mov $0x02, %ah					# Set ah to 2 (AH=0x02 -> Disk Read Function).
 	mov $0x14, %al					# Set al to 14 (AL=0x14) -> Sectors to be readed.
 	mov $0x00, %ch					# Set ch to 0 (CH=0x00) -> Track 0 of the drive.
@@ -81,6 +84,7 @@ boot0print:
 	call boot0print
 	ret
 
+boot0bootdrive: .byte 0
 boot0LoadedMessage: .asciz "Entered 1st Stage"
 
 .fill 510-(.-init0), 1, 0			# Preprocessor directive from GNU as that fills 'x'
