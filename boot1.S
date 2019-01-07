@@ -1,3 +1,4 @@
+# Thanks to Octocontrabass, Combuster and MichaelPetch for the help @ forum.osdev.org
 .code16
 
 .global init1
