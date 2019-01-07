@@ -74,18 +74,22 @@ boot0ResetDrive:					# Function to reset floppy drive in order to ensure it's wo
 	jmp .hlt
 
 boot0print:
-	mov $0x0E, %ah
+	pusha
 .boot0printchar:
-	lodsb
-	cmp $0, %al
+	mov (%bx), %al
+	cmp $0x0, %al
 	je .boot0printdone
+
+	mov $0x0E, %ah
 	int $0x10
+	add $0x1, %bx
 	jmp .boot0printchar
 .boot0printdone:
+	popa
 	ret
 
 .boot0Loaded:
-	mov $boot0LoadedMessage, %si
+	mov $boot0LoadedMessage, %bx
 	call boot0print
 	ret
 
