@@ -149,7 +149,7 @@ gdt_end:
 
 gdt:
 	.word (gdt_end - gdt_start - 1)
-	.long gdt_start
+	.long 0x1000<<4+gdt_start
 
 .boot1A20HasAlreadyBeenEnabled: .asciz "A20 Line has already been enabled"
 .boot1A20HasBeenEnabled: .asciz "A20 Line Enabled"
