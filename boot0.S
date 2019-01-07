@@ -65,6 +65,7 @@ boot0ResetDrive:					# Function to reset floppy drive in order to ensure it's wo
 	mov $0x00, %dh					# Set dh to 0 (DH=0x00) -> Head 0 of the drive.
 	mov $0x1000, %bx				# Set our bx register with the adress we'll jump to.
 	mov %bx, %es					# Move bx onto our extra segment register to prepare the jump.
+	xor %bx, %bx
 	int $0x13						# Call BIOS interrupt 13.
 	ljmp $0x1000, $0x0 				# Long jump into our stage 2 bootloader. [0x1000:0x0] -> CS=0x1000; IP=0x0
 	cli
