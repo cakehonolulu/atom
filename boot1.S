@@ -2,10 +2,49 @@
 
 .global init1
 
+.set BOOT1CODESEGMENT, 0x1000
+.set BOOT1PMSTACK, 0x9c000
+
+.section .data
+gdt_start:
+
+gdt_null:
+        .long 0
+        .long 0
+
+gdt_code:
+        .word 0xffff
+        .word 0x0
+        .byte 0x0
+        .byte 0b10011010
+        .byte 0b11001111
+        .byte 0x0
+
+gdt_data:
+        .word 0xffff
+        .word 0x0
+        .byte 0x0
+        .byte 0b10010010
+        .byte 0b11001111
+        .byte 0x0
+
+gdt_end:
+.set CODE_SEG, gdt_code - gdt_start
+.set DATA_SEG, gdt_data - gdt_start
+
+gdt:
+        .word (gdt_end - gdt_start - 1)
+        .long BOOT1CODESEGMENT << 4 + gdt_start
+
+.boot1A20HasAlreadyBeenEnabled: .asciz "A20 Line has already been enabled"
+.boot1A20HasBeenEnabled: .asciz "A20 Line Enabled"
+.boot1LoadedMessage: .asciz "Entered 2nd Stage"
+.boot1LoadedGDTMessage: .asciz "GDT Loaded"
+
 .section .text
 
 init1:
-	mov $0x1000, %ax
+	mov $BOOT1CODESEGMENT, %ax
 	mov %ax, %ds
 	call boot1LoadedMessage
 	call boot1EnableA20
@@ -15,6 +54,7 @@ init1:
 	or $1, %eax
 	mov %eax, %cr0
 	cli
+	ljmpl $CODE_SEG, $(BOOT1CODESEGMENT << 4 + boot1Start32)
 .hlt:
 	hlt
 	jmp .hlt
@@ -121,39 +161,16 @@ boot1print:
 .boot1printdone:
 	ret
 
+.code32
+boot1Start32:
+        mov $DATA_SEG, %eax
+        mov %eax, %ds
+        mov %eax, %es
+        mov %eax, %fs
+        mov %eax, %gs
+        mov %eax, %ss
+        mov $BOOT1PMSTACK, %esp                 # Set the stack pointer. I place it below the EBDA
 
-#define	CODE_SEG	gdt_code - gdt_start
-#define	DATA_SEG	gdt_data - gdt_start
-
-gdt_start:
-
-gdt_null:
-	.long 0
-	.long 0
-
-gdt_code:
-	.word 0xffff
-	.word 0x0
-	.byte 0x0
-	.byte 0b10011010
-	.byte 0b11001111
-	.byte 0x0
-
-gdt_data:
-	.word 0xffff
-	.word 0x0
-	.byte 0x0
-	.byte 0b10010010
-	.byte 0b11001111
-	.byte 0x0
-
-gdt_end:
-
-gdt:
-	.word (gdt_end - gdt_start - 1)
-	.long 0x1000<<4+gdt_start
-
-.boot1A20HasAlreadyBeenEnabled: .asciz "A20 Line has already been enabled"
-.boot1A20HasBeenEnabled: .asciz "A20 Line Enabled"
-.boot1LoadedMessage: .asciz "Entered 2nd Stage"
-.boot1LoadedGDTMessage: .asciz "GDT Loaded"
+.end_loop:
+        hlt
+        jmp .end_loop
