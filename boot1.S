@@ -45,6 +45,11 @@ gdt:
 .boot1LoadedGDTMessage: .asciz "GDT Loaded"
 .boot1LoadedPMMessage: .asciz "Entered Protected Mode"
 
+.align 4
+boot1_currow: .long 0x00
+boot1_curcol: .long 0x00
+boot1_screenwidth: .long 0x00
+boot1_screenheight:.long 0x00
 .section .text
 
 init1:
@@ -191,16 +196,46 @@ boot1Start32:
         mov %eax, %gs
         mov %eax, %ss
         mov $BOOT1PMSTACK, %esp                 # Set the stack pointer. I place it below the EBDA
-		mov $.boot1LoadedPMMessage, %ebx
-    	call boot1pmprintstring
+        mov $.boot1LoadedPMMessage, %ebx
+        call boot1pmprintstring
 
 .end_loop:
         hlt
         jmp .end_loop
 
+boot1getbioscurpos:
+    xor %eax, %eax
+    mov 0x450, %al
+    mov %eax, boot1_curcol
+    mov 0x451, %al
+    mov %eax, boot1_currow
+    mov 0x484, %al
+    mov %eax, boot1_screenheight
+    mov 0x44a, %ax
+    mov %eax, boot1_screenwidth
+    ret
+
 boot1pmprintstring:
 	pusha
-	mov $BOOT1PMVMEM, %edx
+	push %ebx
+	call boot1getbioscurpos
+	xor %eax, %eax
+	xor %ecx, %ecx
+	mov boot1_currow, %eax
+	mov boot1_screenwidth, %ecx
+	mul %ecx # eax*ecx=eax modded
+	xor %ecx, %ecx
+	mov boot1_curcol, %ecx
+	add %eax, %ecx # eax+ecx=ecx modded
+	mov %ecx, %eax
+	mov $2, %ecx
+	mul %ecx # eax*ecx=eax modded
+	mov $BOOT1PMVMEM, %ecx
+	add %eax, %ecx # eax+ecx=ecx modded
+	mov %ecx, %ebx
+	mov %ebx, %edx
+	pop %ebx
+
 .boot1pmprintstringloop:
 	mov (%ebx), %al
 	mov $BOOT1PMVMEMC, %ah
