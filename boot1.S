@@ -195,7 +195,7 @@ boot1Start32:
         mov %eax, %fs
         mov %eax, %gs
         mov %eax, %ss
-        mov $BOOT1PMSTACK, %esp                 # Set the stack pointer. I place it below the EBDA
+        mov $BOOT1PMSTACK, %esp                 # Set the stack pointer. Place it below the EBDA area
         mov $.boot1LoadedPMMessage, %ebx
         call boot1pmprintstring
 
