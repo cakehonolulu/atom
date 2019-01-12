@@ -1,7 +1,6 @@
 all:
 	make clean
 	make bootstrap
-	make image
 
 bootstrap:
 	i686-elf-as boot0.S -o boot0.o --32 -mtune=i8086
