@@ -216,6 +216,24 @@ boot1pmgetbioscurpos:
     mov %eax, boot1_screenwidth				# Store EAX into our temporal boot1_screenwidth 'buffer'.
     ret										# Return to where this function was called from.
 
+boot1pmsetcursor: 
+    mov boot1_currow, %ecx
+    imul boot1_screenwidth, %ecx
+    add boot1_curcol, %ecx
+    mov $0x3d4, %edx
+    mov $0x0f, %al
+    out %al, %dx
+    inc %edx
+    mov %cl, %al
+    out %al, %dx
+    dec %edx
+    mov $0x0e, %al
+    out %al, %dx
+    inc %edx
+    mov %ch, %al
+    out %al, %dx
+    ret
+
 boot1pmprintstring:
 	pusha
 	push %ebx
@@ -236,7 +254,6 @@ boot1pmprintstring:
 	mov %ecx, %ebx
 	mov %ebx, %edx
 	pop %ebx
-
 .boot1pmprintstringloop:
 	mov (%ebx), %al
 	mov $BOOT1PMVMEMC, %ah
@@ -245,7 +262,13 @@ boot1pmprintstring:
 	mov %ax, (%edx)
 	add $0x1, %ebx
 	add $0x2, %edx
+	push %ecx
+	mov boot1_curcol, %ecx
+	inc %ecx
+	mov %ecx, boot1_curcol
+	pop %ecx
 	jmp .boot1pmprintstringloop
 .boot1pmprintstringdone:
+	call boot1pmsetcursor
 	popa
 	ret
