@@ -189,36 +189,37 @@ boot1printnl:
 
 .code32
 boot1Start32:
-        mov $DATA_SEG, %eax
-        mov %eax, %ds
-        mov %eax, %es
-        mov %eax, %fs
-        mov %eax, %gs
-        mov %eax, %ss
-        mov $BOOT1PMSTACK, %esp                 # Set the stack pointer. Place it below the EBDA area
-        mov $.boot1LoadedPMMessage, %ebx
-        call boot1pmprintstring
-
-.end_loop:
+	mov $DATA_SEG, %eax
+	mov %eax, %ds
+	mov %eax, %es
+	mov %eax, %fs
+	mov %eax, %gs
+	mov %eax, %ss
+	mov $BOOT1PMSTACK, %esp                 # Set up a new stack pointer. Ferrum places it conveniently
+											# below the EBDA area.
+	mov $.boot1LoadedPMMessage, %ebx		# We've landed correctly onto Protected Mode, using a new
+	call boot1pmprintstring					# function that doesn't rely on BIOS Interrupts (Since we are
+											# on Protected Mode, print to the screen to inform the user.
+.boot1pmendloop:
         hlt
-        jmp .end_loop
+        jmp .boot1pmendloop
 
-boot1getbioscurpos:
-    xor %eax, %eax
-    mov 0x450, %al
-    mov %eax, boot1_curcol
-    mov 0x451, %al
-    mov %eax, boot1_currow
-    mov 0x484, %al
-    mov %eax, boot1_screenheight
-    mov 0x44a, %ax
-    mov %eax, boot1_screenwidth
-    ret
+boot1pmgetbioscurpos:
+    xor %eax, %eax							# Set EAX to 0.
+    mov 0x450, %al							# Move the bytes contained at adress 0x450 to a AL.
+    mov %eax, boot1_curcol					# Store EAX into our temporal boot1_curcol 'buffer'.
+    mov 0x451, %al							# Move the bytes contained at adress 0x451 to a AL.
+    mov %eax, boot1_currow					# Store EAX into our temporal boot1_currow 'buffer'.
+    mov 0x484, %al 							# Move the bytes contained at adress 0x484 to a AL.
+    mov %eax, boot1_screenheight			# Store EAX into our temporal boot1_screenheight 'buffer'.
+    mov 0x44A, %ax							# Move the bytes contained at adress 0x44A to a AX.
+    mov %eax, boot1_screenwidth				# Store EAX into our temporal boot1_screenwidth 'buffer'.
+    ret										# Return to where this function was called from.
 
 boot1pmprintstring:
 	pusha
 	push %ebx
-	call boot1getbioscurpos
+	call boot1pmgetbioscurpos
 	xor %eax, %eax
 	xor %ecx, %ecx
 	mov boot1_currow, %eax
