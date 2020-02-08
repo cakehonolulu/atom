@@ -1,4 +1,4 @@
-ENTRY(init0)
+ENTRY(main)
 
 OUTPUT_FORMAT("binary")
 
@@ -6,7 +6,7 @@ OUTPUT_ARCH(i386)
 
 SECTIONS {
 
-    . = 0x7C00;
+	. = 0x1000;
 
     .text :
     {
@@ -27,5 +27,4 @@ SECTIONS {
     {
         *(.bss)
     }
-    
 }

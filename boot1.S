@@ -188,6 +188,8 @@ boot1printnl:
     ret
 
 .code32
+.extern main
+
 boot1Start32:
 	mov $DATA_SEG, %eax
 	mov %eax, %ds
@@ -200,6 +202,9 @@ boot1Start32:
 	mov $.boot1LoadedPMMessage, %ebx		# We've landed correctly onto Protected Mode, using a new
 	call boot1pmprintstring					# function that doesn't rely on BIOS Interrupts (Since we are
 											# on Protected Mode, print to the screen to inform the user.
+
+	jmp 0x1000
+
 .boot1pmendloop:
         hlt
         jmp .boot1pmendloop
