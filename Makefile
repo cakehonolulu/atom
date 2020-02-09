@@ -3,21 +3,27 @@ all:
 	make bootstrap
 
 bootstrap:
-	i686-elf-as boot0.S -o boot0.o --32
-	i686-elf-as boot1.S -o boot1.o --32
-	i686-elf-as kernel_entry.S -o kernel_entry.o --32
-	i686-elf-gcc kernel.c -o kernel.o -ffreestanding -nostdlib
-	i686-elf-ld -o boot0.bin boot0.o -T linkboot0.ld -m elf_i386
-	i686-elf-ld -o boot1.bin boot1.o -T linkboot1.ld -m elf_i386
-	i686-elf-ld -o kernel.bin kernel_entry.o kernel.o -T linkkernel.ld -m elf_i386
+	i686-elf-as bootloader/boot0.S -o bootloader/boot0.o --32
+	i686-elf-as bootloader/boot1.S -o bootloader/boot1.o --32
+	i686-elf-as kernel/kernel_entry.S -o kernel/kernel_entry.o --32
+	i686-elf-as kernel/asm.S -o kernel/asm.o --32
+	i686-elf-gcc -ffreestanding -nostdinc -nostdlib -Wall -Wextra -g -c kernel/gdt.c -o kernel/gdt.o
+	i686-elf-gcc -ffreestanding -nostdinc -nostdlib -Wall -Wextra -g -c kernel/kernel.c -o kernel/kernel.o
+	i686-elf-gcc -T bootloader/linkboot0.ld -o bootloader/boot0.bin bootloader/boot0.o -ffreestanding -nostdlib -lgcc -Wall -Wextra
+	i686-elf-gcc -T bootloader/linkboot1.ld -o bootloader/boot1.bin bootloader/boot1.o -ffreestanding -nostdlib -lgcc -Wall -Wextra
+	i686-elf-gcc kernel/kernel_entry.o kernel/kernel.o kernel/asm.o kernel/gdt.o -o kernel/kernel.bin -T kernel/linkkernel.ld -ffreestanding -nostdlib -lgcc -Wall -Wextra
 	mkfs.msdos -C floppy.img 1440
-	dd conv=notrunc if=boot0.bin of=floppy.img bs=512 seek=0
-	dd conv=notrunc if=boot1.bin of=floppy.img bs=512 seek=1
-	dd conv=notrunc if=kernel.bin of=floppy.img bs=512 seek=3
+	dd conv=notrunc if=bootloader/boot0.bin of=floppy.img bs=512 seek=0
+	dd conv=notrunc if=bootloader/boot1.bin of=floppy.img bs=512 seek=1
+	dd conv=notrunc if=kernel/kernel.bin of=floppy.img bs=512 seek=3
 
 clean:
-	-@rm *.o
-	-@rm *.bin
+	-@rm bootloader/*.o
+	-@rm kernel/*.o
+	-@rm bootloader/*.bin
+	-@rm kernel/*.bin
+	-@rm bootloader/*.img
+	-@rm kernel/*.img
 	-@rm *.img
 
 $(V).SILENT:
