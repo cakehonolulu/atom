@@ -12,10 +12,10 @@ bootstrap:
 	i686-elf-gcc -T bootloader/linkboot0.ld -o bootloader/boot0.bin bootloader/boot0.o -ffreestanding -nostdlib -lgcc -Wall -Wextra
 	i686-elf-gcc -T bootloader/linkboot1.ld -o bootloader/boot1.bin bootloader/boot1.o -ffreestanding -nostdlib -lgcc -Wall -Wextra
 	i686-elf-gcc kernel/kernel_entry.o kernel/kernel.o kernel/asm.o kernel/gdt.o -o kernel/kernel.bin -T kernel/linkkernel.ld -ffreestanding -nostdlib -lgcc -Wall -Wextra
-	mkfs.msdos -C floppy.img 1440
-	dd conv=notrunc if=bootloader/boot0.bin of=floppy.img bs=512 seek=0
-	dd conv=notrunc if=bootloader/boot1.bin of=floppy.img bs=512 seek=1
-	dd conv=notrunc if=kernel/kernel.bin of=floppy.img bs=512 seek=3
+	-@mkfs.msdos -C floppy.img 1440 >/dev/null
+	-@dd conv=notrunc if=bootloader/boot0.bin of=floppy.img bs=512 seek=0 status=none
+	-@dd conv=notrunc if=bootloader/boot1.bin of=floppy.img bs=512 seek=1 status=none
+	-@dd conv=notrunc if=kernel/kernel.bin of=floppy.img bs=512 seek=3 status=none
 
 clean:
 	-@rm bootloader/*.o

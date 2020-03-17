@@ -28,3 +28,58 @@ struct i386_gdt_descriptor
    out CPU's GDT table with ours */
 extern void i386_gdt_update(unsigned int);
 void i386_gdt_install();
+
+// Flags! TODO!
+#define SEG_SIZE(x)      ((x) << 0x0E) // Size (0 for 16-bit, 1 for 32)
+#define SEG_GRAN(x)      ((x) << 0x0F) // Granularity (0 for 1B - 1MB, 1 for 4KB - 4GB)
+
+// Access
+#define I386_GDT_ACCESS_BIT(x)              (x)
+#define I386_GDT_READ_WRITE_BIT(x)          ((x) << 0x01)           // i386 GDT Read/Write Bit (0: Code, 1: Data)
+                                                                    /*
+                                                                        In code segments, if bit is raised (1) the
+                                                                        memory contents can be read, else, not.
+                                                                        [!] Normally we don't let the code segments
+                                                                        be writable!
+
+                                                                        In data segments, if bit is raised (1) the
+                                                                        memory contents can be written, else, not.
+                                                                        not raised, segment grows upwards.
+                                                                        [!] Normally, we are always able to write
+                                                                        to the data segments.
+                                                                    */
+#define I386_GDT_DIRECTION_BIT(x)           ((x) << 0x02)           // i386 GDT Direction Bit
+                                                                    /* 
+                                                                        In code segments, if bit is raised (1) the
+                                                                        code can be executed on a lower privilege
+                                                                        level, else if bit is not raised (0),
+                                                                        the code can only be executed on the
+                                                                        privilege level specified on the "Privl" 
+                                                                        bit (I386_GDT_PRIVILEGE_LEVEL_BIT)
+
+                                                                        In data segments, if bit is raised (1) the
+                                                                        segment grows downwards, else, if bit is
+                                                                        not raised, segment grows upwards.
+                                                                        [!] If data segment grows downwards, offset
+                                                                        must be greater than the base!
+                                                                    */
+#define I386_GDT_EXECUTABLE_BIT(x)          ((x) << 0x03)           // i386 GDT Executable Bit (0: Data, 1: Code)
+#define I386_GDT_DESCRIPTORT_TYPE_BIT(x)    ((x) << 0x04)           // i386 GDT Descriptor Type Bit (0: System, 1: Code/Data)
+#define I386_GDT_PRIVILEGE_LEVEL_BIT(x)     (((x) &  0x03) << 0x05) // i386 GDT Privilege Level Bit (Ring 0 - 3)
+#define I386_GDT_PRESENT_BIT(x)             ((x) << 0x07)           // i386 GDT Present Bit (0: Segment can't be used, 1: "" can be used)
+
+#define I386_GDT_CODE_RING0_ACCESS I386_GDT_ACCESS_BIT(0)        | I386_GDT_READ_WRITE_BIT(0)        | I386_GDT_DIRECTION_BIT(0)         | \
+                                   I386_GDT_EXECUTABLE_BIT(1)    | I386_GDT_DESCRIPTORT_TYPE_BIT(1)  | I386_GDT_PRIVILEGE_LEVEL_BIT(0)   | \
+                                   I386_GDT_PRESENT_BIT(1)
+
+#define I386_GDT_DATA_RING0_ACCESS I386_GDT_ACCESS_BIT(0)        | I386_GDT_READ_WRITE_BIT(1)        | I386_GDT_DIRECTION_BIT(0)         | \
+                                   I386_GDT_EXECUTABLE_BIT(0)    | I386_GDT_DESCRIPTORT_TYPE_BIT(1)  | I386_GDT_PRIVILEGE_LEVEL_BIT(0)   | \
+                                   I386_GDT_PRESENT_BIT(1)
+
+#define I386_GDT_CODE_RING3_ACCESS I386_GDT_ACCESS_BIT(0)        | I386_GDT_READ_WRITE_BIT(0)        | I386_GDT_DIRECTION_BIT(0)         | \
+                                   I386_GDT_EXECUTABLE_BIT(1)    | I386_GDT_DESCRIPTORT_TYPE_BIT(1)  | I386_GDT_PRIVILEGE_LEVEL_BIT(3)   | \
+                                   I386_GDT_PRESENT_BIT(1)
+
+#define I386_GDT_DATA_RING3_ACCESS I386_GDT_ACCESS_BIT(0)        | I386_GDT_READ_WRITE_BIT(1)        | I386_GDT_DIRECTION_BIT(0)         | \
+                                   I386_GDT_EXECUTABLE_BIT(0)    | I386_GDT_DESCRIPTORT_TYPE_BIT(1)  | I386_GDT_PRIVILEGE_LEVEL_BIT(3)   | \
+                                   I386_GDT_PRESENT_BIT(1)
