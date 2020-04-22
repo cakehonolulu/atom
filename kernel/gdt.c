@@ -11,7 +11,7 @@ void i386_gdt_add_entry(unsigned int i386_gdt_entry_num, unsigned long i386_gdt_
 	if ((i386_gdt_pointer.gdt_entry_size > 65536) && (i386_gdt_pointer.gdt_entry_size & 0xFFF) != 0xFFF)
 	{
 		// TODO: Inform the user that it has exceeded maximum
-		// number of GDT entrie or that the GDT size equals to 0
+		// number of GDT entries or that the GDT size equals to 0
 		__asm__ __volatile__ ("cli");
 		__asm__ __volatile__ ("hlt");
 	}
