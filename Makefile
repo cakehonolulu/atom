@@ -7,11 +7,12 @@ bootstrap:
 	i686-elf-as bootloader/boot1.S -o bootloader/boot1.o --32
 	i686-elf-as kernel/kernel_entry.S -o kernel/kernel_entry.o --32
 	i686-elf-as kernel/asm.S -o kernel/asm.o --32
-	i686-elf-gcc -ffreestanding -nostdinc -nostdlib -Wall -Wextra -g -c kernel/gdt.c -o kernel/gdt.o
-	i686-elf-gcc -ffreestanding -nostdinc -nostdlib -Wall -Wextra -g -c kernel/kernel.c -o kernel/kernel.o
-	i686-elf-gcc -T bootloader/linkboot0.ld -o bootloader/boot0.bin bootloader/boot0.o -ffreestanding -nostdlib -lgcc -Wall -Wextra
-	i686-elf-gcc -T bootloader/linkboot1.ld -o bootloader/boot1.bin bootloader/boot1.o -ffreestanding -nostdlib -lgcc -Wall -Wextra
-	i686-elf-gcc kernel/kernel_entry.o kernel/kernel.o kernel/asm.o kernel/gdt.o -o kernel/kernel.bin -T kernel/linkkernel.ld -ffreestanding -nostdlib -lgcc -Wall -Wextra
+	i686-elf-gcc -ffreestanding -Wall -Wextra -g -c kernel/gdt.c -o kernel/gdt.o
+	i686-elf-gcc -ffreestanding -Wall -Wextra -g -c kernel/vga.c -o kernel/vga.o
+	i686-elf-gcc -ffreestanding -Wall -Wextra -g -c kernel/kernel.c -o kernel/kernel.o
+	i686-elf-ld -T bootloader/linkboot0.ld -o bootloader/boot0.bin bootloader/boot0.o
+	i686-elf-ld -T bootloader/linkboot1.ld -o bootloader/boot1.bin bootloader/boot1.o
+	i686-elf-ld kernel/kernel_entry.o kernel/kernel.o kernel/asm.o kernel/vga.o kernel/gdt.o -o kernel/kernel.bin -T kernel/linkkernel.ld
 	-@mkfs.msdos -C floppy.img 1440 >/dev/null
 	-@dd conv=notrunc if=bootloader/boot0.bin of=floppy.img bs=512 seek=0 status=none
 	-@dd conv=notrunc if=bootloader/boot1.bin of=floppy.img bs=512 seek=1 status=none
