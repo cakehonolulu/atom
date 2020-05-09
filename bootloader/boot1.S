@@ -203,7 +203,7 @@ boot1Start32:
 	call boot1pmprintstring					# function that doesn't rely on BIOS Interrupts (Since we are
 											# on Protected Mode, print to the screen to inform the user.
 	xor %eax, %eax
-	mov $0xFE, %eax
+	mov $0xFEB0516C, %eax
 	push %eax
 	jmp 0x1000
 

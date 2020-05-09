@@ -79,7 +79,7 @@ boot0ResetDrive1:					# Function to reset floppy drive in order to ensure it's w
 
 	mov boot0bootdrive, %dl			# Move boot0bootdrive value back into dl in case INT13 messes with it.
 	mov $0x02, %ah					# Set ah to 2 (AH=0x02 -> Disk Read Function).
-	mov $0x1, %al					# Set al to 1 (AL=0x1) -> Sectors to be readed.
+	mov $0x2, %al					# Set al to 1 (AL=0x1) -> Sectors to be readed.
 	mov $0x0, %ch					# Set ch to 0 (CH=0x00) -> Track 0 of the drive.
 	mov $0x4, %cl					# Set cl to 4 (CL=0x02) -> Sector of the drive from which we start reading from.
 	mov $0x00, %dh					# Set dh to 0 (DH=0x00) -> Head 0 of the drive.
