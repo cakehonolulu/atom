@@ -78,6 +78,7 @@ protected_mode_gdt:
 .boot1UMLoadingKernelMessage: .asciz "Loading Kernel..."
 .boot1DiskErrorMessage: .asciz "Disk Read Error!"
 .boot1UMLKMsg: .asciz "Loaded Kernel"
+.boot1UnrealModeLoadKernelFailMessage: .asciz "Failed to load the kernel!"
 
 .align 4
 boot1_currow: .long 0x00
@@ -85,7 +86,6 @@ boot1_curcol: .long 0x00
 boot1_screenwidth: .long 0x00
 boot1_screenheight:.long 0x00
 .section .text
-
 init1:
 	pop %bx
 	mov %bx, boot1bootdrive
@@ -100,9 +100,7 @@ init1:
 	or $1, %eax
 	mov %eax, %cr0
 	ljmpl $UNREAL_MODE_CODE_SEG, $.boot1TemporalProtected
-.hlt:
-	hlt
-	jmp .hlt
+	jmp boot1Halt
 
 .boot1TemporalProtected:				# Now in protected mode
 	mov $0x10, %ax
@@ -140,13 +138,14 @@ init1:
 	mov %eax, %cr0
 	cli
 	ljmpl $PROTECTED_MODE_CODE_SEG, $boot1Start32
-.hltu:
-	hlt
-	jmp .hltu
+	jmp boot1Halt
 
 boot1UnrealModeLoadKernelFail:
+	mov $.boot1UnrealModeLoadKernelFailMessage, %bx
+	call boot1print
+	call boot1printnl
 	cli
-	jmp .hltu
+	jmp boot1Halt
 
 boot1UMLoadKernel:
 	mov boot1bootdrive, %dl
@@ -329,6 +328,10 @@ boot1printnl:
     int $0x10
     popa
     ret
+
+boot1Halt:
+	hlt
+	jmp boot1Halt
 
 .code32
 .extern main
