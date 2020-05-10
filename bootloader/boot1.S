@@ -121,32 +121,10 @@ init1:
 	sti									# Enable interrupts
 	call boot1LandedUnrealMode
 	call boot1UMLoadingKernel
+	call boot1UMLoadKernel
+	cmp $0, %ax
+	jnz .fail
 
-boot1UMLoadKernel:
-	mov $0x02, %ah									# Set ah to 2 (AH=0x02 -> Disk Read Function).
-	mov $0x12, %al						# Set al to I386_KERNEL_SIZE (AL=$I386_KERNEL_SIZE0h) -> Sectors to be readed.
-													# Where I386_KERNEL_SIZE equals to the number of sectors occupied by the kernel binary rounded 1 sector up.
-	mov $0x0, %ch									# Set ch to 0 (CH=0x00) -> Track 0 of the drive.
-	mov $0x4, %cl			# Set cl to I386_KERNEL_STARTING_LOCATION (CL=I386_KERNEL_STARTING_LOCATION)
-													# Which is sector of the drive from which we start reading the kernel from.
-	mov $0x00, %dh									# Set dh to 0 (DH=0x00) -> Head 0 of the drive.
-	xor %bx, %bx									# Set bx to 0.
-	mov %bx, %es									# Move bx onto our extra segment register to prepare the jump.
-	mov $0x1000, %bx								# Set our bx register with the adress we'll jump to.
-	int $0x13										# Call BIOS interrupt 13.
-
-
-	mov $0x1000, %esi
-	mov $0x100000, %edi
-	mov $0x200, %cx
-	mov $0x14, %bx
-.loop:
-	xchg %bx, %bx
-	addr32 rep movsb
-	dec %bx
-	jnz .loop
-	mov $0, %ax
-.done:
 	call boot1UMLK
 
 	call boot1LoadProtectedModeGDT
@@ -160,6 +138,42 @@ boot1UMLoadKernel:
 	hlt
 	jmp .hltu
 
+.fail:
+	cli
+	jmp .hltu
+
+boot1UMLoadKernel:
+	call boot1UKLM
+
+
+boot1UKLM:
+	mov $0, %dl
+	mov $0x02, %ah									# Set ah to 2 (AH=0x02 -> Disk Read Function).
+	mov $0x14, %al									# Set al to I386_KERNEL_SIZE (AL=$I386_KERNEL_SIZE0h) -> Sectors to be readed.
+													# Where I386_KERNEL_SIZE equals to the number of sectors occupied by the kernel binary rounded 1 sector up.
+	mov $0x0, %ch									# Set ch to 0 (CH=0x00) -> Track 0 of the drive.
+	mov $0x4, %cl									# Set cl to I386_KERNEL_STARTING_LOCATION (CL=I386_KERNEL_STARTING_LOCATION)
+													# Which is sector of the drive from which we start reading the kernel from.
+	mov $0x00, %dh									# Set dh to 0 (DH=0x00) -> Head 0 of the drive.
+	xor %bx, %bx									# Set bx to 0.
+	mov %bx, %es									# Move bx onto our extra segment register to prepare the jump.
+	mov $0x1000, %bx								# Set our bx register with the adress we'll jump to.
+	int $0x13										# Call BIOS interrupt 13.
+	jc .done
+	mov $0x1000, %esi
+	mov $0x100000, %edi
+	mov $0x200, %cx
+	mov $0x14, %bx
+.loop:
+	xchg %bx, %bx
+	addr32 rep movsb
+	dec %bx
+	jnz .loop
+
+	mov $0, %ax
+	jc .done
+
+.done: ret
 
 
 boot1EnableA20:
@@ -329,6 +343,10 @@ boot1Start32:
 	mov $.boot1LoadedPMMessage, %ebx		# We've landed correctly onto Protected Mode, using a new
 	call boot1pmprintstring					# function that doesn't rely on BIOS Interrupts (Since we are
 											# on Protected Mode, print to the screen to inform the user.
+	xor %ebx, %ebx
+	mov boot1_currow, %bh
+	mov boot1_curcol, %bl
+	push %ebx
 	xor %eax, %eax
 	mov $0xFEB0516C, %eax
 	push %eax

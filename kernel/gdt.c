@@ -41,7 +41,7 @@ void i386_gdt_add_entry(unsigned int i386_gdt_entry_num, unsigned long i386_gdt_
    and switches the resulting crafted
    GDT to the processor and updates
    the segment registers */
-void i386_gdt_install()
+int i386_gdt_install()
 {
 	/* Setup GDT limit */
     i386_gdt_pointer.gdt_entry_size = (sizeof(struct i386_gdt_entry) * 5) - 1;
@@ -80,4 +80,5 @@ void i386_gdt_install()
     i386_gdt_update((unsigned int)&i386_gdt_pointer);
 
     /* TODO: Update Task State Segment */
+    return 1;
 }

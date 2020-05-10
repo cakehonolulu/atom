@@ -9,6 +9,15 @@ void i386_setup_vga()
     // Add 1 to the initial vga row so that it jumps to a new line right after we give control to the kernel
     initial_vga_offset = vga_get_offset(0, initial_vga_row + 1);
     vga_set_cursor_offset(initial_vga_offset);
+    vga_printkhex(initial_vga_offset);
+    vga_printk(" : Initial VGA Offset\n");
+    vga_printkhex(initial_vga_row);
+    vga_printk(" : Initial VGA ROW\n");
+}
+
+unsigned char vga_entry_color(enum vga_color fg, enum vga_color bg) 
+{
+    return fg | bg << 4;
 }
 
 /**
@@ -16,8 +25,13 @@ void i386_setup_vga()
  * given a column, a row and an array of characters.
  * If the column and/or row are negative, use the current VGA offset.
  */
-void vga_printk_at(char *message, int vga_column, int vga_row)
+void vga_printk_at(char *message, int vga_column, int vga_row, char vga_attributes)
 {
+    if (!vga_attributes)
+    {
+        vga_attributes = vga_entry_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
+    }
+
     // Set vga offset to 0
     int vga_offset = 0;
     // Check if positions are valid, else, get them from the current vga position
@@ -35,7 +49,7 @@ void vga_printk_at(char *message, int vga_column, int vga_row)
     int i = 0;
     while (message[i] != '\0')
     {
-        vga_offset = vga_print_char(message[i++], vga_column, vga_row, VGA_WHITE_ON_BLACK);
+        vga_offset = vga_print_char(message[i++], vga_column, vga_row, vga_attributes);
         // Find VGA location for the next character of the array
         vga_row = vga_get_offset_row(vga_offset);
         vga_column = vga_get_offset_col(vga_offset);
@@ -44,7 +58,25 @@ void vga_printk_at(char *message, int vga_column, int vga_row)
 
 void vga_printk(char *message)
 {
-    vga_printk_at(message, -1, -1);
+    vga_printk_at(message, -1, -1, vga_entry_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK));
+}
+
+void vga_printkok(char *message)
+{
+    vga_printk_at("[ ", -1, -1, vga_entry_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK));
+    vga_printk_at("OK", -1, -1, vga_entry_color(VGA_COLOR_GREEN, VGA_COLOR_BLACK));
+    vga_printk_at(" ] ", -1, -1, vga_entry_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK));
+    vga_printk_at(message, -1, -1, vga_entry_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK));
+    vga_printk_at("\n", -1, -1, vga_entry_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK));
+}
+
+void vga_printkfail(char *message)
+{
+    vga_printk_at("[ ", -1, -1, vga_entry_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK));
+    vga_printk_at("FAIL", -1, -1, vga_entry_color(VGA_COLOR_RED, VGA_COLOR_BLACK));
+    vga_printk_at(" ] ", -1, -1, vga_entry_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK));
+    vga_printk_at(message, -1, -1, vga_entry_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK));
+    vga_printk_at("\n", -1, -1, vga_entry_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK));
 }
 
 /**
@@ -59,14 +91,14 @@ int vga_print_char(char character, int vga_column, int vga_row, char vga_attribu
 
     if (!vga_attributes)
     {
-        vga_attributes = VGA_WHITE_ON_BLACK;
+        vga_attributes = vga_entry_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
     }
 
     /* Error control: print a red 'E' if the coords aren't right */
-    if (vga_column >= VGA_MAXIMUM_COLUMNS || vga_row >= VGA_WHITE_ON_BLACK)
+    if (vga_column >= VGA_MAXIMUM_COLUMNS || vga_row >= vga_entry_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK))
     {
-        vga_video_location[2 * (VGA_MAXIMUM_COLUMNS) * (VGA_WHITE_ON_BLACK) - 2] = 'E';
-        vga_video_location[2 * (VGA_MAXIMUM_COLUMNS) * (VGA_WHITE_ON_BLACK) - 1] = VGA_RED_ON_WHITE;
+        vga_video_location[2 * (VGA_MAXIMUM_COLUMNS) * (vga_entry_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK)) - 2] = 'E';
+        vga_video_location[2 * (VGA_MAXIMUM_COLUMNS) * (vga_entry_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK)) - 1] = vga_entry_color(VGA_COLOR_RED, VGA_COLOR_BLACK);
         return vga_get_offset(vga_column, vga_row);
     }
 
@@ -129,14 +161,38 @@ void vga_set_cursor_offset(int vga_offset)
 
 void vga_clear_screen()
 {
-    int vga_screen_matrix = VGA_MAXIMUM_COLUMNS * VGA_WHITE_ON_BLACK;
+    int vga_screen_matrix = VGA_MAXIMUM_COLUMNS * vga_entry_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
     int i;
     char *vga_video_memory = VGA_VIDEO_ADDRESS;
 
     for (i = 0; i < vga_screen_matrix; i++)
     {
         vga_video_memory[i * 2] = ' ';
-        vga_video_memory[i * 2 + 1] = VGA_WHITE_ON_BLACK;
+        vga_video_memory[i * 2 + 1] = vga_entry_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
     }
     vga_set_cursor_offset(vga_get_offset(0, 0));
+}
+
+char *convert(unsigned int num, int base) 
+{ 
+    static char Representation[]= "0123456789ABCDEF";
+    static char buffer[50]; 
+    char *ptr; 
+
+    ptr = &buffer[49]; 
+    *ptr = '\0'; 
+
+    do 
+    { 
+        *--ptr = Representation[num%base]; 
+        num /= base; 
+    }while(num != 0); 
+
+    return(ptr); 
+}
+
+void vga_printkhex(unsigned int num)
+{
+    const char* message = convert(num, 16);
+    vga_printk(message);
 }

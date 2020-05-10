@@ -27,7 +27,7 @@ struct i386_gdt_descriptor
    to reload the segment registers and swap
    out CPU's GDT table with ours */
 extern void i386_gdt_update(unsigned int);
-void i386_gdt_install();
+int i386_gdt_install();
 
 // Flags! TODO!
 #define SEG_SIZE(x)      ((x) << 0x0E) // Size (0 for 16-bit, 1 for 32)
