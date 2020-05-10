@@ -13,7 +13,6 @@ bootstrap:
 	i686-elf-ld -T bootloader/linkboot1.ld -o bootloader/boot1.bin bootloader/boot1.o
 	i686-elf-ld kernel/kernel_entry.o kernel/kernel.o kernel/asm.o kernel/vga.o kernel/gdt.o kernel/port.o -o kernel/kernel.bin -T kernel/linkkernel.ld
 	bash -c "./scripts/boot.sh"
-	bash -c "sed -i '1s/^/.set I386_KERNEL_SIZE, /' bootloader/boot0.h"
 	i686-elf-as bootloader/boot0.S -o bootloader/boot0.o --32 -Ibootloader
 	i686-elf-ld -T bootloader/linkboot0.ld -o bootloader/boot0.bin bootloader/boot0.o
 	-@mkfs.msdos -C floppy.img 1440 >/dev/null

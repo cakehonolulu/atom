@@ -63,7 +63,8 @@ boot0ResetDrive:					# Function to reset floppy drive in order to ensure it's wo
 									# On this part we'll load our stage 2 bootloader onto 0x7E00 and jump to it.
 	mov boot0bootdrive, %dl			# Move boot0bootdrive value back into dl in case INT13 messes with it.
 	mov $0x02, %ah					# Set ah to 2 (AH=0x02 -> Disk Read Function).
-	mov $0x2, %al					# Set al to 2 (AL=0x2) -> Sectors to be readed. (boot1 needs 2 sectors (600-ish bytes in total))
+	mov $I386_BOOT1_SIZE, %al		# Set al to I386_BOOT1_SIZE (AL=$I386_BOOT1_SIZE0h) -> Sectors to be readed.
+									# Where I386_BOOT1_SIZE equals to the number of sectors occupied by the boot1 binary rounded 1 sector up.
 	mov $0x0, %ch					# Set ch to 0 (CH=0x00) -> Track 0 of the drive.
 	mov $0x2, %cl					# Set cl to 2 (CL=0x02) -> Sector of the drive from which we start reading from.
 	mov $0x00, %dh					# Set dh to 0 (DH=0x00) -> Head 0 of the drive.
