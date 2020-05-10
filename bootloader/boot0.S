@@ -75,26 +75,6 @@ boot0ResetDrive:									# Function to reset floppy drive in order to ensure it'
 	int $0x13										# Call BIOS interrupt 13.
 	jc boot0diskerror
 
-boot0ResetDrive1:									# Function to reset floppy drive in order to ensure it's working correctly.
-	mov	$0x00, %ah									# Set ah to 0 (AH=0x00 -> Reset Disk Function).
-	mov boot0bootdrive, %dl							# Move boot0bootdrive value back into dl.
-	int	$0x13										# Call BIOS interrupt 13.
-	jc boot0ResetDrive1								# If Carry Flag is set (CF=1) an error has ocurred, run the function again.
-
-	mov boot0bootdrive, %dl							# Move boot0bootdrive value back into dl in case INT13 messes with it.
-	mov $0x02, %ah									# Set ah to 2 (AH=0x02 -> Disk Read Function).
-	mov $I386_KERNEL_SIZE, %al						# Set al to I386_KERNEL_SIZE (AL=$I386_KERNEL_SIZE0h) -> Sectors to be readed.
-													# Where I386_KERNEL_SIZE equals to the number of sectors occupied by the kernel binary rounded 1 sector up.
-	mov $0x0, %ch									# Set ch to 0 (CH=0x00) -> Track 0 of the drive.
-	mov $I386_KERNEL_STARTING_LOCATION, %cl			# Set cl to I386_KERNEL_STARTING_LOCATION (CL=I386_KERNEL_STARTING_LOCATION)
-													# Which is sector of the drive from which we start reading the kernel from.
-	mov $0x00, %dh									# Set dh to 0 (DH=0x00) -> Head 0 of the drive.
-	xor %bx, %bx									# Set bx to 0.
-	mov %bx, %es									# Move bx onto our extra segment register to prepare the jump.
-	mov $0x1000, %bx								# Set our bx register with the adress we'll jump to.
-	int $0x13										# Call BIOS interrupt 13.
-	jc boot0diskerror
-
 	ljmp $0x0, $0x7E00								# Long jump into our stage 2 bootloader. [0x7E00:0x0] -> CS=0x7E00; IP=0x0
 	cli
 .hlt:

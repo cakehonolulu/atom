@@ -9,13 +9,13 @@
 .set BOOT1PMVMEMC, 0x0f
 
 .section .data
-gdt_start:
+protected_mode_gdt_start:
 
-gdt_null:
+protected_mode_gdt_null:
         .long 0
         .long 0
 
-gdt_code:
+protected_mode_gdt_code:
         .word 0xffff
         .word 0x0
         .byte 0x0
@@ -23,7 +23,7 @@ gdt_code:
         .byte 0b11001111
         .byte 0x0
 
-gdt_data:
+protected_mode_gdt_data:
         .word 0xffff
         .word 0x0
         .byte 0x0
@@ -31,18 +31,18 @@ gdt_data:
         .byte 0b11001111
         .byte 0x0
 
-gdt_end:
-.set CODE_SEG, gdt_code - gdt_start
-.set DATA_SEG, gdt_data - gdt_start
+protected_mode_gdt_end:
+.set PROTECTED_MODE_CODE_SEG, protected_mode_gdt_code - protected_mode_gdt_start
+.set PROTECTED_MODE_DATA_SEG, protected_mode_gdt_data - protected_mode_gdt_start
 
-gdt:
-        .word (gdt_end - gdt_start - 1)
-        .long gdt_start
+protected_mode_gdt:
+        .word (protected_mode_gdt_end - protected_mode_gdt_start - 1)
+        .long protected_mode_gdt_start
 
 .boot1A20HasAlreadyBeenEnabled: .asciz "A20 Line has already been enabled"
 .boot1A20HasBeenEnabled: .asciz "A20 Line Enabled"
 .boot1LoadedMessage: .asciz "Entered 2nd Stage"
-.boot1LoadedGDTMessage: .asciz "GDT Loaded"
+.boot1LoadedProtectedModeGDTMessage: .asciz "Protected Mode GDT Loaded"
 .boot1LoadedPMMessage: .asciz "Entered Protected Mode"
 
 .align 4
@@ -57,13 +57,13 @@ init1:
 	mov %ax, %ds
 	call boot1LoadedMessage
 	call boot1EnableA20
-	call boot1LoadGDT
+	call boot1LoadProtectedModeGDT
 	cli
 	mov %cr0, %eax
 	or $1, %eax
 	mov %eax, %cr0
 	cli
-	ljmpl $CODE_SEG, $boot1Start32
+	ljmpl $PROTECTED_MODE_CODE_SEG, $boot1Start32
 .hlt:
 	hlt
 	jmp .hlt
@@ -130,13 +130,13 @@ boot1CheckA20LineState:
 	popw %ds
 	ret
 
-boot1LoadGDT:
+boot1LoadProtectedModeGDT:
 	cli
 	pusha
-	lgdt gdt
+	lgdt protected_mode_gdt
 	sti
 	popa
-	call boot1LoadedGDTMessage
+	call boot1LoadedProtectedModeGDTMessage
 	ret
 
 boot1A20HasBeenEnabled:
@@ -157,8 +157,8 @@ boot1LoadedMessage:
 	call boot1printnl
 	ret
 
-boot1LoadedGDTMessage: 
-	mov $.boot1LoadedGDTMessage, %bx
+boot1LoadedProtectedModeGDTMessage: 
+	mov $.boot1LoadedProtectedModeGDTMessage, %bx
 	call boot1print
 	call boot1printnl
 	ret
@@ -191,7 +191,7 @@ boot1printnl:
 .extern main
 
 boot1Start32:
-	mov $DATA_SEG, %eax
+	mov $PROTECTED_MODE_DATA_SEG, %eax
 	mov %eax, %ds
 	mov %eax, %es
 	mov %eax, %fs
