@@ -125,8 +125,6 @@ init1:
 	cmp $0, %ax
 	jnz .fail
 
-	call boot1UMLK
-
 	call boot1LoadProtectedModeGDT
 	cli
 	mov %cr0, %eax
@@ -143,13 +141,9 @@ init1:
 	jmp .hltu
 
 boot1UMLoadKernel:
-	call boot1UKLM
-
-
-boot1UKLM:
 	mov $0, %dl
 	mov $0x02, %ah									# Set ah to 2 (AH=0x02 -> Disk Read Function).
-	mov $0x14, %al									# Set al to I386_KERNEL_SIZE (AL=$I386_KERNEL_SIZE0h) -> Sectors to be readed.
+	mov $0x9, %al									# Set al to I386_KERNEL_SIZE (AL=$I386_KERNEL_SIZE0h) -> Sectors to be readed.
 													# Where I386_KERNEL_SIZE equals to the number of sectors occupied by the kernel binary rounded 1 sector up.
 	mov $0x0, %ch									# Set ch to 0 (CH=0x00) -> Track 0 of the drive.
 	mov $0x4, %cl									# Set cl to I386_KERNEL_STARTING_LOCATION (CL=I386_KERNEL_STARTING_LOCATION)
