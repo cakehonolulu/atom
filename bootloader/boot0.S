@@ -69,7 +69,7 @@ boot0ResetDrive:					# Function to reset floppy drive in order to ensure it's wo
 	mov $0x00, %dh					# Set dh to 0 (DH=0x00) -> Head 0 of the drive.
 	xor %bx, %bx					# Set bx to 0.
 	mov %bx, %es					# Move bx onto our extra segment register to prepare the jump.
-	mov $0x7E00, %bx					# Set our bx register with the adress we'll jump to.
+	mov $0x7E00, %bx				# Set our bx register with the adress we'll jump to.
 	int $0x13						# Call BIOS interrupt 13.
 	jc boot0diskerror
 
@@ -88,7 +88,7 @@ boot0ResetDrive1:					# Function to reset floppy drive in order to ensure it's w
 	mov $0x00, %dh					# Set dh to 0 (DH=0x00) -> Head 0 of the drive.
 	xor %bx, %bx					# Set bx to 0.
 	mov %bx, %es					# Move bx onto our extra segment register to prepare the jump.
-	mov $0x1000, %bx					# Set our bx register with the adress we'll jump to.
+	mov $0x1000, %bx				# Set our bx register with the adress we'll jump to.
 	int $0x13						# Call BIOS interrupt 13.
 	jc boot0diskerror
 
