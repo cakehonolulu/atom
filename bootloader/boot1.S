@@ -9,27 +9,54 @@
 .set BOOT1PMVMEMC, 0x0f
 
 .section .data
-protected_mode_gdt_start:
+unreal_mode_gdt_start:
+unreal_mode_gdt_null:
+	.long 0
+	.long 0
+unreal_mode_gdt_code:
+	.word 0xFFFF
+	.word 0x0
+	.byte 0x0
+	.byte 0b10011010
+	.byte 0b10001111
+	.byte 0x0
 
+unreal_mode_gdt_data:
+	.word 0xffff
+	.word 0x0
+	.byte 0x0
+	.byte 0b10010010
+	.byte 0b10001111
+	.byte 0x0
+
+unreal_mode_gdt_end:
+.set UNREAL_MODE_CODE_SEG, unreal_mode_gdt_code - unreal_mode_gdt_start
+.set UNREAL_MODE_DATA_SEG, unreal_mode_gdt_data - unreal_mode_gdt_start
+
+unreal_mode_gdt:
+        .word (unreal_mode_gdt_end - unreal_mode_gdt_start - 1)
+        .long unreal_mode_gdt_start
+
+protected_mode_gdt_start:
 protected_mode_gdt_null:
-        .long 0
-        .long 0
+	.long 0
+	.long 0
 
 protected_mode_gdt_code:
-        .word 0xffff
-        .word 0x0
-        .byte 0x0
-        .byte 0b10011010
-        .byte 0b11001111
-        .byte 0x0
+	.word 0xFFFF
+	.word 0x0
+	.byte 0x0
+	.byte 0b10011010
+	.byte 0b11001111
+	.byte 0x0
 
 protected_mode_gdt_data:
-        .word 0xffff
-        .word 0x0
-        .byte 0x0
-        .byte 0b10010010
-        .byte 0b11001111
-        .byte 0x0
+	.word 0xffff
+	.word 0x0
+	.byte 0x0
+	.byte 0b10010010
+	.byte 0b11001111
+	.byte 0x0
 
 protected_mode_gdt_end:
 .set PROTECTED_MODE_CODE_SEG, protected_mode_gdt_code - protected_mode_gdt_start
@@ -43,7 +70,12 @@ protected_mode_gdt:
 .boot1A20HasBeenEnabled: .asciz "A20 Line Enabled"
 .boot1LoadedMessage: .asciz "Entered 2nd Stage"
 .boot1LoadedProtectedModeGDTMessage: .asciz "Protected Mode GDT Loaded"
+.boot1LoadedUnrealModeGDTMessage: .asciz "Unreal Mode GDT Loaded"
 .boot1LoadedPMMessage: .asciz "Entered Protected Mode"
+.boot1LoadedUMMessage: .asciz "Entered Unreal Mode"
+.boot1UMLoadingKernelMessage: .asciz "Loading Kernel..."
+.boot1DiskErrorMessage: .asciz "Disk Read Error!"
+.boot1UMLKMsg: .asciz "Loaded Kernel"
 
 .align 4
 boot1_currow: .long 0x00
@@ -57,6 +89,66 @@ init1:
 	mov %ax, %ds
 	call boot1LoadedMessage
 	call boot1EnableA20
+	call boot1LoadUnrealModeGDT
+	cli
+	mov %cr0, %eax
+	or $1, %eax
+	mov %eax, %cr0
+	ljmpl $UNREAL_MODE_CODE_SEG, $.boot1TemporalProtected
+.hlt:
+	hlt
+	jmp .hlt
+
+.boot1TemporalProtected:				# Now in protected mode
+	mov $0x10, %ax
+	mov %ax, %ds
+	mov %ax, %es
+	mov %ax, %fs
+	mov %ax, %gs
+	mov %ax, %ss
+	mov %cr0, %eax						# Exit protected mode
+	and $0b11111110, %eax
+	mov %eax, %cr0
+	jmp $0x0000, $.boot1UnrealMode
+.boot1UnrealMode:						# Now in Unreal Mode
+	xor %ax, %ax
+	mov %ax, %ds
+	mov %ax, %es
+	mov %ax, %fs
+	mov %ax, %gs
+	mov %ax, %ss
+	mov $0x7BF0, %sp
+	sti									# Enable interrupts
+	call boot1LandedUnrealMode
+	call boot1UMLoadingKernel
+
+boot1UMLoadKernel:
+	mov $0x02, %ah									# Set ah to 2 (AH=0x02 -> Disk Read Function).
+	mov $0x12, %al						# Set al to I386_KERNEL_SIZE (AL=$I386_KERNEL_SIZE0h) -> Sectors to be readed.
+													# Where I386_KERNEL_SIZE equals to the number of sectors occupied by the kernel binary rounded 1 sector up.
+	mov $0x0, %ch									# Set ch to 0 (CH=0x00) -> Track 0 of the drive.
+	mov $0x4, %cl			# Set cl to I386_KERNEL_STARTING_LOCATION (CL=I386_KERNEL_STARTING_LOCATION)
+													# Which is sector of the drive from which we start reading the kernel from.
+	mov $0x00, %dh									# Set dh to 0 (DH=0x00) -> Head 0 of the drive.
+	xor %bx, %bx									# Set bx to 0.
+	mov %bx, %es									# Move bx onto our extra segment register to prepare the jump.
+	mov $0x1000, %bx								# Set our bx register with the adress we'll jump to.
+	int $0x13										# Call BIOS interrupt 13.
+
+
+	mov $0x1000, %esi
+	mov $0x100000, %edi
+	mov $0x200, %cx
+	mov $0x14, %bx
+.loop:
+	xchg %bx, %bx
+	addr32 rep movsb
+	dec %bx
+	jnz .loop
+	mov $0, %ax
+.done:
+	call boot1UMLK
+
 	call boot1LoadProtectedModeGDT
 	cli
 	mov %cr0, %eax
@@ -64,9 +156,11 @@ init1:
 	mov %eax, %cr0
 	cli
 	ljmpl $PROTECTED_MODE_CODE_SEG, $boot1Start32
-.hlt:
+.hltu:
 	hlt
-	jmp .hlt
+	jmp .hltu
+
+
 
 boot1EnableA20:
 	call boot1CheckA20LineState			# Check if A20 Line is enabled.
@@ -139,8 +233,23 @@ boot1LoadProtectedModeGDT:
 	call boot1LoadedProtectedModeGDTMessage
 	ret
 
+boot1LoadUnrealModeGDT:
+	cli
+	pusha
+	lgdt unreal_mode_gdt
+	sti
+	popa
+	call boot1LoadedUnrealModeGDTMessage
+	ret
+
 boot1A20HasBeenEnabled:
 	mov $.boot1A20HasBeenEnabled, %bx
+	call boot1print
+	call boot1printnl
+	ret
+
+boot1UMLK:
+	mov $.boot1UMLKMsg, %bx
 	call boot1print
 	call boot1printnl
 	ret
@@ -159,6 +268,24 @@ boot1LoadedMessage:
 
 boot1LoadedProtectedModeGDTMessage: 
 	mov $.boot1LoadedProtectedModeGDTMessage, %bx
+	call boot1print
+	call boot1printnl
+	ret
+
+boot1LoadedUnrealModeGDTMessage: 
+	mov $.boot1LoadedUnrealModeGDTMessage, %bx
+	call boot1print
+	call boot1printnl
+	ret
+
+boot1LandedUnrealMode: 
+	mov $.boot1LoadedUMMessage, %bx
+	call boot1print
+	call boot1printnl
+	ret
+
+boot1UMLoadingKernel:
+	mov $.boot1UMLoadingKernelMessage, %bx
 	call boot1print
 	call boot1printnl
 	ret
@@ -205,7 +332,7 @@ boot1Start32:
 	xor %eax, %eax
 	mov $0xFEB0516C, %eax
 	push %eax
-	jmp 0x1000
+	jmp 0x100000
 
 .boot1pmendloop:
         hlt
