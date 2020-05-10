@@ -66,7 +66,7 @@ boot0ResetDrive:					# Function to reset floppy drive in order to ensure it's wo
 	mov $I386_BOOT1_SIZE, %al		# Set al to I386_BOOT1_SIZE (AL=$I386_BOOT1_SIZE0h) -> Sectors to be readed.
 									# Where I386_BOOT1_SIZE equals to the number of sectors occupied by the boot1 binary rounded 1 sector up.
 	mov $0x0, %ch					# Set ch to 0 (CH=0x00) -> Track 0 of the drive.
-	mov $0x2, %cl					# Set cl to 2 (CL=0x02) -> Sector of the drive from which we start reading from.
+	mov $I386_BOOT1_STARTING_SECTOR_LOCATION, %cl					# Set cl to 2 (CL=0x02) -> Sector of the drive from which we start reading boot1 from.
 	mov $0x00, %dh					# Set dh to 0 (DH=0x00) -> Head 0 of the drive.
 	xor %bx, %bx					# Set bx to 0.
 	mov %bx, %es					# Move bx onto our extra segment register to prepare the jump.
@@ -85,7 +85,7 @@ boot0ResetDrive1:					# Function to reset floppy drive in order to ensure it's w
 	mov $I386_KERNEL_SIZE, %al		# Set al to I386_KERNEL_SIZE (AL=$I386_KERNEL_SIZE0h) -> Sectors to be readed.
 									# Where I386_KERNEL_SIZE equals to the number of sectors occupied by the kernel binary rounded 1 sector up.
 	mov $0x0, %ch					# Set ch to 0 (CH=0x00) -> Track 0 of the drive.
-	mov $0x4, %cl					# Set cl to 4 (CL=0x02) -> Sector of the drive from which we start reading from.
+	mov $I386_KERNEL_STARTING_LOCATION, %cl					# Set cl to 4 (CL=0x02) -> Sector of the drive from which we start reading the kernel from.
 	mov $0x00, %dh					# Set dh to 0 (DH=0x00) -> Head 0 of the drive.
 	xor %bx, %bx					# Set bx to 0.
 	mov %bx, %es					# Move bx onto our extra segment register to prepare the jump.
