@@ -1,4 +1,4 @@
-		# Thanks to Octocontrabass, Combuster and MichaelPetch for the help @ forum.osdev.org
+# Thanks to Octocontrabass, Combuster and MichaelPetch for the help @ forum.osdev.org
 .code16
 
 .global init1
@@ -36,8 +36,8 @@ unreal_mode_gdt_end:
 .set UNREAL_MODE_DATA_SEG, unreal_mode_gdt_data - unreal_mode_gdt_start
 
 unreal_mode_gdt:
-        .word (unreal_mode_gdt_end - unreal_mode_gdt_start - 1)
-        .long unreal_mode_gdt_start
+	.word (unreal_mode_gdt_end - unreal_mode_gdt_start - 1)
+	.long unreal_mode_gdt_start
 
 protected_mode_gdt_start:
 protected_mode_gdt_null:
@@ -65,8 +65,8 @@ protected_mode_gdt_end:
 .set PROTECTED_MODE_DATA_SEG, protected_mode_gdt_data - protected_mode_gdt_start
 
 protected_mode_gdt:
-        .word (protected_mode_gdt_end - protected_mode_gdt_start - 1)
-        .long protected_mode_gdt_start
+	.word (protected_mode_gdt_end - protected_mode_gdt_start - 1)
+	.long protected_mode_gdt_start
 
 .boot1A20HasAlreadyBeenEnabled: .asciz "A20 Line has already been enabled"
 .boot1A20HasBeenEnabled: .asciz "A20 Line Enabled"
@@ -102,7 +102,7 @@ init1:
 	jmp boot1Halt
 
 boot1PrepareUnrealMode:										# We should now be in Protected Mode
-	mov $0x10, %ax
+	mov $UNREAL_MODE_DATA_SEG, %ax
 	mov %ax, %ds
 	mov %ax, %es
 	mov %ax, %fs
