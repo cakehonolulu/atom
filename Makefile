@@ -9,9 +9,11 @@ bootstrap:
 	i686-elf-gcc -ffreestanding -Wall -Wextra -g -c kernel/gdt.c -o kernel/gdt.o
 	i686-elf-gcc -ffreestanding -Wall -Wextra -g -c kernel/vga.c -o kernel/vga.o
 	i686-elf-gcc -ffreestanding -Wall -Wextra -g -c kernel/port.c -o kernel/port.o
+	i686-elf-gcc -ffreestanding -Wall -Wextra -g -c kernel/string.c -o kernel/string.o
+	i686-elf-gcc -ffreestanding -Wall -Wextra -g -c kernel/stdlib.c -o kernel/stdlib.o
 	i686-elf-gcc -ffreestanding -Wall -Wextra -g -c kernel/kernel.c -o kernel/kernel.o
 	i686-elf-ld -T bootloader/linkboot1.ld -o bootloader/boot1.bin bootloader/boot1.o
-	i686-elf-ld kernel/kernel_entry.o kernel/kernel.o kernel/asm.o kernel/vga.o kernel/gdt.o kernel/port.o -o kernel/kernel.bin -T kernel/linkkernel.ld
+	i686-elf-ld kernel/kernel_entry.o kernel/kernel.o kernel/asm.o kernel/string.o kernel/stdlib.o kernel/vga.o kernel/gdt.o kernel/port.o -o kernel/kernel.bin -T kernel/linkkernel.ld
 	bash -c "./scripts/boot.sh"
 	i686-elf-as bootloader/boot0.S -o bootloader/boot0.o --32 -Ibootloader
 	i686-elf-ld -T bootloader/linkboot0.ld -o bootloader/boot0.bin bootloader/boot0.o

@@ -62,10 +62,10 @@ int vga_print_char(char character, int vga_column, int vga_row, char vga_attribu
     }
 
     /* Error control: print a red 'E' if the coords aren't right */
-    if (vga_column >= VGA_MAX_COLS || vga_row >= VGA_WHITE_ON_BLACK)
+    if (vga_column >= VGA_MAXIMUM_COLUMNS || vga_row >= VGA_WHITE_ON_BLACK)
     {
-        vga_video_location[2 * (VGA_MAX_COLS) * (VGA_WHITE_ON_BLACK) - 2] = 'E';
-        vga_video_location[2 * (VGA_MAX_COLS) * (VGA_WHITE_ON_BLACK) - 1] = VGA_RED_ON_WHITE;
+        vga_video_location[2 * (VGA_MAXIMUM_COLUMNS) * (VGA_WHITE_ON_BLACK) - 2] = 'E';
+        vga_video_location[2 * (VGA_MAXIMUM_COLUMNS) * (VGA_WHITE_ON_BLACK) - 1] = VGA_RED_ON_WHITE;
         return vga_get_offset(vga_column, vga_row);
     }
 
@@ -82,6 +82,23 @@ int vga_print_char(char character, int vga_column, int vga_row, char vga_attribu
         vga_video_location[vga_offset + 1] = vga_attributes;
         vga_offset += 2;
     }
+
+    /* Check if the offset is over screen size and scroll */
+    if (vga_offset >= VGA_MAXIMUM_ROWS * VGA_MAXIMUM_COLUMNS * 2)
+    {
+        int i;
+        for (i = 1; i < VGA_MAXIMUM_ROWS; i++)
+        {
+            memcpy(vga_get_offset(0, i) + VGA_VIDEO_ADDRESS, vga_get_offset(0, i - 1) + VGA_VIDEO_ADDRESS, VGA_MAXIMUM_COLUMNS * 2);
+        }
+
+        /* Blank last line */
+        char *last_line = vga_get_offset(0, VGA_MAXIMUM_ROWS-1) + VGA_VIDEO_ADDRESS;
+        for (i = 0; i < VGA_MAXIMUM_COLUMNS * 2; i++) last_line[i] = 0;
+
+        vga_offset -= 2 * VGA_MAXIMUM_COLUMNS;
+    }
+
     vga_set_cursor_offset(vga_offset);
     return vga_offset;
 }
@@ -111,14 +128,14 @@ void vga_set_cursor_offset(int vga_offset)
 
 void vga_clear_screen()
 {
-    int screen_size = VGA_MAX_COLS * VGA_WHITE_ON_BLACK;
+    int vga_screen_matrix = VGA_MAXIMUM_COLUMNS * VGA_WHITE_ON_BLACK;
     int i;
-    char *screen = VGA_VIDEO_ADDRESS;
+    char *vga_video_memory = VGA_VIDEO_ADDRESS;
 
-    for (i = 0; i < screen_size; i++)
+    for (i = 0; i < vga_screen_matrix; i++)
     {
-        screen[i*2] = ' ';
-        screen[i*2 + 1] = VGA_WHITE_ON_BLACK;
+        vga_video_memory[i * 2] = ' ';
+        vga_video_memory[i * 2 + 1] = VGA_WHITE_ON_BLACK;
     }
     vga_set_cursor_offset(vga_get_offset(0, 0));
 }
