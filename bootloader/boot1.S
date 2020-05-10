@@ -92,6 +92,11 @@ init1:
 	xor %bx, %bx
 	xor %ax, %ax
 	mov %ax, %ds
+	mov $0x7C00, %sp										# Set the stack pointer register with 0x7C00.
+															# Stack Dissasembly:
+															# Top stack adress:		-> 0x7C00
+	mov %ax, %ss											# Set up stack segment
+	mov %sp, %bp											# Move sp (Which now is 0x7C00) to the base pointer register.
 	call boot1LoadedMessage
 	call boot1EnableA20
 	call boot1LoadUnrealModeGDT
