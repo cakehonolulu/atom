@@ -124,13 +124,15 @@ boot1HugeUnrealMode:
 	xor %ax, %ax
 	mov %ax, %es
 	mov %ax, %ds
-	mov %ax, %ss
+	mov $0x7C00, %sp										# Set the stack pointer register with 0x7C00.
+															# Stack Dissasembly:
+															# Top stack adress:		-> 0x7C00
+	mov %ax, %ss											# Set up stack segment
+	mov %sp, %bp											# Move sp (Which now is 0x7C00) to the base pointer register.
 	mov $.boot1LoadedUMMessage, %bx
 	call boot1print
 	call boot1printnl
 	call boot1UnrealModeLoadKernel
-	cmp $0, %ax
-	jnz boot1UnrealModeLoadKernelFail
 	lgdt protected_mode_gdt
 	mov $.boot1LoadedProtectedModeGDTMessage, %bx
 	call boot1print
@@ -143,35 +145,19 @@ boot1HugeUnrealMode:
 	jmp boot1Halt
 
 boot1UnrealModeLoadKernel:
-	mov boot1bootdrive, %dl
-	mov $0x02, %ah									# Set ah to 2 (AH=0x02 -> Disk Read Function).
-	mov $0x14, %al									# Set al to I386_KERNEL_SIZE (AL=$I386_KERNEL_SIZE0h) -> Sectors to be readed.
-	mov $0x9, %al									# Set al to I386_KERNEL_SIZE (AL=$I386_KERNEL_SIZE0h) -> Sectors to be readed.
-													# Where I386_KERNEL_SIZE equals to the number of sectors occupied by the kernel binary rounded 1 sector up.
-	mov $0x0, %ch									# Set ch to 0 (CH=0x00) -> Track 0 of the drive.
-	mov $0x4, %cl									# Set cl to I386_KERNEL_STARTING_LOCATION (CL=I386_KERNEL_STARTING_LOCATION)
-													# Which is sector of the drive from which we start reading the kernel from.
-	mov $0x00, %dh									# Set dh to 0 (DH=0x00) -> Head 0 of the drive.
-	xor %bx, %bx									# Set bx to 0.
-	mov %bx, %es									# Move bx onto our extra segment register to prepare the jump.
-	mov $0x1000, %bx								# Set our bx register with the adress we'll jump to.
-	int $0x13										# Call BIOS interrupt 13.
-
-	mov $0x1000, %esi
-	mov $0x100000, %edi
-	mov $0x200, %cx
-	mov $0x14, %bx
-.loop:
-	xchg %bx, %bx
-	addr32 rep movsb
-	dec %bx
-	jnz .loop
-	mov $0, %ax
-	jc .done
-.done: ret
+	# Placeholder
+	cli
+	hlt
 
 boot1UnrealModeLoadKernelFail:
 	mov $.boot1UnrealModeLoadKernelFailMessage, %bx
+	call boot1print
+	call boot1printnl
+	cli
+	jmp boot1Halt
+
+boot1DiskErrorMessage:
+	mov $.boot1DiskErrorMessage, %bx
 	call boot1print
 	call boot1printnl
 	cli
