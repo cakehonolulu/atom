@@ -4,6 +4,7 @@
 void _start(unsigned long bootloader_info)
 {
 	// Check if we booted using Ferrum's bootloader, if not, stop execution.
+	// 0xFEB0516C = Ferrum (FE) Bootloader (B0) Signature (516) Check (C)
 	if (bootloader_info =! 0xFEB0516C)
 	{
 		unsigned char* vga = (unsigned char*) 0xb8000;
