@@ -84,7 +84,7 @@ protected_mode_gdt:
 boot1_currow: .long 0x00
 boot1_curcol: .long 0x00
 boot1_screenwidth: .long 0x00
-boot1_screenheight:.long 0x00
+boot1_screenheight: .long 0x00
 .section .text
 init1:
 	pop %bx
