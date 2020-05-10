@@ -122,8 +122,11 @@ init1:
 	mov %ax, %fs
 	mov %ax, %gs
 	mov %ax, %ss
-	mov $0x7BF0, %sp
-	sti												# Enable interrupts
+	mov $0x7C00, %bx								# Move 0x7C00 to bx.
+	mov %bx, %sp									# Set the stack pointer register with 0x7C00.
+													# Stack Dissasembly:
+													# Top stack adress:		-> 0x7C00
+	mov %sp, %bp									# Move sp (Which now is 0x7C00) to the base pointer register.
 	call boot1LandedUnrealMode
 	call boot1UMLoadingKernel
 	call boot1UMLoadKernel
