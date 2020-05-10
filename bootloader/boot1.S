@@ -72,7 +72,7 @@ protected_mode_gdt:
 .boot1A20HasBeenEnabled: .asciz "A20 Line Enabled"
 .boot1LoadedMessage: .asciz "Entered 2nd Stage"
 .boot1LoadedProtectedModeGDTMessage: .asciz "Protected Mode GDT Loaded"
-.boot1LoadedUnrealModeGDTMessage: .asciz "Unreal Mode GDT Loaded"
+.boot1UnrealModeLoadedGDTMessage: .asciz "Unreal Mode GDT Loaded"
 .boot1LoadedPMMessage: .asciz "Entered Protected Mode"
 .boot1LoadedUMMessage: .asciz "Entered Unreal Mode"
 .boot1UMLoadingKernelMessage: .asciz "Loading Kernel..."
@@ -99,52 +99,37 @@ init1:
 	mov %sp, %bp											# Move sp (Which now is 0x7C00) to the base pointer register.
 	call boot1LoadedMessage
 	call boot1EnableA20
-	call boot1LoadUnrealModeGDT
+	cli
+	lgdt unreal_mode_gdt
+	mov $.boot1UnrealModeLoadedGDTMessage, %bx
+	call boot1print
+	call boot1printnl
 	mov %cr0, %eax
-	or $1, %eax
+	or $0x1, %al
 	mov %eax, %cr0
-	ljmpl $UNREAL_MODE_CODE_SEG, $boot1PrepareUnrealMode
-	jmp boot1Halt
+.code32
+	.byte 0x66
+	ljmp $UNREAL_MODE_CODE_SEG, $(boot1TemporalProtectedMode)
+.code16
+boot1TemporalProtectedMode:
+	mov $UNREAL_MODE_DATA_SEG, %bx
+	mov %bx, %ds
+	mov %bx, %es
+	mov %bx, %ss
+	and $0xFE, %al
+	mov %eax, %cr0
+	ljmp $0x0, $(boot1HugeUnrealMode)
 
-boot1PrepareUnrealMode:										# We should now be in Protected Mode
-	mov $UNREAL_MODE_DATA_SEG, %ax
-	mov %ax, %ds
-	mov %ax, %es
-	mov %ax, %fs
-	mov %ax, %gs
-	mov %ax, %ss
-	mov %cr0, %eax											# Exit protected mode
-	and $0b11111110, %eax									# Disable the Protected Mode Bit.
-	mov %eax, %cr0											# Move eax back to cr0, effectively disabling the Protected Mode Bit.
-	jmp $0x0000, $boot1UnrealMode							# Exit Protected Mode using a jump.
-
-boot1UnrealMode:											# We should now be in (Un)Real Mode
+boot1HugeUnrealMode:
 	xor %ax, %ax
-	mov %ax, %ds
 	mov %ax, %es
-	mov %ax, %fs
-	mov %ax, %gs
+	mov %ax, %ds
 	mov %ax, %ss
-	mov $0x7C00, %bx										# Move 0x7C00 to bx.
-	mov %bx, %sp											# Set the stack pointer register with 0x7C00.
-															# Stack Dissasembly:
-															# Top stack adress:		-> 0x7C00
-	mov %sp, %bp											# Move sp (Which now is 0x7C00) to the base pointer register.
-	call boot1LandedUnrealMode
-	call boot1UMLoadingKernel
-	call boot1UMLoadKernel
-	cmp $0, %ax
-	jnz boot1UnrealModeLoadKernelFail						# Jump-if-not-0, if the comparation on the previous line isn't equal to 0,
-															# bail out!
-
-	call boot1LoadProtectedModeGDT
+	mov $.boot1LoadedUMMessage, %bx
+	call boot1print
+	call boot1printnl
 	cli
-	mov %cr0, %eax
-	or $1, %eax
-	mov %eax, %cr0
-	cli
-	ljmpl $PROTECTED_MODE_CODE_SEG, $boot1Start32
-	jmp boot1Halt
+	hlt
 
 boot1UnrealModeLoadKernelFail:
 	mov $.boot1UnrealModeLoadKernelFailMessage, %bx
@@ -251,17 +236,6 @@ boot1LoadProtectedModeGDT:
 	lgdt protected_mode_gdt
 	popa
 	mov $.boot1LoadedProtectedModeGDTMessage, %bx
-	call boot1print
-	call boot1printnl
-	ret
-
-boot1LoadUnrealModeGDT:
-	cli
-	pusha
-	lgdt unreal_mode_gdt
-	sti
-	popa
-	mov $.boot1LoadedUnrealModeGDTMessage, %bx
 	call boot1print
 	call boot1printnl
 	ret
