@@ -1,4 +1,4 @@
-# Thanks to Octocontrabass, Combuster and MichaelPetch for the help @ forum.osdev.org
+		# Thanks to Octocontrabass, Combuster and MichaelPetch for the help @ forum.osdev.org
 .code16
 
 .global init1
@@ -95,41 +95,42 @@ init1:
 	call boot1LoadedMessage
 	call boot1EnableA20
 	call boot1LoadUnrealModeGDT
-	cli
 	mov %cr0, %eax
 	or $1, %eax
 	mov %eax, %cr0
-	ljmpl $UNREAL_MODE_CODE_SEG, $.boot1TemporalProtected
+	ljmpl $UNREAL_MODE_CODE_SEG, $boot1PrepareUnrealMode
 	jmp boot1Halt
 
-.boot1TemporalProtected:				# Now in protected mode
+boot1PrepareUnrealMode:										# We should now be in Protected Mode
 	mov $0x10, %ax
 	mov %ax, %ds
 	mov %ax, %es
 	mov %ax, %fs
 	mov %ax, %gs
 	mov %ax, %ss
-	mov %cr0, %eax						# Exit protected mode
-	and $0b11111110, %eax
-	mov %eax, %cr0
-	jmp $0x0000, $.boot1UnrealMode
-.boot1UnrealMode:									# Now in Unreal Mode
+	mov %cr0, %eax											# Exit protected mode
+	and $0b11111110, %eax									# Disable the Protected Mode Bit.
+	mov %eax, %cr0											# Move eax back to cr0, effectively disabling the Protected Mode Bit.
+	jmp $0x0000, $boot1UnrealMode							# Exit Protected Mode using a jump.
+
+boot1UnrealMode:											# We should now be in (Un)Real Mode
 	xor %ax, %ax
 	mov %ax, %ds
 	mov %ax, %es
 	mov %ax, %fs
 	mov %ax, %gs
 	mov %ax, %ss
-	mov $0x7C00, %bx								# Move 0x7C00 to bx.
-	mov %bx, %sp									# Set the stack pointer register with 0x7C00.
-													# Stack Dissasembly:
-													# Top stack adress:		-> 0x7C00
-	mov %sp, %bp									# Move sp (Which now is 0x7C00) to the base pointer register.
+	mov $0x7C00, %bx										# Move 0x7C00 to bx.
+	mov %bx, %sp											# Set the stack pointer register with 0x7C00.
+															# Stack Dissasembly:
+															# Top stack adress:		-> 0x7C00
+	mov %sp, %bp											# Move sp (Which now is 0x7C00) to the base pointer register.
 	call boot1LandedUnrealMode
 	call boot1UMLoadingKernel
 	call boot1UMLoadKernel
 	cmp $0, %ax
-	jnz boot1UnrealModeLoadKernelFail				# Jump-if-not-0, if the comparation on the previous line isn't equal to 0, bail out!
+	jnz boot1UnrealModeLoadKernelFail						# Jump-if-not-0, if the comparation on the previous line isn't equal to 0,
+															# bail out!
 
 	call boot1LoadProtectedModeGDT
 	cli
@@ -149,17 +150,17 @@ boot1UnrealModeLoadKernelFail:
 
 boot1UMLoadKernel:
 	mov boot1bootdrive, %dl
-	mov $0x02, %ah									# Set ah to 2 (AH=0x02 -> Disk Read Function).
-	mov $0x9, %al									# Set al to I386_KERNEL_SIZE (AL=$I386_KERNEL_SIZE0h) -> Sectors to be readed.
-													# Where I386_KERNEL_SIZE equals to the number of sectors occupied by the kernel binary rounded 1 sector up.
-	mov $0x0, %ch									# Set ch to 0 (CH=0x00) -> Track 0 of the drive.
-	mov $0x4, %cl									# Set cl to I386_KERNEL_STARTING_LOCATION (CL=I386_KERNEL_STARTING_LOCATION)
-													# Which is sector of the drive from which we start reading the kernel from.
-	mov $0x00, %dh									# Set dh to 0 (DH=0x00) -> Head 0 of the drive.
-	xor %bx, %bx									# Set bx to 0.
-	mov %bx, %es									# Move bx onto our extra segment register to prepare the jump.
-	mov $0x1000, %bx								# Set our bx register with the adress we'll jump to.
-	int $0x13										# Call BIOS interrupt 13.
+	mov $0x02, %ah											# Set ah to 2 (AH=0x02 -> Disk Read Function).
+	mov $0x9, %al											# Set al to I386_KERNEL_SIZE (AL=$I386_KERNEL_SIZE0h) -> Sectors to be readed.
+															# Where I386_KERNEL_SIZE equals to the number of sectors occupied by the kernel binary rounded 1 sector up.
+	mov $0x0, %ch											# Set ch to 0 (CH=0x00) -> Track 0 of the drive.
+	mov $0x4, %cl											# Set cl to I386_KERNEL_STARTING_LOCATION (CL=I386_KERNEL_STARTING_LOCATION)
+															# Which is sector of the drive from which we start reading the kernel from.
+	mov $0x00, %dh											# Set dh to 0 (DH=0x00) -> Head 0 of the drive.
+	xor %bx, %bx											# Set bx to 0.
+	mov %bx, %es											# Move bx onto our extra segment register to prepare the jump.
+	mov $0x1000, %bx										# Set our bx register with the adress we'll jump to.
+	int $0x13												# Call BIOS interrupt 13.
 	jc .done
 	mov $0x1000, %esi
 	mov $0x100000, %edi
@@ -178,44 +179,44 @@ boot1UMLoadKernel:
 
 
 boot1EnableA20:
-	call boot1CheckA20LineState			# Check if A20 Line is enabled.
-	jnz boot1A20HasAlreadyBeenEnabled	# Jump if condition is met.
+	call boot1CheckA20LineState								# Check if A20 Line is enabled.
+	jnz boot1A20HasAlreadyBeenEnabled						# Jump if condition is met.
 
-	movw $0x2401, %ax					# Enable A20 Line using the BIOS Method.
-	stc									# Set carry flag.
-	int	$0x15							# Call BIOS interrupt 15 (Enable A20 Line).
-	jc 1f								# BIOS Method failed.
-	testb %ah, %ah						# Compares both registers.
-	jne 1f								# Jumps if they're not equal.
-	call boot1CheckA20LineState			# Check if A20 Line is enabled.
-	jnz boot1A20HasBeenEnabled			# Jump if condition is met.
-1:										# Enable A20 Line using Intel's 8042 Controller Method.
-	call .boot1_8042_wait				# Wait for Intel's 8042 controller to be ready.
-	movb $0xd1, %al						# Prepare the 8042 port write.
-	outb %al, $0x64						# Write to the 8042 port.
-	call .boot1_8042_wait				# Wait for Intel's 8042 controller to be ready.
-	movb $0xdf, %al						# Prepare the 8042 port write.
-	outb %al, $0x60						# Enable A20 Line.
-	call .boot1_8042_wait				# Wait for Intel's 8042 controller to be ready.
-	call boot1CheckA20LineState			# Check if A20 Line is enabled.
-	jnz	boot1A20HasBeenEnabled			# Jump if condition is met.
-										# Enable A20 Line using the 'Fast' Method.
-	inb $0x92, %al						# Try the computer's Fast A20 Gate.
-	testb $0x02, %al 					# Compare both values.
-	jnz 1f								# Don't enable A20 if it's already set.
-	orb $0x02, %al						# Check wether the A20 Gate Enable Bit...
-	andb $0xfe, %al						# ...is set or not.
-	outb %al, $0x92						# Enable the A20 Line using the Fast Gate.
+	movw $0x2401, %ax										# Enable A20 Line using the BIOS Method.
+	stc														# Set carry flag.
+	int	$0x15												# Call BIOS interrupt 15 (Enable A20 Line).
+	jc 1f													# BIOS Method failed.
+	testb %ah, %ah											# Compares both registers.
+	jne 1f													# Jumps if they're not equal.
+	call boot1CheckA20LineState								# Check if A20 Line is enabled.
+	jnz boot1A20HasBeenEnabled								# Jump if condition is met.
+1:															# Enable A20 Line using Intel's 8042 Controller Method.
+	call .boot1_8042_wait									# Wait for Intel's 8042 controller to be ready.
+	movb $0xd1, %al											# Prepare the 8042 port write.
+	outb %al, $0x64											# Write to the 8042 port.
+	call .boot1_8042_wait									# Wait for Intel's 8042 controller to be ready.
+	movb $0xdf, %al											# Prepare the 8042 port write.
+	outb %al, $0x60											# Enable A20 Line.
+	call .boot1_8042_wait									# Wait for Intel's 8042 controller to be ready.
+	call boot1CheckA20LineState								# Check if A20 Line is enabled.
+	jnz	boot1A20HasBeenEnabled								# Jump if condition is met.
+															# Enable A20 Line using the 'Fast' Method.
+	inb $0x92, %al											# Try the computer's Fast A20 Gate.
+	testb $0x02, %al 										# Compare both values.
+	jnz 1f													# Don't enable A20 if it's already set.
+	orb $0x02, %al											# Check wether the A20 Gate Enable Bit...
+	andb $0xfe, %al											# ...is set or not.
+	outb %al, $0x92											# Enable the A20 Line using the Fast Gate.
 1:
-	call boot1CheckA20LineState			# Check if A20 Line is enabled.
-	jnz boot1A20HasBeenEnabled			# Jump if condition is met.
-	jmp 1b								# Check until A20 Line is set.
+	call boot1CheckA20LineState								# Check if A20 Line is enabled.
+	jnz boot1A20HasBeenEnabled								# Jump if condition is met.
+	jmp 1b													# Check until A20 Line is set.
 
-.boot1_8042_wait:						# Function that waits for Intel's 8042 controller to be ready.
-	inb	$0x64, %al						# Read 8042's status.
-	testb $0x02, %al					# Test if bit 1 is zero.
-	jnz .boot1_8042_wait				# Jump if condition is met.
-	ret									# Return to parent function.
+.boot1_8042_wait:											# Function that waits for Intel's 8042 controller to be ready.
+	inb	$0x64, %al											# Read 8042's status.
+	testb $0x02, %al										# Test if bit 1 is zero.
+	jnz .boot1_8042_wait									# Jump if condition is met.
+	ret														# Return to parent function.
 
 boot1CheckA20LineState:
 	pushw %ds
@@ -243,9 +244,10 @@ boot1LoadProtectedModeGDT:
 	cli
 	pusha
 	lgdt protected_mode_gdt
-	sti
 	popa
-	call boot1LoadedProtectedModeGDTMessage
+	mov $.boot1LoadedProtectedModeGDTMessage, %bx
+	call boot1print
+	call boot1printnl
 	ret
 
 boot1LoadUnrealModeGDT:
@@ -254,7 +256,9 @@ boot1LoadUnrealModeGDT:
 	lgdt unreal_mode_gdt
 	sti
 	popa
-	call boot1LoadedUnrealModeGDTMessage
+	mov $.boot1LoadedUnrealModeGDTMessage, %bx
+	call boot1print
+	call boot1printnl
 	ret
 
 boot1A20HasBeenEnabled:
@@ -277,18 +281,6 @@ boot1A20HasAlreadyBeenEnabled:
 
 boot1LoadedMessage:
 	mov $.boot1LoadedMessage, %bx
-	call boot1print
-	call boot1printnl
-	ret
-
-boot1LoadedProtectedModeGDTMessage: 
-	mov $.boot1LoadedProtectedModeGDTMessage, %bx
-	call boot1print
-	call boot1printnl
-	ret
-
-boot1LoadedUnrealModeGDTMessage: 
-	mov $.boot1LoadedUnrealModeGDTMessage, %bx
 	call boot1print
 	call boot1printnl
 	ret
@@ -343,11 +335,11 @@ boot1Start32:
 	mov %eax, %fs
 	mov %eax, %gs
 	mov %eax, %ss
-	mov $BOOT1PMSTACK, %esp                 # Set up a new stack pointer. Ferrum places it conveniently
-											# below the EBDA area.
-	mov $.boot1LoadedPMMessage, %ebx		# We've landed correctly onto Protected Mode, using a new
-	call boot1pmprintstring					# function that doesn't rely on BIOS Interrupts (Since we are
-											# on Protected Mode, print to the screen to inform the user.
+	mov $BOOT1PMSTACK, %esp                 		# Set up a new stack pointer. Ferrum places it conveniently
+													# below the EBDA area.
+	mov $.boot1LoadedPMMessage, %ebx				# We've landed correctly onto Protected Mode, using a new
+	call boot1pmprintstring							# function that doesn't rely on BIOS Interrupts (Since we are
+													# on Protected Mode, print to the screen to inform the user.
 	xor %ebx, %ebx
 	mov boot1_currow, %bh
 	mov boot1_curcol, %bl
@@ -362,16 +354,16 @@ boot1Start32:
         jmp .boot1pmendloop
 
 boot1pmgetbioscurpos:
-    xor %eax, %eax							# Set EAX to 0.
-    mov 0x450, %al							# Move the bytes contained at adress 0x450 to a AL.
-    mov %eax, boot1_curcol					# Store EAX into our temporal boot1_curcol 'buffer'.
-    mov 0x451, %al							# Move the bytes contained at adress 0x451 to a AL.
-    mov %eax, boot1_currow					# Store EAX into our temporal boot1_currow 'buffer'.
-    mov 0x484, %al 							# Move the bytes contained at adress 0x484 to a AL.
-    mov %eax, boot1_screenheight			# Store EAX into our temporal boot1_screenheight 'buffer'.
-    mov 0x44A, %ax							# Move the bytes contained at adress 0x44A to a AX.
-    mov %eax, boot1_screenwidth				# Store EAX into our temporal boot1_screenwidth 'buffer'.
-    ret										# Return to where this function was called from.
+    xor %eax, %eax									# Set EAX to 0.
+    mov 0x450, %al									# Move the bytes contained at adress 0x450 to a AL.
+    mov %eax, boot1_curcol							# Store EAX into our temporal boot1_curcol 'buffer'.
+    mov 0x451, %al									# Move the bytes contained at adress 0x451 to a AL.
+    mov %eax, boot1_currow							# Store EAX into our temporal boot1_currow 'buffer'.
+    mov 0x484, %al 									# Move the bytes contained at adress 0x484 to a AL.
+    mov %eax, boot1_screenheight					# Store EAX into our temporal boot1_screenheight 'buffer'.
+    mov 0x44A, %ax									# Move the bytes contained at adress 0x44A to a AX.
+    mov %eax, boot1_screenwidth						# Store EAX into our temporal boot1_screenwidth 'buffer'.
+    ret												# Return to where this function was called from.
 
 boot1pmsetcursor: 
     mov boot1_currow, %ecx
@@ -399,15 +391,15 @@ boot1pmprintstring:
 	xor %ecx, %ecx
 	mov boot1_currow, %eax
 	mov boot1_screenwidth, %ecx
-	mul %ecx # eax*ecx=eax modded
+	mul %ecx 		# eax*ecx=eax modded
 	xor %ecx, %ecx
 	mov boot1_curcol, %ecx
-	add %eax, %ecx # eax+ecx=ecx modded
+	add %eax, %ecx 		# eax+ecx=ecx modded
 	mov %ecx, %eax
 	mov $2, %ecx
-	mul %ecx # eax*ecx=eax modded
+	mul %ecx 		# eax*ecx=eax modded
 	mov $BOOT1PMVMEM, %ecx
-	add %eax, %ecx # eax+ecx=ecx modded
+	add %eax, %ecx 		# eax+ecx=ecx modded
 	mov %ecx, %ebx
 	mov %ebx, %edx
 	pop %ebx
