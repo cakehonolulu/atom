@@ -115,7 +115,7 @@ init1:
 	and $0b11111110, %eax
 	mov %eax, %cr0
 	jmp $0x0000, $.boot1UnrealMode
-.boot1UnrealMode:						# Now in Unreal Mode
+.boot1UnrealMode:									# Now in Unreal Mode
 	xor %ax, %ax
 	mov %ax, %ds
 	mov %ax, %es
@@ -123,12 +123,12 @@ init1:
 	mov %ax, %gs
 	mov %ax, %ss
 	mov $0x7BF0, %sp
-	sti									# Enable interrupts
+	sti												# Enable interrupts
 	call boot1LandedUnrealMode
 	call boot1UMLoadingKernel
 	call boot1UMLoadKernel
 	cmp $0, %ax
-	jnz .fail
+	jnz boot1UnrealModeLoadKernelFail				# Jump-if-not-0, if the comparation on the previous line isn't equal to 0, bail out!
 
 	call boot1LoadProtectedModeGDT
 	cli
@@ -141,7 +141,7 @@ init1:
 	hlt
 	jmp .hltu
 
-.fail:
+boot1UnrealModeLoadKernelFail:
 	cli
 	jmp .hltu
 
