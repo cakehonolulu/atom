@@ -75,6 +75,8 @@ boot0ResetDrive:									# Function to reset floppy drive in order to ensure it'
 	int $0x13										# Call BIOS interrupt 13.
 	jc boot0diskerror
 
+	mov boot0bootdrive, %bx
+	push %bx
 	ljmp $0x0, $0x7E00								# Long jump into our stage 2 bootloader. [0x7E00:0x0] -> CS=0x7E00; IP=0x0
 	cli
 .hlt:

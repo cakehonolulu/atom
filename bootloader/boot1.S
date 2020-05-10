@@ -9,6 +9,8 @@
 .set BOOT1PMVMEMC, 0x0f
 
 .section .data
+boot1bootdrive: .byte 0
+
 unreal_mode_gdt_start:
 unreal_mode_gdt_null:
 	.long 0
@@ -85,6 +87,9 @@ boot1_screenheight:.long 0x00
 .section .text
 
 init1:
+	pop %bx
+	mov %bx, boot1bootdrive
+	xor %bx, %bx
 	xor %ax, %ax
 	mov %ax, %ds
 	call boot1LoadedMessage
@@ -141,7 +146,7 @@ init1:
 	jmp .hltu
 
 boot1UMLoadKernel:
-	mov $0, %dl
+	mov boot1bootdrive, %dl
 	mov $0x02, %ah									# Set ah to 2 (AH=0x02 -> Disk Read Function).
 	mov $0x9, %al									# Set al to I386_KERNEL_SIZE (AL=$I386_KERNEL_SIZE0h) -> Sectors to be readed.
 													# Where I386_KERNEL_SIZE equals to the number of sectors occupied by the kernel binary rounded 1 sector up.
