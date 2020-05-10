@@ -31,8 +31,9 @@ void vga_printk_at(char *message, int vga_column, int vga_row)
     }
 
     // Simple while loop that iterates through the entire character array and prints letter by letter
+    // and stops when it finds a null character
     int i = 0;
-    while (message[i] != 0)
+    while (message[i] != '\0')
     {
         vga_offset = vga_print_char(message[i++], vga_column, vga_row, VGA_WHITE_ON_BLACK);
         // Find VGA location for the next character of the array
