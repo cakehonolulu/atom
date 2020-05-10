@@ -25,6 +25,6 @@ void _start(unsigned long bootloader_info)
 
 	i386_setup_vga();
 	i386_gdt_install();
-	kprint("Booted to kernel mode!");
+	vga_printk("Booted to kernel mode!");
 	for(;;);
 }
