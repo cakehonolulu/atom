@@ -176,6 +176,11 @@ boot1UnrealModePrepareKernel:
 .done: ret
 
 boot1UnrealModeLoadKernel:
+boot1ResetDrive:									# Function to reset floppy drive in order to ensure it's working correctly.
+	mov	$0x00, %ah									# Set ah to 0 (AH=0x00 -> Reset Disk Function).
+	mov boot1bootdrive, %dl							# Move boot1bootdrive value back into dl.
+	int	$0x13										# Call BIOS interrupt 13.
+jc boot1ResetDrive
 	mov $0x02, %ah									# Set ah to 2 (AH=0x02 -> Disk Read Function).
 	mov $0x9, %al									# Set al to I386_KERNEL_SIZE (AL=$I386_KERNEL_SIZE0h) -> Sectors to be readed.
 													# Where I386_KERNEL_SIZE equals to the number of sectors occupied by the kernel binary rounded 1 sector up.
