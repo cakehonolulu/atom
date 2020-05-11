@@ -8,10 +8,12 @@ struct i386_gdt_descriptor i386_gdt_pointer;
 /* Function to craft a descriptor for the Global Descriptor Table */
 void i386_gdt_add_entry(unsigned int i386_gdt_entry_num, unsigned long i386_gdt_entry_base, unsigned long i386_gdt_entry_limit, unsigned char i386_gdt_access, unsigned char i386_gdt_flags)
 {
-	if ((i386_gdt_pointer.gdt_entry_size > 65536) && (i386_gdt_pointer.gdt_entry_size & 0xFFF) != 0xFFF)
+	if ((i386_gdt_entry_limit > sizeof(unsigned char)) && (i386_gdt_entry_limit & 0xFFF) != 0xFFF)
 	{
 		// TODO: Inform the user that it has exceeded maximum
 		// number of GDT entries or that the GDT size equals to 0
+		vga_printk("Can't encode a GDT entry with a that size!\n");
+		vga_printk("Halting...\n");
 		__asm__ __volatile__ ("cli");
 		__asm__ __volatile__ ("hlt");
 	}
