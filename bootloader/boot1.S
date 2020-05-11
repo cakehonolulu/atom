@@ -132,22 +132,49 @@ boot1HugeUnrealMode:
 	mov $.boot1LoadedUMMessage, %bx
 	call boot1print
 	call boot1printnl
-	call boot1UnrealModeLoadKernel
-	lgdt protected_mode_gdt
-	mov $.boot1LoadedProtectedModeGDTMessage, %bx
-	call boot1print
-	call boot1printnl
+	sti
+	call boot1UnrealModePrepareKernel
+	cli
 	mov %cr0, %eax
 	or $1, %eax
 	mov %eax, %cr0
+	lgdt protected_mode_gdt
+.code32
+	.byte 0x66
 	ljmpl $PROTECTED_MODE_CODE_SEG, $boot1Start32
 	cli
 	jmp boot1Halt
 
+.code16
+boot1UnrealModePrepareKernel:
+	call boot1UnrealModeLoadKernel
+	mov $0x1000, %esi
+	mov $0x100000, %edi
+	mov $0x200, %cx
+	mov $0x9, %bx
+.loop:
+	xchg %bx, %bx
+	addr32 rep movsb
+	dec %bx
+	jnz .loop
+	mov $0, %ax
+	jc .done
+.done: ret
+
 boot1UnrealModeLoadKernel:
-	# Placeholder
-	cli
-	hlt
+	mov $0x02, %ah									# Set ah to 2 (AH=0x02 -> Disk Read Function).
+	mov $0x9, %al									# Set al to I386_KERNEL_SIZE (AL=$I386_KERNEL_SIZE0h) -> Sectors to be readed.
+													# Where I386_KERNEL_SIZE equals to the number of sectors occupied by the kernel binary rounded 1 sector up.
+	mov $0x0, %ch									# Set ch to 0 (CH=0x00) -> Track 0 of the drive.
+	mov $0x4, %cl									# Set cl to I386_KERNEL_STARTING_LOCATION (CL=I386_KERNEL_STARTING_LOCATION)
+													# Which is sector of the drive from which we start reading the kernel from.
+	mov boot1bootdrive, %dh							# Set dh to 0 (DH=0x00) -> Head 0 of the drive.
+	xor %bx, %bx									# Set bx to 0.
+	mov %bx, %es									# Move bx onto our extra segment register to prepare the jump.
+	mov $0x1000, %bx								# Set our bx register with the adress we'll jump to.
+	int $0x13										# Call BIOS interrupt 13.
+	jc boot1UnrealModeLoadKernelFail
+	ret
 
 boot1UnrealModeLoadKernelFail:
 	mov $.boot1UnrealModeLoadKernelFailMessage, %bx
