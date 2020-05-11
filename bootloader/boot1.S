@@ -348,12 +348,10 @@ boot1Start32:
 	mov $.boot1LoadedPMMessage, %ebx				# We've landed correctly onto Protected Mode, using a new
 	call boot1pmprintstring							# function that doesn't rely on BIOS Interrupts (Since we are
 													# on Protected Mode, print to the screen to inform the user.
-	xor %ebx, %ebx
-	mov boot1_currow, %bh
-	mov boot1_curcol, %bl
+	xor %ebx, %ebx									# unsigned int ferrum_info
 	push %ebx
 	xor %eax, %eax
-	mov $0xFEB0516C, %eax
+	mov $0xFEB0516C, %eax							# unsigned int ferrum_signature
 	push %eax
 	jmp 0x100000
 

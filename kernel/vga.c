@@ -18,10 +18,6 @@ void i386_setup_vga()
     // Add 1 to the initial vga row so that it jumps to a new line right after we give control to the kernel
     initial_vga_offset = vga_get_offset(0, initial_vga_row + 1);
     vga_set_cursor_offset(initial_vga_offset);
-    vga_printkhex(initial_vga_offset);
-    vga_printk(" : Initial VGA Offset\n");
-    vga_printkhex(initial_vga_row);
-    vga_printk(" : Initial VGA ROW\n");
 }
 
 /**
