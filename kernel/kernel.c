@@ -90,5 +90,7 @@ void _start(unsigned int ferrum_signature, unsigned int ferrum_info)
     vga_printkhex(position);
     vga_printk(" : position\n");
 	vga_printkok("Booted to kernel mode!");
+	__asm__ __volatile__ ("cli");
+	__asm__ __volatile__ ("hlt");
 	for(;;);
 }
