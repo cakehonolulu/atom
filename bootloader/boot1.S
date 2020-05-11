@@ -87,52 +87,66 @@ boot1_screenwidth: .long 0x00
 boot1_screenheight: .long 0x00
 .section .text
 init1:
-	pop %bx
-	mov %bx, boot1bootdrive
-	xor %bx, %bx
-	xor %ax, %ax
-	mov %ax, %ds
-	mov $0x7C00, %sp										# Set the stack pointer register with 0x7C00.
-															# Stack Dissasembly:
-															# Top stack adress:		-> 0x7C00
-	mov %ax, %ss											# Set up stack segment
-	mov %sp, %bp											# Move sp (Which now is 0x7C00) to the base pointer register.
-	call boot1LoadedMessage
+	pop %bx														# Get the boot drive value from stack.
+	mov %bx, boot1bootdrive										# Place the boot drive value on a temporal buffer.
+	xor %bx, %bx												# Set bx to 0.
+	xor %ax, %ax												# Set ax to 0.
+	mov %ax, %ds												# Set ds to 0.
+	mov $0x7C00, %sp											# Set the stack pointer register with 0x7C00.
+																# Stack Dissasembly:
+																# Top stack adress:		-> 0x7C00
+	mov %ax, %ss												# Set up stack segment.
+	mov %sp, %bp												# Move sp (Which now is 0x7C00) to the base pointer register.
+	mov $.boot1LoadedMessage, %bx								# Print a message that tells we're currently on second stage bootloader.
+	call boot1print
+	call boot1printnl								
 	call boot1EnableA20
-	cli
-	lgdt unreal_mode_gdt
-	mov $.boot1UnrealModeLoadedGDTMessage, %bx
+	cli															# Disable interrupts.
+	cld															# CLD sets EFLAG's register DF flag to 0, this way, string
+																# operations increment the segment registers (Such as SI & DI).
+																# Invoking a CLD instruction, also makes us aware of the DF's flag
+																# contents, in order to make 0 assumptions on how the BIOS leaves this value. 
+	lgdt unreal_mode_gdt										# Load the Unreal Mode GDT.
+	mov $.boot1UnrealModeLoadedGDTMessage, %bx					# Print a message that tells that the Unreal Mode GDT has been loaded.
 	call boot1print
 	call boot1printnl
-	mov %cr0, %eax
-	or $0x1, %al
-	mov %eax, %cr0
+	mov %cr0, %eax												# Move CR0 to EAX.
+	or $0x1, %al												# Set the Protected Mode Bit of EAX.
+	mov %eax, %cr0												# Move back EAX to CR0, enabling Protected Mode.
+
 .code32
 	.byte 0x66
-	ljmp $UNREAL_MODE_CODE_SEG, $(boot1TemporalProtectedMode)
+	ljmp $UNREAL_MODE_CODE_SEG, $(boot1TemporalProtectedMode)	# Enable Protected Mode by Long-Jumping (This changes the Instruction
+																# Pointer Register alongside the Code Segment).
+																# After jumping to Protected Mode (32-BIT) and setting the 4GiB Code/Data
+																# Segments, we'll quickly switch back to Real Mode (16-BIT) but this will
+																# maintain the Protected Mode's Segments (Which are larger than the limit
+																# Real Mode offers, which is 64KiB) and this will result on a variation
+																# of Real Mode called Unreal Mode where we will be able to load the Kernel
+																# over the 1MiB mark due to the fact that we have 4GiB Code & Data Segments.
+
 .code16
 boot1TemporalProtectedMode:
-	mov $UNREAL_MODE_DATA_SEG, %bx
-	mov %bx, %ds
-	mov %bx, %es
-	mov %bx, %ss
-	and $0xFE, %al
-	mov %eax, %cr0
-	ljmp $0x0, $(boot1HugeUnrealMode)
+	mov $UNREAL_MODE_DATA_SEG, %bx								# Set bx to use the "higher-than-64KiB" segment...
+	mov %bx, %ds												# ...and set the remaining segments with this value.
+	mov %bx, %es												# The extra segment...
+	mov %bx, %ss												# ...and the stack segment.
+	and $0xFE, %al												# Now, disable the Protected Mode Bit...
+	mov %eax, %cr0												# ...and make the change effective by loading the result back to CR0.
+	ljmp $0x0, $(boot1HugeUnrealMode)							# We Long-Jump again so that Real Mode (Now Unreal) gets "enabled" back.
 
 boot1HugeUnrealMode:
 	xor %ax, %ax
 	mov %ax, %es
 	mov %ax, %ds
-	mov $0x7C00, %sp										# Set the stack pointer register with 0x7C00.
-															# Stack Dissasembly:
-															# Top stack adress:		-> 0x7C00
-	mov %ax, %ss											# Set up stack segment
-	mov %sp, %bp											# Move sp (Which now is 0x7C00) to the base pointer register.
+	mov $0x7C00, %sp											# Set the stack pointer register with 0x7C00.
+																# Stack Dissasembly:
+																# Top stack adress:		-> 0x7C00
+	mov %ax, %ss												# Set up stack segment
+	mov %sp, %bp												# Move sp (Which now is 0x7C00) to the base pointer register.
 	mov $.boot1LoadedUMMessage, %bx
 	call boot1print
 	call boot1printnl
-	sti
 	call boot1UnrealModePrepareKernel
 	cli
 	mov %cr0, %eax
@@ -266,12 +280,6 @@ boot1UMLK:
 
 boot1A20HasAlreadyBeenEnabled:
 	mov $.boot1A20HasAlreadyBeenEnabled, %bx
-	call boot1print
-	call boot1printnl
-	ret
-
-boot1LoadedMessage:
-	mov $.boot1LoadedMessage, %bx
 	call boot1print
 	call boot1printnl
 	ret
