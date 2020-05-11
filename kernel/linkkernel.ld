@@ -6,7 +6,7 @@ OUTPUT_ARCH(i386)
 
 SECTIONS {
 
-	. = 0x100000;
+	. = 1M;
 
     .text :
     {
@@ -25,6 +25,7 @@ SECTIONS {
 
     .bss :
     {
+        *(COMMON)
         *(.bss)
     }
 }
