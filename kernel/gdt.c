@@ -17,6 +17,15 @@ void i386_gdt_add_entry(unsigned int i386_gdt_entry_num, unsigned long i386_gdt_
 		__asm__ __volatile__ ("cli");
 		__asm__ __volatile__ ("hlt");
 	}
+
+	if (i386_gdt_entry_limit > sizeof(unsigned char))
+	{
+		i386_gdt[i386_gdt_entry_num].limitandflags = i386_gdt[i386_gdt_entry_num].limitandflags >> 12;
+		i386_gdt[i386_gdt_entry_num].limitandflags = 0xC0;
+	} else {
+		i386_gdt[i386_gdt_entry_num].limitandflags = 0x40;
+	}
+
 	// 1 byte = 8 bits [!]
 	// 1 byte to hex = 0xFF
 	i386_gdt[i386_gdt_entry_num].limit0_15 = (i386_gdt_entry_limit & 0xFFFF);			// If i386_gdt_entry_limit = 0x41424344, & 0xFFFF ('AND') will result in 0x4344 (2 bytes)
