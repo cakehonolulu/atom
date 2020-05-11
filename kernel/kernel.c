@@ -68,31 +68,27 @@ void _start(unsigned int ferrum_signature, unsigned int ferrum_info)
 	i386_setup_vga();
 	if (i386_gdt_install() == 1)
 	{
-		//kprintok
-		kprint("Re-initialized GDT\n");
+		vga_printkok("Re-initialized GDT");
 	} else {
-		//kprintfail
-		kprint("Failed to re-initialize GDT\n");
+		vga_printkfail("Failed to re-initialize GDT");
 	}
 
-    kprinthex(ferrum_info);
-    kprint(" : Ferrum Info\n");
-    kprinthex(boot1_ferrum_info_high);
-    kprint(" : Ferrum Info High\n");
-    kprinthex(boot1_lastrow);
-    kprint(" : boot1_lastrow\n");
-    kprinthex(boot1_lastcol);
-    kprint(" : boot1_lastcol\n");
-    kprinthex(boot1_vga_position);
-    kprint(" : boot1_vga_position\n");
-    kprinthex(boot1_vga_offset);
-    kprint(" : boot1_vga_offset\n");
-    kprinthex(offset_from_vga);
-    kprint(" : offset_from_vga\n");
-    kprinthex(position);
-    kprint(" : position\n");
-
-	//kprintok
-	kprint("Booted to kernel mode!\n");
+    vga_printkhex(ferrum_info);
+    vga_printk(" : Ferrum Info\n");
+    vga_printkhex(boot1_ferrum_info_high);
+    vga_printk(" : Ferrum Info High\n");
+    vga_printkhex(boot1_lastrow);
+    vga_printk(" : boot1_lastrow\n");
+    vga_printkhex(boot1_lastcol);
+    vga_printk(" : boot1_lastcol\n");
+    vga_printkhex(boot1_vga_position);
+    vga_printk(" : boot1_vga_position\n");
+    vga_printkhex(boot1_vga_offset);
+    vga_printk(" : boot1_vga_offset\n");
+    vga_printkhex(offset_from_vga);
+    vga_printk(" : offset_from_vga\n");
+    vga_printkhex(position);
+    vga_printk(" : position\n");
+	vga_printkok("Booted to kernel mode!");
 	for(;;);
 }

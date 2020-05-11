@@ -1,149 +1,177 @@
 #include <stddef.h>
 #include "vga.h"
 
-/* Declaration of private functions */
-int get_cursor_offset();
-void set_cursor_offset(int offset);
-int print_char(char c, int col, int row, char attr);
-int get_offset(int col, int row);
-int get_offset_row(int offset);
-int get_offset_col(int offset);
+char vga_default_colour = 0;
 
-/**********************************************************
- * Public Kernel API functions                            *
- **********************************************************/
+// Code snippet taken from osdev.org Wiki
+unsigned char vga_set_color(enum vga_color vga_foreground_colour, enum vga_color vga_background_colour) 
+{
+    return vga_foreground_colour | vga_background_colour << 4;
+}
 
 void i386_setup_vga()
 {
-    int initial_vga_offset = get_cursor_offset();
-    int initial_vga_row = get_offset_row(initial_vga_offset);
-    initial_vga_row = get_offset_row(initial_vga_offset);
+    vga_default_colour = vga_set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
+    int initial_vga_offset = vga_get_cursor_offset();
+    int initial_vga_row = vga_get_offset_row(initial_vga_offset);
+    initial_vga_row = vga_get_offset_row(initial_vga_offset);
     // Add 1 to the initial vga row so that it jumps to a new line right after we give control to the kernel
-    initial_vga_offset = get_offset(0, initial_vga_row + 1);
-    set_cursor_offset(initial_vga_offset);
-    kprinthex(initial_vga_offset);
-    kprint(" : Initial VGA Offset\n");
-    kprinthex(initial_vga_row);
-    kprint(" : Initial VGA ROW\n");
+    initial_vga_offset = vga_get_offset(0, initial_vga_row + 1);
+    vga_set_cursor_offset(initial_vga_offset);
+    vga_printkhex(initial_vga_offset);
+    vga_printk(" : Initial VGA Offset\n");
+    vga_printkhex(initial_vga_row);
+    vga_printk(" : Initial VGA ROW\n");
 }
 
 /**
- * Print a message on the specified location
- * If col, row, are negative, we will use the current offset
+ * Using VGA, this is a function that prints characters on screen
+ * given a column, a row and an array of characters.
+ * If the column and/or row are negative, use the current VGA offset.
  */
-void kprint_at(char *message, int col, int row) {
-    /* Set cursor if col/row are negative */
-    int offset;
-    if (col >= 0 && row >= 0)
-        offset = get_offset(col, row);
-    else {
-        offset = get_cursor_offset();
-        row = get_offset_row(offset);
-        col = get_offset_col(offset);
+void vga_printk_at(char *message, int vga_column, int vga_row)
+{
+    // Set vga offset to 0
+    int vga_offset;
+    if (vga_column >= 0 && vga_row >= 0)
+    {
+        vga_offset = vga_get_offset(vga_column, vga_row);
+    }
+        else
+    {
+        vga_offset = vga_get_cursor_offset();
+        vga_row = vga_get_offset_row(vga_offset);
+        vga_column = vga_get_offset_col(vga_offset);
     }
 
-    /* Loop through message and print it */
+    // Simple while loop that iterates through the entire character array and prints letter by letter
+    // and stops when it finds a null character
     int i = 0;
-    while (message[i] != 0) {
-        offset = print_char(message[i++], col, row, WHITE_ON_BLACK);
-        /* Compute row/col for next iteration */
-        row = get_offset_row(offset);
-        col = get_offset_col(offset);
+    while (message[i] != 0)
+    {
+        vga_offset = vga_print_char(message[i++], vga_column, vga_row, vga_default_colour);
+        // Find VGA location for the next character of the array
+        vga_row = vga_get_offset_row(vga_offset);
+        vga_column = vga_get_offset_col(vga_offset);
     }
 }
 
-void kprint(char *message) {
-    kprint_at(message, -1, -1);
+void vga_printk(char *message)
+{
+    vga_printk_at(message, -1, -1);
 }
 
+void vga_printkok(char *message)
+{
+    vga_printk_at("[ ", -1, -1);
+    vga_default_colour = vga_set_color(VGA_COLOR_GREEN, VGA_COLOR_BLACK);
+    vga_printk_at("OK", -1, -1);
+    vga_default_colour = vga_set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
+    vga_printk_at(" ] ", -1, -1);
+    vga_printk_at(message, -1, -1);
+    vga_printk_at("\n", -1, -1);
+}
 
-/**********************************************************
- * Private kernel functions                               *
- **********************************************************/
+void vga_printkfail(char *message)
+{
+    vga_printk_at("[", -1, -1);
+    vga_default_colour = vga_set_color(VGA_COLOR_RED, VGA_COLOR_BLACK);
+    vga_printk_at("FAIL", -1, -1);
+    vga_default_colour = vga_set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
+    vga_printk_at("] ", -1, -1);
+    vga_printk_at(message, -1, -1);
+    vga_printk_at("\n", -1, -1);
+}
 
+int vga_print_char(char c, int vga_column, int vga_row, char vga_colour_attributes)
+{
+    unsigned char *vga_video_memory = (unsigned char*) VGA_VIDEO_ADDRESS;
 
-/**
- * Innermost print function for our kernel, directly accesses the video memory 
- *
- * If 'col' and 'row' are negative, we will print at current cursor location
- * If 'attr' is zero it will use 'white on black' as default
- * Returns the offset of the next character
- * Sets the video cursor to the returned offset
- */
-int print_char(char c, int col, int row, char attr) {
-    unsigned char *vidmem = (unsigned char*) VIDEO_ADDRESS;
-    if (!attr) attr = WHITE_ON_BLACK;
-
-    /* Error control: print a red 'E' if the coords aren't right */
-    if (col >= MAX_COLS || row >= MAX_ROWS) {
-        vidmem[2*(MAX_COLS)*(MAX_ROWS)-2] = 'E';
-        vidmem[2*(MAX_COLS)*(MAX_ROWS)-1] = RED_ON_WHITE;
-        return get_offset(col, row);
+    if (!vga_colour_attributes)
+    {
+        vga_colour_attributes = vga_set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
     }
 
-    int offset;
-    if (col >= 0 && row >= 0) offset = get_offset(col, row);
-    else offset = get_cursor_offset();
+    if (vga_column >= VGA_MAXIMUM_COLUMNS || vga_row >= VGA_MAXIMUM_ROWS)
+    {
+        vga_video_memory[2*(VGA_MAXIMUM_COLUMNS)*(VGA_MAXIMUM_ROWS)-2] = 'E';
+        vga_video_memory[2*(VGA_MAXIMUM_COLUMNS)*(VGA_MAXIMUM_ROWS)-1] = vga_set_color(VGA_COLOR_RED, VGA_COLOR_WHITE);
+        return vga_get_offset(vga_column, vga_row);
+    }
+
+    int vga_offset;
+
+    if (vga_column >= 0 && vga_row >= 0)
+    {
+        vga_offset = vga_get_offset(vga_column, vga_row);
+    }
+        else
+    {
+        vga_offset = vga_get_cursor_offset();
+    }
 
     if (c == '\n') {
-        row = get_offset_row(offset);
-        offset = get_offset(0, row+1);
+        vga_row = vga_get_offset_row(vga_offset);
+        vga_offset = vga_get_offset(0, vga_row+1);
     } else {
-        vidmem[offset] = c;
-        vidmem[offset+1] = attr;
-        offset += 2;
+        vga_video_memory[vga_offset] = c;
+        vga_video_memory[vga_offset+1] = vga_colour_attributes;
+        vga_offset += 2;
     }
 
-    /* Check if the offset is over screen size and scroll */
-    if (offset >= MAX_ROWS * MAX_COLS * 2) {
+    if (vga_offset >= VGA_MAXIMUM_ROWS * VGA_MAXIMUM_COLUMNS * 2)
+    {
         int i;
-        for (i = 1; i < MAX_ROWS; i++) 
-            memcpy(get_offset(0, i) + VIDEO_ADDRESS,
-                        get_offset(0, i-1) + VIDEO_ADDRESS,
-                        MAX_COLS * 2);
+        for (i = 1; i < VGA_MAXIMUM_ROWS; i++)
+        {
+            memcpy(vga_get_offset(0, i) + VGA_VIDEO_ADDRESS, vga_get_offset(0, i-1) + VGA_VIDEO_ADDRESS, VGA_MAXIMUM_COLUMNS * 2);
+        }
 
-        /* Blank last line */
-        char *last_line = get_offset(0, MAX_ROWS-1) + VIDEO_ADDRESS;
-        for (i = 0; i < MAX_COLS * 2; i++) last_line[i] = 0;
+        char *last_line = vga_get_offset(0, VGA_MAXIMUM_ROWS-1) + VGA_VIDEO_ADDRESS;
 
-        offset -= 2 * MAX_COLS;
+        for (i = 0; i < VGA_MAXIMUM_COLUMNS * 2; i++)
+        {
+            last_line[i] = 0;
+        }
+
+        vga_offset -= 2 * VGA_MAXIMUM_COLUMNS;
     }
 
-    set_cursor_offset(offset);
-    return offset;
+    vga_set_cursor_offset(vga_offset);
+    return vga_offset;
 }
 
-int get_cursor_offset() {
-    /* Use the VGA ports to get the current cursor position
-     * 1. Ask for high byte of the cursor offset (data 14)
-     * 2. Ask for low byte (data 15)
-     */
-    outb(REG_SCREEN_CTRL, 14);
-    int offset = inb(REG_SCREEN_DATA) << 8; /* High byte: << 8 */
-    outb(REG_SCREEN_CTRL, 15);
-    offset += inb(REG_SCREEN_DATA);
-    return offset * 2; /* Position * size of character cell */
+int vga_get_cursor_offset()
+{
+    outb(VGA_SCREEN_CONTROL_REGISTER, 14);
+    int vga_offset = inb(VGA_SCREEN_DATA_REGISTER) << 8;
+    outb(VGA_SCREEN_CONTROL_REGISTER, 15);
+    vga_offset += inb(VGA_SCREEN_DATA_REGISTER);
+    return vga_offset * 2;
 }
 
-void set_cursor_offset(int offset) {
-    /* Similar to get_cursor_offset, but instead of reading we write data */
-    offset /= 2;
-    outb(REG_SCREEN_CTRL, 14);
-    outb(REG_SCREEN_DATA, (unsigned char)(offset >> 8));
-    outb(REG_SCREEN_CTRL, 15);
-    outb(REG_SCREEN_DATA, (unsigned char)(offset & 0xff));
+void vga_set_cursor_offset(int vga_offset)
+{
+    vga_offset /= 2;
+    outb(VGA_SCREEN_CONTROL_REGISTER, 14);
+    outb(VGA_SCREEN_DATA_REGISTER, (unsigned char)(vga_offset >> 8));
+    outb(VGA_SCREEN_CONTROL_REGISTER, 15);
+    outb(VGA_SCREEN_DATA_REGISTER, (unsigned char)(vga_offset & 0xff));
 }
 
-void clear_screen() {
-    int screen_size = MAX_COLS * MAX_ROWS;
+void vga_clear_screen()
+{
+    int vga_screen_size = VGA_MAXIMUM_COLUMNS * VGA_MAXIMUM_ROWS;
     int i;
-    char *screen = VIDEO_ADDRESS;
+    char *vga_video_memory = VGA_VIDEO_ADDRESS;
 
-    for (i = 0; i < screen_size; i++) {
-        screen[i*2] = ' ';
-        screen[i*2+1] = WHITE_ON_BLACK;
+    for (i = 0; i < vga_screen_size; i++)
+    {
+        vga_video_memory[i*2] = ' ';
+        vga_video_memory[i*2+1] = vga_set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
     }
-    set_cursor_offset(get_offset(0, 0));
+
+    vga_set_cursor_offset(vga_get_offset(0, 0));
 }
 
 
@@ -160,17 +188,29 @@ char *convert(unsigned int num, int base)
     { 
         *--ptr = Representation[num%base]; 
         num /= base; 
-    }while(num != 0); 
+    } while(num != 0); 
 
     return(ptr); 
 }
 
-void kprinthex(unsigned int num)
+void vga_printkhex(unsigned int num)
 {
     const char* message = convert(num, 16);
-    kprint(message);
+    vga_printk("0x");
+    vga_printk(message);
 }
 
-int get_offset(int col, int row) { return 2 * (row * MAX_COLS + col); }
-int get_offset_row(int offset) { return offset / (2 * MAX_COLS); }
-int get_offset_col(int offset) { return (offset - (get_offset_row(offset)*2*MAX_COLS))/2; }
+int vga_get_offset(int vga_column, int vga_row)
+{
+    return 2 * (vga_row * VGA_MAXIMUM_COLUMNS + vga_column);
+}
+
+int vga_get_offset_row(int vga_offset)
+{
+    return vga_offset / (2 * VGA_MAXIMUM_COLUMNS);
+}
+
+int vga_get_offset_col(int vga_offset)
+{
+    return (vga_offset - (vga_get_offset_row(vga_offset)*2*VGA_MAXIMUM_COLUMNS))/2;
+}
