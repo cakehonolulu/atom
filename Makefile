@@ -3,7 +3,6 @@ all:
 	make bootstrap
 
 bootstrap:
-	i686-elf-as bootloader/boot1.S -o bootloader/boot1.o --32
 	i686-elf-as kernel/kernel_entry.S -o kernel/kernel_entry.o --32
 	i686-elf-as kernel/asm.S -o kernel/asm.o --32
 	i686-elf-gcc -ffreestanding -Wall -Wextra -g -c kernel/gdt.c -o kernel/gdt.o
@@ -12,8 +11,10 @@ bootstrap:
 	i686-elf-gcc -ffreestanding -Wall -Wextra -g -c kernel/string.c -o kernel/string.o
 	i686-elf-gcc -ffreestanding -Wall -Wextra -g -c kernel/stdlib.c -o kernel/stdlib.o
 	i686-elf-gcc -ffreestanding -Wall -Wextra -g -c kernel/kernel.c -o kernel/kernel.o
-	i686-elf-ld -T bootloader/linkboot1.ld -o bootloader/boot1.bin bootloader/boot1.o
 	i686-elf-ld kernel/kernel_entry.o kernel/kernel.o kernel/asm.o kernel/string.o kernel/stdlib.o kernel/vga.o kernel/gdt.o kernel/port.o -o kernel/kernel.bin -T kernel/linkkernel.ld
+	bash -c "./scripts/kernel.sh"
+	i686-elf-as bootloader/boot1.S -o bootloader/boot1.o --32 -Ibootloader
+	i686-elf-ld -T bootloader/linkboot1.ld -o bootloader/boot1.bin bootloader/boot1.o
 	bash -c "./scripts/boot.sh"
 	i686-elf-as bootloader/boot0.S -o bootloader/boot0.o --32 -Ibootloader
 	i686-elf-ld -T bootloader/linkboot0.ld -o bootloader/boot0.bin bootloader/boot0.o
