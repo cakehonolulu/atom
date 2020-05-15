@@ -43,6 +43,8 @@ void _start(unsigned int ferrum_signature, unsigned int ferrum_info)
     
     vga_printk("\n");
     
+    vga_printkok("Booted to kernel mode!");
+
 	if (i386_gdt_install() == 1)
 	{
 		vga_printkok("Re-initialized GDT");
@@ -50,7 +52,14 @@ void _start(unsigned int ferrum_signature, unsigned int ferrum_info)
 		vga_printkfail("Failed to re-initialize GDT");
 	}
 
-	vga_printkok("Booted to kernel mode!");
+	isr_install();
+	irq_install();
+
+    /* Test the interrupts */
+    __asm__ __volatile__("int $2");
+    __asm__ __volatile__("int $3");
+
+
 	__asm__ __volatile__ ("cli");
 	__asm__ __volatile__ ("hlt");
 	for(;;);
