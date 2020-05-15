@@ -119,7 +119,7 @@ init1:
 
 .code32
 	.byte 0x66
-	ljmp $UNREAL_MODE_CODE_SEG, $(boot1TemporalProtectedMode)	# Enable Protected Mode by Long-Jumping (This changes the Instruction
+	ljmp $UNREAL_MODE_CODE_SEG, $boot1TemporalProtectedMode		# Enable Protected Mode by Long-Jumping (This changes the Instruction
 																# Pointer Register alongside the Code Segment).
 																# After jumping to Protected Mode (32-BIT) and setting the 4GiB Code/Data
 																# Segments, we'll quickly switch back to Real Mode (16-BIT) but this will
@@ -136,7 +136,7 @@ boot1TemporalProtectedMode:
 	mov %bx, %ss												# ...and the stack segment.
 	and $0xFE, %al												# Now, disable the Protected Mode Bit...
 	mov %eax, %cr0												# ...and make the change effective by loading the result back to CR0.
-	ljmp $0x0, $(boot1HugeUnrealMode)							# We Long-Jump again so that Real Mode (Now Unreal) gets "enabled" back.
+	ljmp $0x0, $boot1HugeUnrealMode								# We Long-Jump again so that Real Mode (Now Unreal) gets "enabled" back.
 
 boot1HugeUnrealMode:
 	xor %ax, %ax
@@ -151,6 +151,8 @@ boot1HugeUnrealMode:
 	call boot1print
 	call boot1printnl
 	call boot1UnrealModePrepareKernel
+	cmp $0, %ax
+	jnz boot1UnrealModeLoadKernelFail
 	cli
 	mov %cr0, %eax
 	or $1, %eax
