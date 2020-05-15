@@ -4,6 +4,7 @@
 
 Atom is a project that holds both a 2 Stage Bootloader and a (Very rudimentary) kernel.
 It is designed for being used on i386+ processors using BIOS (Or UEFI's Legacy-Compatible's Mode).
+
 -----------------
 
 - Compiling Atom
