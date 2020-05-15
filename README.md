@@ -1,14 +1,12 @@
 # Atom
 
 - What is Atom?
------------------
 
 Atom is a project that holds both a 2 Stage Bootloader and a (Very rudimentary) kernel.
 It is designed for being used on i386+ processors using BIOS (Or UEFI's Legacy-Compatible's Mode).
-
+-----------------
 
 - Compiling Atom
---------------------
 
 #### a - Compile Prerequisites:
 Compiling Atom only depends on:
@@ -41,9 +39,10 @@ This will result in a floppy image called floppy.img accordingly that can be use
 #### e - Running on bochs:
 
 	make bochs
+-----------------
 
 - Atom components
----------------
+
 #### initium
 
 initium is Atom's 2 stage bootloader
@@ -76,9 +75,8 @@ Features:
 	* PS/2 Keyboard Handling (8042)
 
 - Atom roadmaps
----------------
 
-#### initium
+#### initium && nucleus
 
 	* Switch from 1.44MB Floppy to HDD
 	* Paging
@@ -86,3 +84,5 @@ Features:
 	* Add more support for the basic x86 components (APIC, ATA, ATAPIO, CMOS...)
 	* Enter Long Mode (64-Bit)
 	* Switch to UEFI (But preserving the Legacy code)
+
+-----------------
