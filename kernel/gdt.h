@@ -23,10 +23,17 @@ struct i386_gdt_descriptor
     unsigned int gdt_entry_offset; // 4 bytes (0 -> 4294967295) -> Up to 4 GiB descriptors (4294967295)
 } __attribute__ ((packed));
 
+// TODO: Find a way to dynamically set this value
+#define I386_GDT_MAX_ENTRIES 5
+
+// TODO: Fix next 2 line's math!
+#define i386_GDT_KERNEL_CODE_SEGMENT_SELECTOR ((sizeof(struct i386_gdt_entry) * I386_GDT_MAX_ENTRIES)/I386_GDT_MAX_ENTRIES)
+#define i386_GDT_KERNEL_DATA_SEGMENT_SELECTOR ((((sizeof(struct i386_gdt_entry) * (I386_GDT_MAX_ENTRIES))/I386_GDT_MAX_ENTRIES))*2)
+
 /* cake: Function declared on another file
    to reload the segment registers and swap
    out CPU's GDT table with ours */
-extern void i386_gdt_update(unsigned int);
+extern void i386_gdt_update(struct i386_gdt_descriptor *i386_gdt_pointer, unsigned int i386_gdt_code_segment, unsigned int i386_gdt_data_segment);
 int i386_gdt_install();
 
 // Flags! TODO!

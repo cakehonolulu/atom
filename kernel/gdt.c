@@ -2,7 +2,7 @@
 #include "utils.h"
 
 /* GDT structure */
-struct i386_gdt_entry i386_gdt[5];
+struct i386_gdt_entry i386_gdt[I386_GDT_MAX_ENTRIES];
 /* GDT pointer */
 struct i386_gdt_descriptor i386_gdt_pointer;
 
@@ -58,6 +58,16 @@ int i386_gdt_install()
 	/* Setup GDT limit */
     i386_gdt_pointer.gdt_entry_size = (sizeof(struct i386_gdt_entry) * 5) - 1;
 
+#ifdef DEBUG
+    vga_printk("GDT Debugging:\nGDT Entry: ");
+    vga_printkhex(i386_gdt_pointer.gdt_entry_size);
+    vga_printk("\nGDT Code Segment Selector: ");
+    vga_printkhex((unsigned int)i386_GDT_KERNEL_CODE_SEGMENT_SELECTOR);
+    vga_printk("\nGDT Data Segment Selector: ");
+    vga_printkhex((unsigned int)i386_GDT_KERNEL_DATA_SEGMENT_SELECTOR);
+    vga_printk("\n");
+#endif
+
     /* Setup GDT pointer */
     i386_gdt_pointer.gdt_entry_offset = (unsigned int) &i386_gdt;
 
@@ -89,7 +99,7 @@ int i386_gdt_install()
 
     /* Replace old GDT with the new one by 
        flushing all the changes */
-    i386_gdt_update((unsigned int)&i386_gdt_pointer);
+    i386_gdt_update((unsigned int)&i386_gdt_pointer, i386_GDT_KERNEL_CODE_SEGMENT_SELECTOR, i386_GDT_KERNEL_DATA_SEGMENT_SELECTOR);
 
     /* TODO: Update Task State Segment */
     return 1;
