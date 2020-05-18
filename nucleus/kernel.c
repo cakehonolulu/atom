@@ -1,7 +1,7 @@
 #include "gdt.h"
 #include <stddef.h>
 
-void _start(unsigned int ferrum_signature, unsigned int ferrum_info)
+void _start(unsigned int ferrum_signature, unsigned int ferrum_low_mem)
 {
 	i386_setup_vga();
 

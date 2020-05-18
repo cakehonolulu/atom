@@ -83,6 +83,8 @@ protected_mode_gdt:
 .boot1UMLKMsg: .asciz "Loaded Kernel"
 .boot1UnrealModeLoadKernelFailMessage: .asciz "Failed to load the kernel!"
 
+ferrum_low_memory: .long 0x00
+
 .align 4
 boot1_currow: .long 0x00
 boot1_curcol: .long 0x00
@@ -104,6 +106,11 @@ init1:
 	call boot1print
 	call boot1printnl								
 	call boot1EnableA20
+
+	clc
+	int $0x12
+	mov %ax, ferrum_low_memory
+
 	cli															# Disable interrupts.
 	cld															# CLD sets EFLAG's register DF flag to 0, this way, string
 																# operations increment the segment registers (Such as SI & DI).
@@ -350,10 +357,9 @@ boot1Start32:
 	mov $.boot1LoadedPMMessage, %ebx				# We've landed correctly onto Protected Mode, using a new
 	call boot1pmprintstring							# function that doesn't rely on BIOS Interrupts (Since we are
 													# on Protected Mode, print to the screen to inform the user.
-	xor %ebx, %ebx									# unsigned int ferrum_info
-	push %ebx
-	xor %eax, %eax
+	mov ferrum_low_memory, %ebx						# unsigned int ferrum_low_memory
 	mov $0xFEB0516C, %eax							# unsigned int ferrum_signature
+	push %ebx
 	push %eax
 	jmp 0x100000
 
