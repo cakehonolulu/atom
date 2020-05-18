@@ -56,11 +56,19 @@ void _start(unsigned int ferrum_signature, unsigned int ferrum_info)
 	irq_install();
 
     /* Test the interrupts */
-    __asm__ __volatile__("int $2");
-    __asm__ __volatile__("int $3");
+    //__asm__ __volatile__("int $2");
+    //__asm__ __volatile__("int $3");
 
-
-	__asm__ __volatile__ ("cli");
-	__asm__ __volatile__ ("hlt");
 	for(;;);
+}
+
+void user_input(char *input)
+{
+    if (strcmp(input, "END") == 0) {
+        vga_printk("Stopping the CPU. Bye!\n");
+        __asm__ __volatile__("hlt");
+    }
+    vga_printk("You said: ");
+    vga_printk(input);
+    vga_printk("\n> ");
 }

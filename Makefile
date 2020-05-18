@@ -10,10 +10,11 @@ bootstrap:
 	i686-elf-gcc -ffreestanding -Wall -Wextra -g -c kernel/port.c -o kernel/port.o
 	i686-elf-gcc -ffreestanding -Wall -Wextra -g -c kernel/idt.c -o kernel/idt.o
 	i686-elf-gcc -ffreestanding -Wall -Wextra -g -c kernel/isr.c -o kernel/isr.o
+	i686-elf-gcc -ffreestanding -Wall -Wextra -g -c kernel/timer.c -o kernel/timer.o
+	i686-elf-gcc -ffreestanding -Wall -Wextra -g -c kernel/keyboard.c -o kernel/keyboard.o
 	i686-elf-gcc -ffreestanding -Wall -Wextra -g -c kernel/string.c -o kernel/string.o
-	i686-elf-gcc -ffreestanding -Wall -Wextra -g -c kernel/stdlib.c -o kernel/stdlib.o
 	i686-elf-gcc -ffreestanding -Wall -Wextra -g -c kernel/kernel.c -o kernel/kernel.o
-	i686-elf-ld kernel/kernel_entry.o kernel/kernel.o kernel/asm.o kernel/string.o kernel/stdlib.o kernel/vga.o kernel/gdt.o kernel/idt.o kernel/isr.o kernel/port.o -o kernel/kernel.bin -T kernel/linkkernel.ld
+	i686-elf-ld kernel/kernel_entry.o kernel/kernel.o kernel/asm.o kernel/string.o kernel/vga.o kernel/gdt.o kernel/idt.o kernel/isr.o kernel/port.o kernel/timer.o kernel/keyboard.o -o kernel/kernel.bin -T kernel/linkkernel.ld
 	bash -c "./scripts/kernel.sh"
 	i686-elf-as bootloader/boot1.S -o bootloader/boot1.o --32 -Ibootloader
 	i686-elf-ld -T bootloader/linkboot1.ld -o bootloader/boot1.bin bootloader/boot1.o

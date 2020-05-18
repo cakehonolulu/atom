@@ -52,6 +52,14 @@ void vga_printk_at(char *message, int vga_column, int vga_row)
     }
 }
 
+void vga_printk_backspace()
+{
+    int offset = vga_get_cursor_offset()-2;
+    int row = vga_get_offset_row(offset);
+    int col = vga_get_offset_col(offset);
+    vga_print_char(0x08, col, row, vga_set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK));
+}
+
 void vga_printk(char *message)
 {
     vga_printk_at(message, -1, -1);
