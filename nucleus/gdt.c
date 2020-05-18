@@ -13,8 +13,7 @@ void i386_gdt_add_entry(unsigned int i386_gdt_entry_num, unsigned long i386_gdt_
 	{
 		// TODO: Inform the user that it has exceeded maximum
 		// number of GDT entries or that the GDT size equals to 0
-		vga_printk("Can't encode a GDT entry with a that size!\n");
-		vga_printk("Halting...\n");
+		printk("Can't encode a GDT entry with a that size!\nHalting...\n");
 		__asm__ __volatile__ ("cli");
 		__asm__ __volatile__ ("hlt");
 	}
@@ -59,13 +58,9 @@ int i386_gdt_install()
     i386_gdt_pointer.gdt_entry_size = (sizeof(struct i386_gdt_entry) * 5) - 1;
 
 #ifdef DEBUG
-    vga_printk("GDT Debugging:\nGDT Entry: ");
-    vga_printkhex(i386_gdt_pointer.gdt_entry_size);
-    vga_printk("\nGDT Code Segment Selector: ");
-    vga_printkhex((unsigned int)i386_GDT_KERNEL_CODE_SEGMENT_SELECTOR);
-    vga_printk("\nGDT Data Segment Selector: ");
-    vga_printkhex((unsigned int)i386_GDT_KERNEL_DATA_SEGMENT_SELECTOR);
-    vga_printk("\n");
+    printk("GDT Debugging:\nGDT Entry: 0x%x\n", i386_gdt_pointer.gdt_entry_size);
+    printk("GDT Code Segment Selector: 0x%x\n", (unsigned int)i386_GDT_KERNEL_CODE_SEGMENT_SELECTOR);
+    printk("GDT Data Segment Selector: 0x%x\n", (unsigned int)i386_GDT_KERNEL_DATA_SEGMENT_SELECTOR);
 #endif
 
     /* Setup GDT pointer */

@@ -3,7 +3,7 @@
 
 void _start(unsigned int ferrum_signature, unsigned int ferrum_low_mem)
 {
-	i386_setup_vga();
+	i386_setup_vga_text_mode();
 
 	int initial_vga_offset = vga_get_cursor_offset();
 
@@ -41,29 +41,29 @@ void _start(unsigned int ferrum_signature, unsigned int ferrum_low_mem)
 		/* for(;;); */
 	}
     
-    vga_printk("\n");
+    printk("\n");
     
-    vga_printkok("Booted to kernel mode!");
+    printkok("Booted to kernel mode!");
 
 	if (i386_gdt_install() == 1)
 	{
-		vga_printkok("Re-initialized GDT");
+		printkok("Re-initialized GDT");
 	} else {
-		vga_printkfail("Failed to re-initialize GDT");
+		printkfail("Failed to re-initialize GDT");
 	}
 
 	if (isr_install() == 1)
 	{
-		vga_printkok("Initialized ISRs");
+		printkok("Initialized ISRs");
 	} else {
-		vga_printkfail("Failed to initialize ISRs");
+		printkfail("Failed to initialize ISRs");
 	}
 
 	if (irq_install() == 1)
 	{
-		vga_printkok("Initialized IRQs");
+		printkok("Initialized IRQs");
 	} else {
-		vga_printkfail("Failed to initialize IRQs");
+		printkfail("Failed to initialize IRQs");
 	}
 
     /* IRQ0: timer */
@@ -80,11 +80,11 @@ void _start(unsigned int ferrum_signature, unsigned int ferrum_low_mem)
 
 void user_input(char *input)
 {
-    if (strcmp(input, "END") == 0) {
-        vga_printk("Stopping the CPU. Bye!\n");
+    if (strcmp(input, "end") == 0) {
+        printk("Stopping the CPU. Bye!\n");
         __asm__ __volatile__("hlt");
     }
-    vga_printk("You said: ");
-    vga_printk(input);
-    vga_printk("\n> ");
+    printk("You said: ");
+    printk(input);
+    printk("\n> ");
 }

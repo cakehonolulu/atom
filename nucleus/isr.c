@@ -68,9 +68,9 @@ unsigned int isr_install() {
 
     if (set_idt() == 1)
     {
-        vga_printkok("Initialized IDTs");
+        printkok("Initialized IDTs");
     } else {
-        vga_printkfail("Failed to initialize IDTs");
+        printkfail("Failed to initialize IDTs");
     }
 
     return 1;
@@ -116,11 +116,7 @@ char *exception_messages[] = {
 };
 
 void isr_handler(registers_t *r) {
-    vga_printk("received interrupt: ");
-    vga_printkhex(r->int_no);
-    vga_printk("\n");
-    vga_printk(exception_messages[r->int_no]);
-    vga_printk("\n");
+    printk("received interrupt: %x, %s\n", r->int_no, exception_messages[r->int_no]);
 }
 
 void register_interrupt_handler(unsigned char n, isr_t handler) {
