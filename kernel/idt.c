@@ -11,10 +11,12 @@ void set_idt_gate(int i386_idt_entry_num, unsigned int i386_idt_handler)
     i386_idt[i386_idt_entry_num].offset16_31 = high_16(i386_idt_handler);
 }
 
-void set_idt()
+unsigned int set_idt()
 {
     i386_idt_pointer.base = (unsigned int) &i386_idt;
     i386_idt_pointer.limit = IDT_ENTRIES * sizeof(struct i386_idt_entry) - 1;
     /* Don't make the mistake of loading &idt -- always load &idt_reg */
     __asm__ __volatile__("lidtl (%0)" : : "r" (&i386_idt_pointer));
+
+    return 1;
 }

@@ -52,9 +52,25 @@ void _start(unsigned int ferrum_signature, unsigned int ferrum_info)
 		vga_printkfail("Failed to re-initialize GDT");
 	}
 
-	isr_install();
-	irq_install();
+	if (isr_install() == 1)
+	{
+		vga_printkok("Initialized ISRs");
+	} else {
+		vga_printkfail("Failed to initialize ISRs");
+	}
 
+	if (irq_install() == 1)
+	{
+		vga_printkok("Initialized IRQs");
+	} else {
+		vga_printkfail("Failed to initialize IRQs");
+	}
+
+    /* IRQ0: timer */
+    init_timer(50);
+    /* IRQ1: keyboard */
+    init_keyboard();
+    
     /* Test the interrupts */
     //__asm__ __volatile__("int $2");
     //__asm__ __volatile__("int $3");

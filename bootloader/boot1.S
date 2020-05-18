@@ -193,7 +193,7 @@ jc boot1ResetDrive
 													# TODO: Get boot1 size at runtime! For now, hardcode the size.
 	mov $0x4, %cl									# Set cl to I386_KERNEL_STARTING_LOCATION (CL=I386_KERNEL_STARTING_LOCATION)
 													# Which is sector of the drive from which we start reading the kernel from.
-	mov boot1bootdrive, %dh							# Set dh to 0 (DH=0x00) -> Head 0 of the drive.
+	mov $0x0, %dh									# Set dh to 0 (DH=0x00) -> Head 0 of the drive.
 	xor %bx, %bx									# Set bx to 0.
 	mov %bx, %es									# Move bx onto our extra segment register to prepare the jump.
 	mov $0x1000, %bx								# Set our bx register with the adress we'll jump to.

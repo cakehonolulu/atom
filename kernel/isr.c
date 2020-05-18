@@ -2,7 +2,7 @@
 
 isr_t interrupt_handlers[256];
 
-void isr_install() {
+unsigned int isr_install() {
     set_idt_gate(0, (unsigned int)isr0);
     set_idt_gate(1, (unsigned int)isr1);
     set_idt_gate(2, (unsigned int)isr2);
@@ -66,7 +66,14 @@ void isr_install() {
     set_idt_gate(46, (unsigned int)irq14);
     set_idt_gate(47, (unsigned int)irq15);
 
-    set_idt(); // Load with ASM
+    if (set_idt() == 1)
+    {
+        vga_printkok("Initialized IDTs");
+    } else {
+        vga_printkfail("Failed to initialize IDTs");
+    }
+
+    return 1;
 }
 
 /* To print the message which defines every exception */
@@ -133,11 +140,9 @@ void irq_handler(registers_t *r) {
     }
 }
 
-void irq_install() {
+unsigned int irq_install() {
     /* Enable interruptions */
     __asm__ __volatile__("sti");
-    /* IRQ0: timer */
-    init_timer(50);
-    /* IRQ1: keyboard */
-    init_keyboard();
+
+    return 1;
 }

@@ -25,4 +25,4 @@ struct i386_idt_descriptor i386_idt_pointer;
 
 /* Functions implemented in idt.c */
 void set_idt_gate(int i386_idt_entry_num, unsigned int i386_idt_handler);
-void set_idt();
+unsigned int set_idt();
