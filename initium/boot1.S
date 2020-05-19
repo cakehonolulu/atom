@@ -6,14 +6,14 @@
 
 .global init1
 
-.set BOOT1CODESEGMENT, 0x7E00
-.set BOOT1PMSTACK, 0x9c000
-.set BOOT1PMVMEM, 0xb8000
-.set BOOT1PMVMEMC, 0x0f
-
 .section .data
-boot1bootdrive: .byte 0
 
+/* Static Bootloader Values */
+.set BOOT1_PROTECTED_MODE_STACK_ADDRESS, 0x9C000
+.set VGA_MEMORY_LOCATION, 0xB8000
+.set VGA_MEMORY_ATTRIBUTES, 0x0F
+
+/* Unreal Mode Basic GDT */
 unreal_mode_gdt_start:
 unreal_mode_gdt_null:
 	.long 0
@@ -42,6 +42,7 @@ unreal_mode_gdt:
 	.word (unreal_mode_gdt_end - unreal_mode_gdt_start - 1)
 	.long unreal_mode_gdt_start
 
+/* Protected Mode Basic GDT */
 protected_mode_gdt_start:
 protected_mode_gdt_null:
 	.long 0
@@ -71,29 +72,37 @@ protected_mode_gdt:
 	.word (protected_mode_gdt_end - protected_mode_gdt_start - 1)
 	.long protected_mode_gdt_start
 
-.boot1A20HasAlreadyBeenEnabled: .asciz "A20 Line has already been enabled"
-.boot1A20HasBeenEnabled: .asciz "A20 Line Enabled"
-.boot1LoadedMessage: .asciz "Entered 2nd Stage"
-.boot1LoadedProtectedModeGDTMessage: .asciz "Protected Mode GDT Loaded"
-.boot1UnrealModeLoadedGDTMessage: .asciz "Unreal Mode GDT Loaded"
-.boot1LoadedPMMessage: .asciz "Entered Protected Mode"
-.boot1LoadedUMMessage: .asciz "Entered Unreal Mode"
-.boot1UMLoadingKernelMessage: .asciz "Loading Kernel..."
-.boot1DiskErrorMessage: .asciz "Disk Read Error!"
-.boot1UMLKMsg: .asciz "Loaded Kernel"
-.boot1UnrealModeLoadKernelFailMessage: .asciz "Failed to load the kernel!"
+/* Bootloader Strings */
+A20AlreadyEnabledMessage: .asciz "A20 Line is already enabled, skipping..." // Bochs for example, enables it regardless the OS
+A20EnabledMessage: .asciz "A20 Line enabled Successfully!"
+Stage2LoadedMessage: .asciz "Entered 2nd Stage"
 
-ferrum_low_memory: .long 0x00
+ProtectedModeGDTLoadedMessage: .asciz "Protected Mode GDT Loaded"
+UnrealModeGDTLoadedMessage: .asciz "Unreal Mode GDT Loaded"
 
-.align 4
-boot1_currow: .long 0x00
-boot1_curcol: .long 0x00
-boot1_screenwidth: .long 0x00
-boot1_screenheight: .long 0x00
+EnteredProtectedModeMessage: .asciz "Entered Protected Mode"
+EnteredUnrealModeMessage: .asciz "Entered Unreal Mode"
+
+LoadingKernelMessage: .asciz "Loading Kernel..."
+LoadedKernelMessage: .asciz "Loaded Kernel"
+LoadKernelFailMessage: .asciz "Failed to load the kernel!"
+
+DiskErrorMessage: .asciz "Disk Read Error!"
+
+/* Bootloader Variables */
+INT15_LOW_MEMORY_VALUE: .long 0x00
+
+VGA_TEXT_MODE_CURRENT_ROW: .long 0x00
+VGA_TEXT_MODE_CURRENT_COLUMN: .long 0x00
+VGA_TEXT_MODE_SCREEN_WIDTH: .long 0x00
+VGA_TEXT_MODE_SCREEN_HEIGHT: .long 0x00
+
+BOOT_DRIVE_NUMBER: .byte 0
+
 .section .text
 init1:
 	pop %bx														# Get the boot drive value from stack.
-	mov %bx, boot1bootdrive										# Place the boot drive value on a temporal buffer.
+	mov %bx, BOOT_DRIVE_NUMBER										# Place the boot drive value on a temporal buffer.
 	xor %bx, %bx												# Set bx to 0.
 	xor %ax, %ax												# Set ax to 0.
 	mov %ax, %ds												# Set ds to 0.
@@ -102,14 +111,14 @@ init1:
 																# Top stack adress:		-> 0x7C00
 	mov %ax, %ss												# Set up stack segment.
 	mov %sp, %bp												# Move sp (Which now is 0x7C00) to the base pointer register.
-	mov $.boot1LoadedMessage, %bx								# Print a message that tells we're currently on second stage bootloader.
+	mov $Stage2LoadedMessage, %bx								# Print a message that tells we're currently on second stage bootloader.
 	call boot1print
 	call boot1printnl								
 	call boot1EnableA20
 
 	clc
 	int $0x12
-	mov %ax, ferrum_low_memory
+	mov %ax, INT15_LOW_MEMORY_VALUE
 
 	cli															# Disable interrupts.
 	cld															# CLD sets EFLAG's register DF flag to 0, this way, string
@@ -117,7 +126,7 @@ init1:
 																# Invoking a CLD instruction, also makes us aware of the DF's flag
 																# contents, in order to make 0 assumptions on how the BIOS leaves this value. 
 	lgdt unreal_mode_gdt										# Load the Unreal Mode GDT.
-	mov $.boot1UnrealModeLoadedGDTMessage, %bx					# Print a message that tells that the Unreal Mode GDT has been loaded.
+	mov $UnrealModeGDTLoadedMessage, %bx					# Print a message that tells that the Unreal Mode GDT has been loaded.
 	call boot1print
 	call boot1printnl
 	mov %cr0, %eax												# Move CR0 to EAX.
@@ -154,7 +163,7 @@ boot1HugeUnrealMode:
 																# Top stack adress:		-> 0x7C00
 	mov %ax, %ss												# Set up stack segment
 	mov %sp, %bp												# Move sp (Which now is 0x7C00) to the base pointer register.
-	mov $.boot1LoadedUMMessage, %bx
+	mov $EnteredUnrealModeMessage, %bx
 	call boot1print
 	call boot1printnl
 	call boot1UnrealModePrepareKernel
@@ -190,7 +199,7 @@ boot1UnrealModePrepareKernel:
 boot1UnrealModeLoadKernel:
 boot1ResetDrive:									# Function to reset floppy drive in order to ensure it's working correctly.
 	mov	$0x00, %ah									# Set ah to 0 (AH=0x00 -> Reset Disk Function).
-	mov boot1bootdrive, %dl							# Move boot1bootdrive value back into dl.
+	mov BOOT_DRIVE_NUMBER, %dl							# Move BOOT_DRIVE_NUMBER value back into dl.
 	int	$0x13										# Call BIOS interrupt 13.
 jc boot1ResetDrive
 	mov $0x02, %ah									# Set ah to 2 (AH=0x02 -> Disk Read Function).
@@ -209,14 +218,14 @@ jc boot1ResetDrive
 	ret
 
 boot1UnrealModeLoadKernelFail:
-	mov $.boot1UnrealModeLoadKernelFailMessage, %bx
+	mov $LoadKernelFailMessage, %bx
 	call boot1print
 	call boot1printnl
 	cli
 	jmp boot1Halt
 
 boot1DiskErrorMessage:
-	mov $.boot1DiskErrorMessage, %bx
+	mov $DiskErrorMessage, %bx
 	call boot1print
 	call boot1printnl
 	cli
@@ -285,31 +294,31 @@ boot1CheckA20LineState:
 	ret
 
 boot1A20HasBeenEnabled:
-	mov $.boot1A20HasBeenEnabled, %bx
+	mov $A20EnabledMessage, %bx
 	call boot1print
 	call boot1printnl
 	ret
 
 boot1UMLK:
-	mov $.boot1UMLKMsg, %bx
+	mov $LoadedKernelMessage, %bx
 	call boot1print
 	call boot1printnl
 	ret
 
 boot1A20HasAlreadyBeenEnabled:
-	mov $.boot1A20HasAlreadyBeenEnabled, %bx
+	mov $A20AlreadyEnabledMessage, %bx
 	call boot1print
 	call boot1printnl
 	ret
 
 boot1LandedUnrealMode: 
-	mov $.boot1LoadedUMMessage, %bx
+	mov $EnteredUnrealModeMessage, %bx
 	call boot1print
 	call boot1printnl
 	ret
 
 boot1UMLoadingKernel:
-	mov $.boot1UMLoadingKernelMessage, %bx
+	mov $LoadingKernelMessage, %bx
 	call boot1print
 	call boot1printnl
 	ret
@@ -352,12 +361,12 @@ boot1Start32:
 	mov %eax, %fs
 	mov %eax, %gs
 	mov %eax, %ss
-	mov $BOOT1PMSTACK, %esp                 		# Set up a new stack pointer. Ferrum places it conveniently
+	mov $BOOT1_PROTECTED_MODE_STACK_ADDRESS, %esp                 		# Set up a new stack pointer. Ferrum places it conveniently
 													# below the EBDA area.
-	mov $.boot1LoadedPMMessage, %ebx				# We've landed correctly onto Protected Mode, using a new
+	mov $EnteredProtectedModeMessage, %ebx				# We've landed correctly onto Protected Mode, using a new
 	call boot1pmprintstring							# function that doesn't rely on BIOS Interrupts (Since we are
 													# on Protected Mode, print to the screen to inform the user.
-	mov ferrum_low_memory, %ebx						# unsigned int ferrum_low_memory
+	mov INT15_LOW_MEMORY_VALUE, %ebx						# unsigned int INT15_LOW_MEMORY_VALUE
 	mov $0xFEB0516C, %eax							# unsigned int ferrum_signature
 	push %ebx
 	push %eax
@@ -370,19 +379,19 @@ boot1Start32:
 boot1pmgetbioscurpos:
     xor %eax, %eax									# Set EAX to 0.
     mov 0x450, %al									# Move the bytes contained at adress 0x450 to a AL.
-    mov %eax, boot1_curcol							# Store EAX into our temporal boot1_curcol 'buffer'.
+    mov %eax, VGA_TEXT_MODE_CURRENT_COLUMN							# Store EAX into our temporal VGA_TEXT_MODE_CURRENT_COLUMN 'buffer'.
     mov 0x451, %al									# Move the bytes contained at adress 0x451 to a AL.
-    mov %eax, boot1_currow							# Store EAX into our temporal boot1_currow 'buffer'.
+    mov %eax, VGA_TEXT_MODE_CURRENT_ROW							# Store EAX into our temporal VGA_TEXT_MODE_CURRENT_ROW 'buffer'.
     mov 0x484, %al 									# Move the bytes contained at adress 0x484 to a AL.
-    mov %eax, boot1_screenheight					# Store EAX into our temporal boot1_screenheight 'buffer'.
+    mov %eax, VGA_TEXT_MODE_SCREEN_HEIGHT					# Store EAX into our temporal VGA_TEXT_MODE_SCREEN_HEIGHT 'buffer'.
     mov 0x44A, %ax									# Move the bytes contained at adress 0x44A to a AX.
-    mov %eax, boot1_screenwidth						# Store EAX into our temporal boot1_screenwidth 'buffer'.
+    mov %eax, VGA_TEXT_MODE_SCREEN_WIDTH						# Store EAX into our temporal VGA_TEXT_MODE_SCREEN_WIDTH 'buffer'.
     ret												# Return to where this function was called from.
 
 boot1pmsetcursor: 
-    mov boot1_currow, %ecx
-    imul boot1_screenwidth, %ecx
-    add boot1_curcol, %ecx
+    mov VGA_TEXT_MODE_CURRENT_ROW, %ecx
+    imul VGA_TEXT_MODE_SCREEN_WIDTH, %ecx
+    add VGA_TEXT_MODE_CURRENT_COLUMN, %ecx
     mov $0x3d4, %edx
     mov $0x0f, %al
     out %al, %dx
@@ -403,32 +412,32 @@ boot1pmprintstring:
 	call boot1pmgetbioscurpos
 	xor %eax, %eax
 	xor %ecx, %ecx
-	mov boot1_currow, %eax
-	mov boot1_screenwidth, %ecx
+	mov VGA_TEXT_MODE_CURRENT_ROW, %eax
+	mov VGA_TEXT_MODE_SCREEN_WIDTH, %ecx
 	mul %ecx 		# eax*ecx=eax modded
 	xor %ecx, %ecx
-	mov boot1_curcol, %ecx
+	mov VGA_TEXT_MODE_CURRENT_COLUMN, %ecx
 	add %eax, %ecx 		# eax+ecx=ecx modded
 	mov %ecx, %eax
 	mov $2, %ecx
 	mul %ecx 		# eax*ecx=eax modded
-	mov $BOOT1PMVMEM, %ecx
+	mov $VGA_MEMORY_LOCATION, %ecx
 	add %eax, %ecx 		# eax+ecx=ecx modded
 	mov %ecx, %ebx
 	mov %ebx, %edx
 	pop %ebx
 .boot1pmprintstringloop:
 	mov (%ebx), %al
-	mov $BOOT1PMVMEMC, %ah
+	mov $VGA_MEMORY_ATTRIBUTES, %ah
 	cmp $0x0, %al
 	je .boot1pmprintstringdone
 	mov %ax, (%edx)
 	add $0x1, %ebx
 	add $0x2, %edx
 	push %ecx
-	mov boot1_curcol, %ecx
+	mov VGA_TEXT_MODE_CURRENT_COLUMN, %ecx
 	inc %ecx
-	mov %ecx, boot1_curcol
+	mov %ecx, VGA_TEXT_MODE_CURRENT_COLUMN
 	pop %ecx
 	jmp .boot1pmprintstringloop
 .boot1pmprintstringdone:
