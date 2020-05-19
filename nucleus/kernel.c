@@ -71,10 +71,6 @@ void _start(unsigned int ferrum_signature, unsigned int ferrum_low_mem)
     /* IRQ1: keyboard */
     init_keyboard();
     
-    /* Test the interrupts */
-    //__asm__ __volatile__("int $2");
-    //__asm__ __volatile__("int $3");
-
 	for(;;);
 }
 
@@ -83,6 +79,10 @@ void user_input(char *input)
     if (strcmp(input, "end") == 0) {
         printk("Stopping the CPU. Bye!\n");
         __asm__ __volatile__("hlt");
+    } else if (strcmp(input, "int") == 0) {
+    	/* Test the interrupts */
+    	__asm__ __volatile__("int $2");
+    	__asm__ __volatile__("int $3");
     } else {
     	printk("Unknown Command: ");
     	printk(input);
