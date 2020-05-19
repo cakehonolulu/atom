@@ -83,8 +83,9 @@ void user_input(char *input)
     if (strcmp(input, "end") == 0) {
         printk("Stopping the CPU. Bye!\n");
         __asm__ __volatile__("hlt");
+    } else {
+    	printk("Unknown Command: ");
+    	printk(input);
     }
-    printk("You said: ");
-    printk(input);
     printk("\n> ");
 }
