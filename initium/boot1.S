@@ -143,7 +143,6 @@ boot1HugeUnrealMode:
 	mov %cr0, %eax
 	or $1, %eax
 	mov %eax, %cr0
-	xor %al, %al
 	mov $0b11001111, %al
 	mov %al, (gdt_code + 6)										# We dynamically modify the GDT structure to try optimizing
 	mov %al, (gdt_data + 6)										# the size, change both segment's bitmode to 32-bit.
