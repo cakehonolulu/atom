@@ -13,12 +13,12 @@
 .set VGA_MEMORY_LOCATION, 0xB8000
 .set VGA_MEMORY_ATTRIBUTES, 0x0F
 
-/* Unreal Mode Basic GDT */
-unreal_mode_gdt_start:
-unreal_mode_gdt_null:
+/* Basic GDT. set-up for Unreal Mode, change descriptor 1 & 2 alongside 16->32 bit segment mode later on */
+gdt_start:
+gdt_null:
 	.long 0
 	.long 0
-unreal_mode_gdt_code:
+gdt_code:
 	.word 0xFFFF
 	.word 0x0
 	.byte 0x0
@@ -26,7 +26,7 @@ unreal_mode_gdt_code:
 	.byte 0b10001111
 	.byte 0x0
 
-unreal_mode_gdt_data:
+gdt_data:
 	.word 0xffff
 	.word 0x0
 	.byte 0x0
@@ -34,43 +34,13 @@ unreal_mode_gdt_data:
 	.byte 0b10001111
 	.byte 0x0
 
-unreal_mode_gdt_end:
-.set UNREAL_MODE_CODE_SEG, unreal_mode_gdt_code - unreal_mode_gdt_start
-.set UNREAL_MODE_DATA_SEG, unreal_mode_gdt_data - unreal_mode_gdt_start
+gdt_end:
+.set GDT_CODE_SEGMENT, gdt_code - gdt_start
+.set GDT_DATA_SEGMENT, gdt_data - gdt_start
 
-unreal_mode_gdt:
-	.word (unreal_mode_gdt_end - unreal_mode_gdt_start - 1)
-	.long unreal_mode_gdt_start
-
-/* Protected Mode Basic GDT */
-protected_mode_gdt_start:
-protected_mode_gdt_null:
-	.long 0
-	.long 0
-
-protected_mode_gdt_code:
-	.word 0xFFFF
-	.word 0x0
-	.byte 0x0
-	.byte 0b10011010
-	.byte 0b11001111
-	.byte 0x0
-
-protected_mode_gdt_data:
-	.word 0xffff
-	.word 0x0
-	.byte 0x0
-	.byte 0b10010010
-	.byte 0b11001111
-	.byte 0x0
-
-protected_mode_gdt_end:
-.set PROTECTED_MODE_CODE_SEG, protected_mode_gdt_code - protected_mode_gdt_start
-.set PROTECTED_MODE_DATA_SEG, protected_mode_gdt_data - protected_mode_gdt_start
-
-protected_mode_gdt:
-	.word (protected_mode_gdt_end - protected_mode_gdt_start - 1)
-	.long protected_mode_gdt_start
+gdt:
+	.word (gdt_end - gdt_start - 1)
+	.long gdt_start
 
 /* Bootloader Strings */
 A20AlreadyEnabledMessage: .asciz "A20 Line is already enabled, skipping..." // Bochs for example, enables it regardless the OS
@@ -125,8 +95,8 @@ init1:
 																# operations increment the segment registers (Such as SI & DI).
 																# Invoking a CLD instruction, also makes us aware of the DF's flag
 																# contents, in order to make 0 assumptions on how the BIOS leaves this value. 
-	lgdt unreal_mode_gdt										# Load the Unreal Mode GDT.
-	mov $UnrealModeGDTLoadedMessage, %bx					# Print a message that tells that the Unreal Mode GDT has been loaded.
+	lgdt gdt													# Load the Unreal Mode GDT.
+	mov $UnrealModeGDTLoadedMessage, %bx						# Print a message that tells that the Unreal Mode GDT has been loaded.
 	call boot1print
 	call boot1printnl
 	mov %cr0, %eax												# Move CR0 to EAX.
@@ -135,7 +105,7 @@ init1:
 
 .code32
 	.byte 0x66
-	ljmp $UNREAL_MODE_CODE_SEG, $boot1TemporalProtectedMode		# Enable Protected Mode by Long-Jumping (This changes the Instruction
+	ljmp $GDT_CODE_SEGMENT, $boot1TemporalProtectedMode			# Enable Protected Mode by Long-Jumping (This changes the Instruction
 																# Pointer Register alongside the Code Segment).
 																# After jumping to Protected Mode (32-BIT) and setting the 4GiB Code/Data
 																# Segments, we'll quickly switch back to Real Mode (16-BIT) but this will
@@ -146,7 +116,7 @@ init1:
 
 .code16
 boot1TemporalProtectedMode:
-	mov $UNREAL_MODE_DATA_SEG, %bx								# Set bx to use the "higher-than-64KiB" segment...
+	mov $GDT_DATA_SEGMENT, %bx									# Set bx to use the "higher-than-64KiB" segment...
 	mov %bx, %ds												# ...and set the remaining segments with this value.
 	mov %bx, %es												# The extra segment...
 	mov %bx, %ss												# ...and the stack segment.
@@ -173,10 +143,14 @@ boot1HugeUnrealMode:
 	mov %cr0, %eax
 	or $1, %eax
 	mov %eax, %cr0
-	lgdt protected_mode_gdt
+	xor %al, %al
+	mov $0b11001111, %al
+	mov %al, (gdt_code + 6)										# We dynamically modify the GDT structure to try optimizing
+	mov %al, (gdt_data + 6)										# the size, change both segment's bitmode to 32-bit.
+	lgdt gdt
 .code32
 	.byte 0x66
-	ljmpl $PROTECTED_MODE_CODE_SEG, $boot1Start32
+	ljmpl $GDT_CODE_SEGMENT, $boot1Start32
 	cli
 	jmp boot1Halt
 
@@ -355,7 +329,7 @@ boot1Halt:
 .extern main
 
 boot1Start32:
-	mov $PROTECTED_MODE_DATA_SEG, %eax
+	mov $GDT_DATA_SEGMENT, %eax
 	mov %eax, %ds
 	mov %eax, %es
 	mov %eax, %fs
