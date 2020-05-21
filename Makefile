@@ -17,7 +17,6 @@ bootstrap:
 	i686-elf-ld nucleus/kernel_entry.o nucleus/kernel.o nucleus/asm.o nucleus/string.o nucleus/vga.o nucleus/gdt.o nucleus/idt.o nucleus/isr.o nucleus/port.o nucleus/timer.o nucleus/keyboard.o -o nucleus/kernel.bin -T nucleus/linkkernel.ld
 	bash -c "./scripts/kernel.sh"
 	i686-elf-as initium/boot1.S -o initium/boot1.o --32 -Iinitium
-	i686-elf-ld -T initium/linkboot1.ld -o initium/boot1.bin initium/boot1.o
 	bash -c "./scripts/boot.sh"
 	i686-elf-as initium/boot0.S -o initium/boot0.o --32 -Iinitium
 	i686-elf-ld -T initium/linkboot0.ld -o initium/boot0.bin initium/boot0.o
@@ -37,6 +36,13 @@ clean:
 	-@rm initium/*.h
 
 bochs:
-	$(BOCHS) -q -f bochsrc.bxrc 'floppya: type=1_44, 1_44=floppy.img, status=inserted, write_protected=0'
+	bochs -q -f bochsrc.bxrc 'floppya: type=1_44, 1_44=floppy.img, status=inserted, write_protected=0'
+
+qemu:
+	qemu-system-i386 -fda floppy.img
+
+qemu-debug:
+	qemu-system-i386 -fda floppy.img -s -S &
+	gdb --eval-command="target remote localhost:1234"
 
 $(V).SILENT:
