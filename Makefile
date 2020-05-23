@@ -36,14 +36,19 @@ bootstrap:
 	-@dd conv=notrunc if=nucleus/kernel.bin of=floppy.img bs=512 seek=3 status=none
 
 clean:
+	-@rm initium/*.h
 	-@rm initium/*.o
-	-@rm nucleus/*.o
+	-@rm initium/*.elf
+	-@rm initium/*.sym
 	-@rm initium/*.bin
-	-@rm nucleus/*.bin
 	-@rm initium/*.img
+	-@rm nucleus/*.o
+	-@rm nucleus/*.elf
+	-@rm nucleus/*.sym
+	-@rm nucleus/*.bin
 	-@rm nucleus/*.img
 	-@rm *.img
-	-@rm initium/*.h
+
 
 bochs:
 	bochs -q -f bochsrc.bxrc 'floppya: type=1_44, 1_44=floppy.img, status=inserted, write_protected=0'
