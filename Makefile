@@ -2,6 +2,7 @@ all:
 	make clean
 	make bootstrap
 
+# We should probably switch to nostdlib soon
 bootstrap:
 	i686-elf-as nucleus/kernel_entry.S -o nucleus/kernel_entry.o --32
 	i686-elf-as nucleus/asm.S -o nucleus/asm.o --32
