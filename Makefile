@@ -49,7 +49,6 @@ clean:
 	-@rm nucleus/*.img
 	-@rm *.img
 
-
 bochs:
 	bochs -q -f bochsrc.bxrc 'floppya: type=1_44, 1_44=floppy.img, status=inserted, write_protected=0'
 
