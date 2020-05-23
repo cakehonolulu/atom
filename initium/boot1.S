@@ -2,6 +2,8 @@
 
 .include "boot1.h"
 
+.set MEMORY_MAP, 0x9000
+
 .code16
 
 .global init1
@@ -140,6 +142,36 @@ boot1HugeUnrealMode:
 	cmp $0, %ax
 	jnz boot1UnrealModeLoadKernelFail
 	cli
+    xor %bp, %bp            // counter variable
+    xor %ebx, %ebx          // initially ebx=0
+    mov %bx, %es            // es:di -> buffer
+    mov $MEMORY_MAP + 8, %di
+0:
+    movl $1, %es:20(%di)    // allow ACPI 3.x entry
+    mov $0x534d4150, %edx   // magic number
+    mov $24, %ecx           // request 24 bytes
+    mov $0xe820, %eax
+    int $0x15               // ebx <- some internal value
+    jc boot1UnrealModeLoadKernelFail
+    cmp $0x534d4150, %eax
+    jne boot1UnrealModeLoadKernelFail
+1:
+    jcxz 3f                 // ignore if bytes=0
+    cmp $20, %cl            // or "ignore" ACPI 3.x attribute is 1
+    jbe 2f
+    testb $1, %es:20(%di)
+    jz 3f
+2:
+    mov %es:8(%di), %ecx    // ignore if length=0
+    or %es:12(%di), %ecx
+    jz 3f
+    inc %bp
+    add $24, %di
+3:
+    test %ebx, %ebx         // ebx=0 if end of list
+    jnz 0b
+    mov %bp, (MEMORY_MAP)
+    clc
 	mov %cr0, %eax
 	or $1, %eax
 	mov %eax, %cr0
