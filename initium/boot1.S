@@ -128,11 +128,11 @@ boot1HugeUnrealMode:
 	xor %ax, %ax
 	mov %ax, %es
 	mov %ax, %ds
-	mov $0x7C00, %sp											# Set the stack pointer register with 0x7C00.
+	mov $0x9000, %sp											# Set the stack pointer register with 0x9000.
 																# Stack Dissasembly:
-																# Top stack adress:		-> 0x7C00
+																# Top stack adress:		-> 0x9000
 	mov %ax, %ss												# Set up stack segment
-	mov %sp, %bp												# Move sp (Which now is 0x7C00) to the base pointer register.
+	mov %sp, %bp												# Move sp (Which now is 0x9000) to the base pointer register.
 	mov $EnteredUnrealModeMessage, %bx
 	call boot1print
 	call boot1printnl
