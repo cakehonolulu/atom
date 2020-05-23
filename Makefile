@@ -14,13 +14,22 @@ bootstrap:
 	i686-elf-gcc -ffreestanding -Wall -Wextra -g -c nucleus/keyboard.c -o nucleus/keyboard.o
 	i686-elf-gcc -ffreestanding -Wall -Wextra -g -c nucleus/string.c -o nucleus/string.o
 	i686-elf-gcc -ffreestanding -Wall -Wextra -g -c nucleus/kernel.c -o nucleus/kernel.o
-	i686-elf-ld nucleus/kernel_entry.o nucleus/kernel.o nucleus/asm.o nucleus/string.o nucleus/vga.o nucleus/gdt.o nucleus/idt.o nucleus/isr.o nucleus/port.o nucleus/timer.o nucleus/keyboard.o -o nucleus/kernel.bin -T nucleus/linkkernel.ld
+	i686-elf-ld nucleus/kernel_entry.o nucleus/kernel.o nucleus/asm.o nucleus/string.o nucleus/vga.o nucleus/gdt.o nucleus/idt.o nucleus/isr.o nucleus/port.o nucleus/timer.o nucleus/keyboard.o -o nucleus/kernel.elf -T nucleus/linkkernel.ld
+	i686-elf-objcopy --only-keep-debug nucleus/kernel.elf nucleus/kernel.sym
+	i686-elf-objcopy --strip-debug nucleus/kernel.elf
+	i686-elf-objcopy -O binary nucleus/kernel.elf nucleus/kernel.bin
 	bash -c "./scripts/kernel.sh"
 	i686-elf-as initium/boot1.S -o initium/boot1.o --32 -Iinitium
-	i686-elf-ld -T initium/linkboot1.ld -o initium/boot1.bin initium/boot1.o
+	i686-elf-ld -T initium/linkboot1.ld -o initium/boot1.elf initium/boot1.o
+	i686-elf-objcopy --only-keep-debug initium/boot1.elf initium/boot1.sym
+	i686-elf-objcopy --strip-debug initium/boot1.elf
+	i686-elf-objcopy -O binary initium/boot1.elf initium/boot1.bin
 	bash -c "./scripts/boot.sh"
 	i686-elf-as initium/boot0.S -o initium/boot0.o --32 -Iinitium
-	i686-elf-ld -T initium/linkboot0.ld -o initium/boot0.bin initium/boot0.o
+	i686-elf-ld -T initium/linkboot0.ld -o initium/boot0.elf initium/boot0.o
+	i686-elf-objcopy --only-keep-debug initium/boot0.elf initium/boot0.sym
+	i686-elf-objcopy --strip-debug initium/boot0.elf
+	i686-elf-objcopy -O binary initium/boot0.elf initium/boot0.bin
 	-@mkfs.msdos -C floppy.img 1440 >/dev/null
 	-@dd conv=notrunc if=initium/boot0.bin of=floppy.img bs=512 seek=0 status=none
 	-@dd conv=notrunc if=initium/boot1.bin of=floppy.img bs=512 seek=1 status=none
