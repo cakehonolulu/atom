@@ -1,5 +1,5 @@
 #include <stddef.h>
-#include "vga.h"
+#include <drivers/vga.h>
 
 int currmode = 0;
 int currheight = 0;
