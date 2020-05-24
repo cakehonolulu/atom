@@ -21,6 +21,12 @@ struct bios_memmap_entry
     uint32_t attrib;
 };
 
+// FIXME: For now, we'll just use 1 memory region, later
+// on we'll keep track of all of them, order them and use
+// them accordingly.
+uint32_t memory_management_region_start = 0;
+uint32_t memory_management_region_end = 0;
+
 void mem_init(void)
 {
     static const char* strtype[] = {
@@ -132,10 +138,12 @@ void mem_init(void)
 #ifdef DEBUG
         	printk("Current i: %d\n", i);
 #endif
-        	if ((memory_locations[i + 1] + memory_locations[i]) > 0x100000) // Check if bigger than 1MV
+        	if ((memory_locations[i + 1] + memory_locations[i]) > 0x100000) // Check if bigger than 1MB
         	{
         		printk("Big region found, Start: 0x%x, End: 0x%x, Size: %d Megabytes\n", memory_locations[i], memory_locations[i + 1],
         		(((memory_locations[i + 1] - memory_locations[i]) / 1024) / 1024));
+        		memory_management_region_start = memory_locations[i];
+        		memory_management_region_end = memory_locations[i + 1];
         	}
 
 #ifdef DEBUG
@@ -232,10 +240,8 @@ void user_input(char *input)
     	extern unsigned int tick;
     	printk("Ticks: %u\n", tick);    
     } else if (strcmp(input, "memloc") == 0) {
-        /*for (unsigned int i = 0; i < possible_locations; i++)
-        {
-            printk("Usable Memory Locations: 0x%x\n", memory_locations[i]);
-        }*/
+        printk("Memory management is using a %d MB region located \nfrom 0x%x to 0x%x\n", (((memory_management_region_end - memory_management_region_start) / 1024) / 1024),
+        memory_management_region_start, memory_management_region_end);
     } else {
     	printk("Unknown Command: ");
     	printk(input);
