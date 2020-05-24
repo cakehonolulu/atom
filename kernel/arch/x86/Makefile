@@ -39,9 +39,6 @@ x86: $(KERNEL_IMAGE)
 	$(OBJCOPY) -O binary nucleus.elf kernel.bin
 
 # We should probably switch to nostdlib soon
-# FIXME: We link kernel_entry and kernel first so that it works correctly!
-# We're not using the wildcarded object files as they are in random order and
-# leave the kernel unbootable!
 $(KERNEL_IMAGE): $(ARCH_OBJECT_FILES)
 	@echo " \033[0;36mLD \033[0mnucleus.elf"
 	$(LD) $(LDFLAGS) -T $(LDSCRIPT) -o $@ init/kernel_entry.o init/kernel.o $(ARCH_FINAL_OFILES)
