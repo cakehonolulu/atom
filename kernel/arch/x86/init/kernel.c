@@ -134,7 +134,8 @@ void mem_init(void)
 #endif
         	if ((memory_locations[i + 1] + memory_locations[i]) > 0x100000) // Check if bigger than 1MV
         	{
-        		printk("Big region found -> Start: 0x%x, End: 0x%x\n", memory_locations[i], memory_locations[i + 1]);
+        		printk("Big region found, Start: 0x%x, End: 0x%x, Size: %d Megabytes\n", memory_locations[i], memory_locations[i + 1],
+        		(((memory_locations[i + 1] - memory_locations[i]) / 1024) / 1024));
         	}
 
 #ifdef DEBUG
