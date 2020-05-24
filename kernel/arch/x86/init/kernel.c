@@ -45,8 +45,13 @@ void mem_init(void)
         base = entry->base & 0xFFFFFFFF;
         end = base + size;
         const char* t = entry->type <= 5 ? strtype[entry->type] : strtype[0];
-        printk("Start: 0x%x; End: 0x%x; Size: %d bytes; Type: %s\n",
-            base, end, size, t);
+        printk("Start: 0x");
+        printkhex(base);
+        printk(", End: 0x");
+        printkhex(end);
+        //printk("Start: 0x%x; End: 0x%x;
+        printk(" Size: %d bytes; Type: %s\n",
+            size, t);
         ++entry;
     }
 }

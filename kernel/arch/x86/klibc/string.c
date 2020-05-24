@@ -65,6 +65,20 @@ int strcmp(char s1[], char s2[]) {
     return s1[i] - s2[i];
 }
 
+static void hextoa(char* buffer, uint32_t value) {
+    static const char hex[] = "0123456789abcdef";
+    const char* x = (const char*)&value;
+
+    for(int i = 3; i >= 0; i--) {
+        char ch = x[i];
+        *buffer++ = hex[(ch >> 4) & 0xf];
+        *buffer++ = hex[ch & 0xf];
+    }
+
+    *buffer = 0;
+}
+
+
 static const long hextable[] = {
    [0 ... 255] = -1, // bit aligned access into this table is considerably
    ['0'] = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, // faster for most modern processors,
@@ -130,7 +144,7 @@ void printk(char* fmt, ...)
                         printkuint(u_num);
                         break;
                     case 'x':
-                        u_num = va_arg(list, unsigned int);
+                        u_num = va_arg(list, uint32_t);
                         printkhex(u_num);
                         break;
                     default:

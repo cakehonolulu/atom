@@ -436,13 +436,13 @@ char hex_letters[] =
     '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
 };
 
-void printkhex(const unsigned short number)
+void printkhex(const unsigned int number)
 {
     char buf[20];
     buf[0] = 0;
     int len = 0;
 
-    unsigned short value = number;
+    unsigned int value = number;
 
     while (value >= 16)
     {
