@@ -40,7 +40,9 @@ void mem_init(void)
 
     uint32_t possible_locations = 0;
 
+#ifdef DEBUG
     printk("Memory map report: %d entries\n", len);
+#endif
     while (len-- != 0)
     {
         size = entry->size & 0xFFFFFFFF;
