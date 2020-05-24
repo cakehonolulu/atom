@@ -10,7 +10,7 @@ OBJCOPY = i686-elf-objcopy
 # Tool flags
 # We should switch to -nostdlib --freestanding -fno-builtin
 CFLAGS =  -ffreestanding -Wall -Wextra -g
-CFLAGS += -Iinclude -Wl,--no-as-needed
+CFLAGS += -Iinclude
 
 ASFLAGS = --32
 LDSCRIPT = linker.ld
@@ -20,11 +20,14 @@ ifeq ($(DEBUG), 1)
     ASFLAGS =
 endif
 
-ARCH_C_OBJECTS=$(shell find . -name '*.c')
-ARCH_S_OBJECTS=$(shell find . -name '*.S')
+ARCH_C_SOURCE_FILES=$(shell find . -name '*.c')
+ARCH_S_SOURCE_FILES=$(shell find . -name '*.S')
 
-ARCH_K_OBJECTS=$(patsubst %.S,%.o,$(ARCH_S_OBJECTS))
-ARCH_K_OBJECTS+=$(patsubst %.c,%.o,$(ARCH_C_OBJECTS))
+ARCH_OBJECT_FILES=$(patsubst %.S,%.o,$(ARCH_S_SOURCE_FILES))
+ARCH_OBJECT_FILES+=$(patsubst %.c,%.o,$(ARCH_C_SOURCE_FILES))
+
+ARCH_OFILES_NOENTRY := $(filter-out ./init/kernel_entry.o,$(ARCH_OBJECT_FILES))
+ARCH_FINAL_OFILES := $(filter-out ./init/kernel.o,$(ARCH_OFILES_NOENTRY))
 
 KERNEL_IMAGE = nucleus.elf
 
@@ -39,8 +42,9 @@ x86: $(KERNEL_IMAGE)
 # FIXME: We link kernel_entry and kernel first so that it works correctly!
 # We're not using the wildcarded object files as they are in random order and
 # leave the kernel unbootable!
-$(KERNEL_IMAGE): $(ARCH_K_OBJECTS)
-	$(LD) $(LDFLAGS) -T $(LDSCRIPT) -o $@ init/kernel_entry.o init/kernel.o asm.o klibc/string.o drivers/vga.o drivers/keyboard.o gdt.o idt.o isr.o common/port.o timer.o
+$(KERNEL_IMAGE): $(ARCH_OBJECT_FILES)
+	$(info Linking...)
+	$(LD) $(LDFLAGS) -T $(LDSCRIPT) -o $@ init/kernel_entry.o init/kernel.o $(ARCH_FINAL_OFILES)
 	
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -49,7 +53,7 @@ $(KERNEL_IMAGE): $(ARCH_K_OBJECTS)
 	$(AS) $(ASFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(ARCH_K_OBJECTS)
+	rm -f $(ARCH_OBJECT_FILES)
 	rm -f *.elf
 	rm -f *.bin
 	rm -f *.sym
