@@ -21,6 +21,9 @@ init0:												# init0 function
 													# that instead of searching for 0x55AA MBR signature
 													# at the end of the first sector of the bootable media,
 													# looks for a jump instruction on the first bytes of it.
+													# All of this, effectively sets Code Segment and Instruction Pointer
+													# to the expected values by this bootloader that way it doesn't error out
+													# on strange BIOS configurations that our code assumptions don't have in mind.
 
 boot0:												# boot0 function
 													# Note: We'll be avoiding FS and GS registers in order to
