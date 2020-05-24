@@ -433,14 +433,14 @@ void printkdec(unsigned short n)
 char hex_letters[] =
 {
     '0', '1', '2', '3', '4', '5', '6', '7',
-    '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
+    '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
 };
 
-void printkhex(const unsigned int number)
+void printkhex(unsigned int number)
 {
     char buf[20];
     buf[0] = 0;
-    int len = 0;
+    unsigned int len = 0;
 
     unsigned int value = number;
 

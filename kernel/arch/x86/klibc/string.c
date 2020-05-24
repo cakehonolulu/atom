@@ -120,32 +120,32 @@ void printk(char* fmt, ...)
             }
             else
             {
-                int d_num;
-                uint16_t u_num;
-                char* d_str;
+                int signed_integer;
+                unsigned int unsigned_integer;
+                char* signed_string;
                 ch++;
 
                 switch (*ch)
                 {
                     case 'c':
-                        d_num = va_arg(list, int);
-                        putch(d_num);
+                        signed_integer = va_arg(list, int);
+                        putch(signed_integer);
                         break;
                     case 'd':
-                        d_num = va_arg(list, int);
-                        printkint(d_num);
+                        signed_integer = va_arg(list, int);
+                        printkint(signed_integer);
                         break;
                     case 's':
-                        d_str = va_arg(list, char*);
-                        print(d_str);
+                        signed_string = va_arg(list, char*);
+                        print(signed_string);
                         break;
                     case 'u':
-                        u_num = va_arg(list, unsigned int);
-                        printkuint(u_num);
+                        unsigned_integer = va_arg(list, unsigned int);
+                        printkuint(unsigned_integer);
                         break;
                     case 'x':
-                        u_num = va_arg(list, uint32_t);
-                        printkhex(u_num);
+                        unsigned_integer = va_arg(list, unsigned int);
+                        printkhex(unsigned_integer);
                         break;
                     default:
                         putch('%');

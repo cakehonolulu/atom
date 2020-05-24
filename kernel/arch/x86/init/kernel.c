@@ -25,11 +25,11 @@ void mem_init(void)
 {
     static const char* strtype[] = {
         "Unknown",
-        "Usable",
-        "Reserved",
-        "Reclaimable",
-        "Non-Volatile",
-        "Bad Area"
+        "Usable", // Usable
+        "Reserved", // Unusable
+        "ACPI Reclaimable",
+        "ACPI NVS Memory",
+        "Bad Memory"
     };
 
     uint32_t len = *(uint32_t*)MEMORY_MAP;
@@ -45,13 +45,7 @@ void mem_init(void)
         base = entry->base & 0xFFFFFFFF;
         end = base + size;
         const char* t = entry->type <= 5 ? strtype[entry->type] : strtype[0];
-        printk("Start: 0x");
-        printkhex(base);
-        printk(", End: 0x");
-        printkhex(end);
-        //printk("Start: 0x%x; End: 0x%x;
-        printk(" Size: %d bytes; Type: %s\n",
-            size, t);
+        printk("Start: 0x%x; End: 0x%x Size: %d bytes; Type: %s\n", base, end, size, t);
         ++entry;
     }
 }
@@ -100,8 +94,6 @@ void _start(unsigned int ferrum_signature, unsigned int ferrum_low_mem)
     
     printkok("Booted to kernel mode!");
 
-    mem_init();
-
 	if (i386_gdt_install() == 1)
 	{
 		printkok("Re-initialized GDT");
@@ -142,7 +134,9 @@ void user_input(char *input)
     	__asm__ __volatile__("int $3");
     } else if (strcmp(input, "tick") == 0) {
     	extern unsigned int tick;
-    	printk("Ticks: %u\n", tick);
+    	printk("Ticks: %u\n", tick);    
+    } else if (strcmp(input, "mmap") == 0) {
+        mem_init();
     } else {
     	printk("Unknown Command: ");
     	printk(input);
