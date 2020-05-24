@@ -1,4 +1,8 @@
+.set BOOT1_STARTING_SECTOR, 0x2
+
 .code16												# Produce 16-Bit Code (For Real Mode).
+
+#include "boot1.S"
 
 .section .text										# Text section.
 
@@ -64,8 +68,8 @@ boot0ResetDrive:									# Function to reset floppy drive in order to ensure it'
 	mov $0x2, %al									# Set al to I386_BOOT1_SIZE (AL=$I386_BOOT1_SIZE0h) -> Sectors to be readed.
 													# Where I386_BOOT1_SIZE equals to the number of sectors occupied by the boot1 binary rounded 1 sector up.
 	mov $0x0, %ch									# Set ch to 0 (CH=0x00) -> Track 0 of the drive.
-	mov $0x2, %cl									# Set cl to I386_BOOT1_STARTING_SECTOR_LOCATION (CL=$I386_BOOT1_STARTING_SECTOR_LOCATION)
-													# Which is the sector of the drive from which we start reading boot1 from.
+	mov $BOOT1_STARTING_SECTOR, %cl					# Set CL to 2, this is hardcoded, because we're always going to start reading
+													# from the sector next to the one that contains the MBR signature (Sector 1 Physically).
 	mov $0x00, %dh									# Set dh to 0 (DH=0x00) -> Head 0 of the drive.
 	xor %bx, %bx									# Set bx to 0.
 	mov %bx, %es									# Move bx onto our extra segment register to prepare the jump.
