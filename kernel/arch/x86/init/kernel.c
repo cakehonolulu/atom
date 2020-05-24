@@ -33,14 +33,20 @@ void mem_init(void)
     };
 
     uint32_t len = *(uint32_t*)MEMORY_MAP;
+    uint32_t size = 0;
+    uint32_t base = 0;
+    uint32_t end = 0;
     const struct bios_memmap_entry* entry = (const struct bios_memmap_entry*)(MEMORY_MAP + 8);
 
     printk("Memory map report: %d entries\n", len);
     while (len-- != 0)
     {
+        size = entry->size & 0xFFFFFFFF;
+        base = entry->base & 0xFFFFFFFF;
+        end = base + size;
         const char* t = entry->type <= 5 ? strtype[entry->type] : strtype[0];
         printk("Start: 0x%x; End: 0x%x; Size: %d bytes; Type: %s\n",
-            entry->base, entry->base + entry->size, entry->size, t);
+            base, end, size, t);
         ++entry;
     }
 }
