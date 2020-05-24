@@ -1,4 +1,4 @@
-.set BOOT1_STARTING_SECTOR, 0x2
+.set BOOT1_STARTING_SECTOR, 0x2						# This is a constant! It will always be the same!
 
 .code16												# Produce 16-Bit Code (For Real Mode).
 
