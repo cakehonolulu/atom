@@ -50,3 +50,6 @@ $(KERNEL_IMAGE): $(ARCH_K_OBJECTS)
 
 clean:
 	rm -f $(ARCH_K_OBJECTS)
+	rm -f *.elf
+	rm -f *.bin
+	rm -f *.sym
