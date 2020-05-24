@@ -38,7 +38,7 @@ void mem_init(void)
     uint32_t end = 0;
     const struct bios_memmap_entry* entry = (const struct bios_memmap_entry*)(MEMORY_MAP + 8);
 
-    uint32_t possible_locations = 0;
+    size_t possible_locations = 0;
 
 #ifdef DEBUG
     printk("Memory map report: %d entries\n", len);
@@ -61,16 +61,26 @@ void mem_init(void)
         }
 
 #ifdef DEBUG
-        printk("Start: 0x%x; End: 0x%x Size: %d bytes; Type: %s\n", base, end, size, t);
+		if (((size / 1024) / 1024) != 0) {
+			printk("Start: 0x%x; End: 0x%x Size: %d bytes (%d MB); Type: %s\n", base, end, size, ((size / 1024) / 1024), t);
+		} else {
+			printk("Start: 0x%x; End: 0x%x Size: %d bytes; Type: %s\n", base, end, size, t);
+		}
 #endif
         ++entry;
     }
 
-    uint32_t memory_locations[possible_locations];
+#ifdef DEBUG
+    printk("possible_locations: %d, memory_locations_max[%d]\n", possible_locations, ((possible_locations * 2) - 1));
+#endif
 
-    uint32_t first_run = 1;
+    // Each possible location holds base address and end address, so multiply the array by 2 and
+    // substract 1 due to the fact that we have to count 0 (As it's an array)
+    uint32_t memory_locations[((possible_locations * 2) - 1)];
 
-    uint32_t counter = 0;
+    size_t first_run = 1;
+
+    size_t counter = 0;
 
     len = *(uint32_t*)MEMORY_MAP;
     const struct bios_memmap_entry* entry2 = (const struct bios_memmap_entry*)(MEMORY_MAP + 8);
@@ -78,33 +88,59 @@ void mem_init(void)
     base = 0;
     end = 0;
 
+#ifdef DEBUG
+    printk("Usable Memory Locations (Start - End):\n");
+#endif
+
     while (len-- != 0)
     {
         size = entry2->size & 0xFFFFFFFF;
         base = entry2->base & 0xFFFFFFFF;
         end = base + size;
         const char* t = entry2->type <= 5 ? strtype[entry2->type] : strtype[0];
+
+        // Check if Usable
         if (entry2->type == 1)
         {
             if (first_run == 1)
             {
                 memory_locations[0] = base;
+                memory_locations[1] = end;
                 first_run = 0;
 #ifdef DEBUG
-                printk("Usable Memory Locations: 0x%x\n", memory_locations[0]);
+                printk("0x%x - 0x%x\n", memory_locations[0], memory_locations[1]);
 #endif
-                counter++;
-            } else if (first_run == 0) {
-                memory_locations[counter] = base;
+                counter++; // counter = 1
+            } else {
+                memory_locations[counter + 1] = base;
+                memory_locations[counter + 2] = end;
 #ifdef DEBUG
-                printk("Usable Memory Locations: 0x%x\n", memory_locations[counter]);
+                printk("0x%x - 0x%x\n", memory_locations[counter + 1], memory_locations[counter + 2]);
 #endif
-                counter++;
+                counter += 2;
             }
         }
-
         ++entry2;
     }
+#ifdef DEBUG
+        printk("counter[%d], counter non array: %d\n", counter, counter+1);
+#endif
+        // Now we should decide which regions are large enough to satisfy our needs
+        // and we will mark them appropiately for the memory management related functions
+        for (size_t i = 0; counter > i; i += 2)
+        {
+#ifdef DEBUG
+        	printk("Current i: %d\n", i);
+#endif
+        	if ((memory_locations[i + 1] + memory_locations[i]) > 0x100000) // Check if bigger than 1MV
+        	{
+        		printk("Big region found -> Start: 0x%x, End: 0x%x\n", memory_locations[i], memory_locations[i + 1]);
+        	}
+
+#ifdef DEBUG
+            printk("Counter: %d\n", i);
+#endif
+        }
 }
 
 void _start(unsigned int ferrum_signature, unsigned int ferrum_low_mem)
