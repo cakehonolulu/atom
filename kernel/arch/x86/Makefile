@@ -45,11 +45,11 @@ $(KERNEL_IMAGE): $(ARCH_OBJECT_FILES)
 	
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
-	@echo " \033[0;35mCC \033[0m $<"
+	@echo " \033[0;35mCC\033[0m $<"
 
 %.o: %.S
 	$(AS) $(ASFLAGS) -c $< -o $@
-	@echo " \033[0;33mAS \033[0m $<"
+	@echo " \033[0;33mAS\033[0m $<"
 
 clean:
 	rm -f $(ARCH_OBJECT_FILES)

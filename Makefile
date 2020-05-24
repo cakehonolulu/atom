@@ -31,9 +31,9 @@ LDFLAGS =
 
 .PHONY: clean bochs qemu qemu-debug
 
-all: clean floppy
+all: clean floppy.img
 
-floppy: bloader arch
+floppy.img: bloader arch
 	-@mkfs.msdos -C floppy.img 1440 >/dev/null
 	-@dd conv=notrunc if=bootloader/$(ARCH)/boot0.bin of=floppy.img bs=512 seek=0 status=none
 	-@dd conv=notrunc if=bootloader/$(ARCH)/boot1.bin of=floppy.img bs=512 seek=1 status=none
