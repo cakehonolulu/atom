@@ -156,22 +156,22 @@ void _start(unsigned int initium_signature, unsigned int detected_low_memory)
 	// 0xA1B0516C =  Atom (A) Initium (I) Bootloader (B0) Signature (516) Check (C)
 	if (initium_signature == 0xA1B0516C)
 	{
-		unsigned char* vga = (unsigned char*) 0xb8000;
-		unsigned char bootedfromferrum[] = "[ATOM] Initium Bootloader detected!";
+		unsigned char* vga = (unsigned char*) 0xB8000;
+		unsigned char bootedfrominitium[] = "[ATOM] Initium Bootloader detected!";
 
-		for (int i = 0; i < (sizeof(bootedfromferrum) - 1); i++)
+		for (int i = 0; i < (sizeof(bootedfrominitium) - 1); i++)
 		{
-				vga[initial_vga_offset] = bootedfromferrum[i];
+				vga[initial_vga_offset] = bootedfrominitium[i];
 				vga[initial_vga_offset + 1] = 0x0F;
 				initial_vga_offset += 2;
 		}
 	} else {
-		unsigned char* vga = (unsigned char*) 0xb8000;
-		unsigned char notbootedfromferrum[] = "[ATOM] Initium Bootloader not detected!";
+		unsigned char* vga = (unsigned char*) 0xB8000;
+		unsigned char notbootedfrominitium[] = "[ATOM] Initium Bootloader not detected!";
 
-		for (int i = 0; i < (sizeof(notbootedfromferrum) - 1); i++)
+		for (int i = 0; i < (sizeof(notbootedfrominitium) - 1); i++)
 		{
-				vga[initial_vga_offset] = notbootedfromferrum[i];
+				vga[initial_vga_offset] = notbootedfrominitium[i];
 				vga[initial_vga_offset + 1] = 0x4F;
 				initial_vga_offset += 2;
 		}
