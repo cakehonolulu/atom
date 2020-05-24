@@ -143,7 +143,7 @@ void mem_init(void)
         }
 }
 
-void _start(unsigned int ferrum_signature, unsigned int ferrum_low_mem)
+void _start(unsigned int initium_signature, unsigned int detected_low_memory)
 {
 	i386_setup_vga_text_mode();
 
@@ -152,12 +152,12 @@ void _start(unsigned int ferrum_signature, unsigned int ferrum_low_mem)
     /* VGA 'cells' consist of the character and its control data
      * e.g. 'white on black background', 'red text on white bg', etc */
 
-	// Check if we booted using Ferrum's bootloader, if not, stop execution.
-	// 0xFEB0516C = Ferrum (FE) Bootloader (B0) Signature (516) Check (C)
-	if (ferrum_signature == 0xFEB0516C)
+	// Check if we booted using Atom's Initium bootloader, if not, stop execution.
+	// 0xA1B0516C =  Atom (A) Initium (I) Bootloader (B0) Signature (516) Check (C)
+	if (initium_signature == 0xA1B0516C)
 	{
 		unsigned char* vga = (unsigned char*) 0xb8000;
-		unsigned char bootedfromferrum[] = "Ferrum detected!";
+		unsigned char bootedfromferrum[] = "[ATOM] Initium Bootloader detected!";
 
 		for (int i = 0; i < (sizeof(bootedfromferrum) - 1); i++)
 		{
@@ -167,7 +167,7 @@ void _start(unsigned int ferrum_signature, unsigned int ferrum_low_mem)
 		}
 	} else {
 		unsigned char* vga = (unsigned char*) 0xb8000;
-		unsigned char notbootedfromferrum[] = "Ferrum not detected!";
+		unsigned char notbootedfromferrum[] = "[ATOM] Initium Bootloader not detected!";
 
 		for (int i = 0; i < (sizeof(notbootedfromferrum) - 1); i++)
 		{

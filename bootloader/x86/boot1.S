@@ -370,7 +370,7 @@ boot1Start32:
 	call boot1pmprintstring							# function that doesn't rely on BIOS Interrupts (Since we are
 													# on Protected Mode, print to the screen to inform the user.
 	mov INT15_LOW_MEMORY_VALUE, %ebx						# unsigned int INT15_LOW_MEMORY_VALUE
-	mov $0xFEB0516C, %eax							# unsigned int ferrum_signature
+	mov $0xA1B0516C, %eax							# unsigned int ferrum_signature
 	push %ebx
 	push %eax
 	jmp 0x100000
