@@ -43,14 +43,16 @@ x86: $(KERNEL_IMAGE)
 # We're not using the wildcarded object files as they are in random order and
 # leave the kernel unbootable!
 $(KERNEL_IMAGE): $(ARCH_OBJECT_FILES)
-	$(info Linking...)
+	@echo " \033[0;36mLD \033[0mnucleus.elf"
 	$(LD) $(LDFLAGS) -T $(LDSCRIPT) -o $@ init/kernel_entry.o init/kernel.o $(ARCH_FINAL_OFILES)
 	
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
+	@echo " \033[0;35mCC \033[0m $<"
 
 %.o: %.S
 	$(AS) $(ASFLAGS) -c $< -o $@
+	@echo " \033[0;33mAS \033[0m $<"
 
 clean:
 	rm -f $(ARCH_OBJECT_FILES)
