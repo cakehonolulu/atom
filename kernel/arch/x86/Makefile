@@ -16,7 +16,7 @@ ASFLAGS = --32
 LDSCRIPT = linker.ld
 
 ifeq ($(DEBUG), 1)
-    CFLAGS += -O0 -DHAVE_DEBUG
+    CFLAGS += -DDEBUG
     ASFLAGS =
 endif
 
