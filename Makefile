@@ -39,13 +39,6 @@ floppy: bloader arch
 	-@dd conv=notrunc if=bootloader/$(ARCH)/boot1.bin of=floppy.img bs=512 seek=1 status=none
 	-@dd conv=notrunc if=kernel/arch/$(ARCH)/kernel.bin of=floppy.img bs=512 seek=3 status=none
 
-flp:
-	rm -f floppy.img
-	-@mkfs.msdos -C floppy.img 1440 >/dev/null
-	-@dd conv=notrunc if=bootloader/$(ARCH)/boot0.bin of=floppy.img bs=512 seek=0 status=none
-	-@dd conv=notrunc if=bootloader/$(ARCH)/boot1.bin of=floppy.img bs=512 seek=1 status=none
-	-@dd conv=notrunc if=kernel/arch/$(ARCH)/kernel.bin of=floppy.img bs=512 seek=3 status=none
-
 arch:
 	make -C kernel/arch/$(ARCH)
 
