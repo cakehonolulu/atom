@@ -8,6 +8,8 @@ SECTIONS {
 
 	. = 1M;
 
+	kernel_start = .;
+
     .text :
     {
         *(.text)
@@ -28,4 +30,6 @@ SECTIONS {
         *(COMMON)
         *(.bss)
     }
+
+    kernel_end = .;
 }

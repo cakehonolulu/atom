@@ -2,6 +2,13 @@
 #include <stddef.h>
 #include <stdint.h>
 
+extern void *kernel_end;
+extern void *kernel_start;
+
+#define KERNEL_START (uint32_t)(&kernel_start)
+#define KERNEL_END (uint32_t)(&kernel_end)
+#define KERNEL_SIZE KERNEL_END - KERNEL_START
+
 #define MEMORY_MAP 0x9000
 
 enum bios_memmap_type
