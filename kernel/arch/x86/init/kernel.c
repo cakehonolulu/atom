@@ -203,6 +203,8 @@ void _start(unsigned int initium_signature, unsigned int detected_low_memory)
     
     printkok("Booted to kernel mode!");
 
+    printk("Kernel Start: 0x%x, Kernel End: 0x%x, Kernel Size: %d bytes (%d KB)\n", KERNEL_START, KERNEL_END, KERNEL_SIZE, ((KERNEL_END - KERNEL_START) / 1024));
+
     mem_init();
 
 	if (i386_gdt_install() == 1)
