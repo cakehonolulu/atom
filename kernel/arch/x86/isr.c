@@ -116,7 +116,15 @@ char *exception_messages[] = {
 };
 
 void isr_handler(registers_t *r) {
-    printk("received interrupt: %x, %s\n", r->int_no, exception_messages[r->int_no]);
+    if (interrupt_handlers[r->int_no] != 0)
+    {
+        isr_t handler = interrupt_handlers[r->int_no];
+        handler(&r);
+    }
+    else
+    {
+        printk("Unhandled Interrupt: 0x%x\n", r->int_no);
+    }
 }
 
 void register_interrupt_handler(unsigned char n, isr_t handler) {
@@ -132,7 +140,7 @@ void irq_handler(registers_t *r) {
     /* Handle the interrupt in a more modular way */
     if (interrupt_handlers[r->int_no] != 0) {
         isr_t handler = interrupt_handlers[r->int_no];
-        handler(r);
+        handler(&r);
     }
 }
 
