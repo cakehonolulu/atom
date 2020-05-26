@@ -56,7 +56,9 @@ boot0:												# boot0 function
 	mov $0x3, %ax									# Use VGA Text Mode
 	int $0x10										# Call BIOS interrupt 13.
 
-	call .boot0Loaded								# Call a function that displays a message on-screen.
+	mov $boot0LoadedMessage, %bx
+	call boot0print
+	call boot0printnl
 
 	mov %dl, boot0bootdrive							# Store BIOS dl value containing the boot drive number.
 
@@ -113,12 +115,6 @@ boot0printnl:
     int $0x10
     popa
     ret
-
-.boot0Loaded:
-	mov $boot0LoadedMessage, %bx
-	call boot0print
-	call boot0printnl
-	ret
 
 boot0diskerror:
 	mov $boot0DiskErrorMessage, %bx
