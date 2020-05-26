@@ -159,7 +159,7 @@ void mem_init(void)
         }
 }
 
-void _kmain(unsigned int initium_signature, unsigned int detected_low_memory)
+void _kmain(unsigned int initium_signature)
 {
 	i386_setup_vga_text_mode();
 

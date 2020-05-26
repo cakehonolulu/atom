@@ -60,8 +60,6 @@ LoadKernelFailMessage: .asciz "Failed to load the kernel!"
 DiskErrorMessage: .asciz "Disk Read Error!"
 
 /* Bootloader Variables */
-INT15_LOW_MEMORY_VALUE: .long 0x00
-
 VGA_TEXT_MODE_CURRENT_ROW: .long 0x00
 VGA_TEXT_MODE_CURRENT_COLUMN: .long 0x00
 VGA_TEXT_MODE_SCREEN_WIDTH: .long 0x00
@@ -85,10 +83,6 @@ init1:
 	call boot1print
 	call boot1printnl								
 	call boot1EnableA20
-
-	clc
-	int $0x12
-	mov %ax, INT15_LOW_MEMORY_VALUE
 
 	cli															# Disable interrupts.
 	cld															# CLD sets EFLAG's register DF flag to 0, this way, string
@@ -370,7 +364,7 @@ boot1Start32:
 	mov $EnteredProtectedModeMessage, %ebx				# We've landed correctly onto Protected Mode, using a new
 	call boot1pmprintstring							# function that doesn't rely on BIOS Interrupts (Since we are
 													# on Protected Mode, print to the screen to inform the user.
-	jmp 0x100000
+	ljmp $GDT_CODE_SEGMENT, $0x100000
 
 .boot1pmendloop:
 	hlt

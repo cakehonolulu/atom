@@ -5,16 +5,20 @@
 .type _bootstrap, @function
 _bootstrap:
 	movl $stack_top, %esp
+	and $-8, %esp
+    pushl %esp
+    pushl $0
+    popf
+
 	mov $0xA1B0516C, %eax
 	push %eax
+	
 	call _kmain
 
 	# If for some reason _kmain returns, hang indefinitely
 	cli
 1:	hlt
 	jmp 1b
-
-.size _bootstrap, . - _bootstrap
 
 .section .bss
 .align 8
