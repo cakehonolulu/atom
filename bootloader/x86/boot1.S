@@ -207,7 +207,7 @@ boot1ResetDrive:									# Function to reset floppy drive in order to ensure it'
 jc boot1ResetDrive
 	mov $0x02, %ah									# Set ah to 2 (AH=0x02 -> Disk Read Function).
 	# Sectors per track on a 1.44 MB floppy disk is 18. Since 18*4 = 72 (Which is the max theoretical sectors we can read)
-	mov $0x24, %al						# Set al to I386_KERNEL_SIZE (AL=$I386_KERNEL_SIZE0h) -> Sectors to be readed.
+	mov $0x25, %al						# Set al to I386_KERNEL_SIZE (AL=$I386_KERNEL_SIZE0h) -> Sectors to be readed.
 													# Where I386_KERNEL_SIZE equals to the number of sectors occupied by the kernel binary rounded 1 sector up.
 	mov $0x0, %ch									# Set ch to 0 (CH=0x00) -> Track 0 of the drive.
 													# TODO: Get boot1 size at runtime! For now, hardcode the size.
@@ -370,15 +370,11 @@ boot1Start32:
 	mov $EnteredProtectedModeMessage, %ebx				# We've landed correctly onto Protected Mode, using a new
 	call boot1pmprintstring							# function that doesn't rely on BIOS Interrupts (Since we are
 													# on Protected Mode, print to the screen to inform the user.
-	mov INT15_LOW_MEMORY_VALUE, %ebx						# unsigned int INT15_LOW_MEMORY_VALUE
-	mov $0xA1B0516C, %eax							# unsigned int ferrum_signature
-	push %ebx
-	push %eax
 	jmp 0x100000
 
 .boot1pmendloop:
-        hlt
-        jmp .boot1pmendloop
+	hlt
+	jmp .boot1pmendloop
 
 boot1pmgetbioscurpos:
     xor %eax, %eax									# Set EAX to 0.
