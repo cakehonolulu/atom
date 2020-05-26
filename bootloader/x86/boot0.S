@@ -135,3 +135,7 @@ boot0DiskErrorMessage: .asciz "Disk Read Error!"
 
 .word 0xAA55										# BIOS 2-byte magic number that enables the proper
 													# booting of this bootloader
+stage2_start:
+.incbin "boot1.bin"
+stage2_end:
+STAGE2_BYTES = ((stage2_end - stage2_start) + 511)	# Rounded up one sector
