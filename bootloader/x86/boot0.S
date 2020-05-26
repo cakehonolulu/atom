@@ -1,15 +1,17 @@
-.set BOOT1_STARTING_SECTOR, 0x2						# This is a constant! It will always be the same!
+.section .stage2_discard							# Maybe hacky, but hey, it works!
+stage2_start:
+.incbin "boot1.bin"
+stage2_end:
 
 .code16												# Produce 16-Bit Code (For Real Mode).
-
-#include "boot1.S"
-
 .section .text										# Text section.
+
+I386_BOOT1_SIZE = ((stage2_end - stage2_start) + 512) / 512 # Rounded up one sector
+
+.set BOOT1_STARTING_SECTOR, 0x2						# This is a constant! It will always be the same!
 
 .global init0										# Make our function globally available.
 .global boot0										# Make our function globally available.
-
-.section .text
 init0:												# init0 function
 	ljmp $0, $boot0									# [CS : IP] We long jump to CS=0x0 and IP=boot0,
 													# where our bootloader starts. That way, we don't assume
@@ -67,8 +69,8 @@ boot0ResetDrive:									# Function to reset floppy drive in order to ensure it'
 
 													# On this part we'll load our stage 2 bootloader onto 0x7E00 and jump to it.
 	mov boot0bootdrive, %dl							# Move boot0bootdrive value back into dl in case INT13 messes with it.
-	mov $0x02, %ah									# Set ah to 2 (AH=0x02 -> Disk Read Function).
-	mov $0x2, %al									# Set al to I386_BOOT1_SIZE (AL=$I386_BOOT1_SIZE0h) -> Sectors to be readed.
+	mov $0x2, %ah									# Set ah to 2 (AH=0x02 -> Disk Read Function).
+	mov $I386_BOOT1_SIZE, %al						# Set al to I386_BOOT1_SIZE (AL=$I386_BOOT1_SIZE) -> Sectors to be readed.
 													# Where I386_BOOT1_SIZE equals to the number of sectors occupied by the boot1 binary rounded 1 sector up.
 	mov $0x0, %ch									# Set ch to 0 (CH=0x00) -> Track 0 of the drive.
 	mov $BOOT1_STARTING_SECTOR, %cl					# Set CL to 2, this is hardcoded, because we're always going to start reading
@@ -135,7 +137,3 @@ boot0DiskErrorMessage: .asciz "Disk Read Error!"
 
 .word 0xAA55										# BIOS 2-byte magic number that enables the proper
 													# booting of this bootloader
-stage2_start:
-.incbin "boot1.bin"
-stage2_end:
-STAGE2_BYTES = ((stage2_end - stage2_start) + 511)	# Rounded up one sector

@@ -27,5 +27,10 @@ SECTIONS {
     {
         *(.bss)
     }
+
+    /DISCARD/ :
+    {
+      *(.stage2_discard)
+    }
     
 }
