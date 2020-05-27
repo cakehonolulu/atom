@@ -1,9 +1,9 @@
-AR = i686-elf-ar
-AS = i686-elf-as
-CC = i686-elf-gcc
-LD = i686-elf-ld
+AR = i786-elf-ar
+AS = i786-elf-as
+CC = i786-elf-gcc
+LD = i786-elf-ld
 NASM = nasm
-OBJCOPY = i686-elf-objcopy
+OBJCOPY = i786-elf-objcopy
 
 .PHONY: bootloader
 

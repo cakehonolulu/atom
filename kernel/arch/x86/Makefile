@@ -1,11 +1,11 @@
 DEBUG ?= 0
 
 # Tools
-AR = i686-elf-ar
-AS = i686-elf-as
-CC = i686-elf-gcc
-LD = i686-elf-ld
-OBJCOPY = i686-elf-objcopy
+AR = i786-elf-ar
+AS = i786-elf-as
+CC = i786-elf-gcc
+LD = i786-elf-ld
+OBJCOPY = i786-elf-objcopy
 
 # Tool flags
 # We should switch to -nostdlib --freestanding -fno-builtin
