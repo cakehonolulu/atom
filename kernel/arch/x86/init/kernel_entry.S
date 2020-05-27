@@ -1,6 +1,6 @@
-.code32	# This just acts kind of a wrapper between the boot1 second stage bootloader
+.code32				# This just acts kind of a wrapper between the boot1 second stage bootloader
 .section .kernel.entry
-	call _bootstrap		# and just calls another assembly file where we can do a bunch more things.
+	call _bootstrap	
 	cli
 	hlt
 
@@ -15,7 +15,7 @@
 .type _bootstrap, @function
 _bootstrap:
 	movl $stack_top, %esp
-	and $-8, %esp
+	and $-16, %esp
     pushl %esp
     pushl $0
     popf
@@ -36,7 +36,7 @@ _bootstrap:
 	jmp 1b
 
 .section .bss
-.align 8
+.align 16
 stack_bottom:
-.skip 8192 # 8 KiB
+.skip 16384 # 16 KiB
 stack_top:
