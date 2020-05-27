@@ -1,4 +1,5 @@
 #include "gdt.h"
+#include "paging.h"
 #include <stddef.h>
 #include <stdint.h>
 
@@ -228,6 +229,10 @@ void _kmain(unsigned int initium_signature)
 		printkfail("Failed to initialize IRQs");
 	}
 
+    initialise_paging();
+
+    printkok("Initialized Paging");
+
     /* IRQ0: timer */
     init_timer(50);
     /* IRQ1: keyboard */
@@ -248,6 +253,9 @@ void user_input(char *input)
     } else if (strcmp(input, "tick") == 0) {
     	extern unsigned int tick;
     	printk("Ticks: %u\n", tick);    
+    } else if (strcmp(input, "pfault") == 0) {
+        uint32_t *ptr = (uint32_t*)0xA0000000;
+        uint32_t do_page_fault = *ptr;
     } else if (strcmp(input, "memloc") == 0) {
         printk("Memory management is using a %d MB region located \nfrom 0x%x to 0x%x\n", (((memory_management_region_end - memory_management_region_start) / 1024) / 1024),
         memory_management_region_start, memory_management_region_end);
