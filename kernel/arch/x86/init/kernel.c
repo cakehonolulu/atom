@@ -9,7 +9,7 @@ extern void *kernel_hh_start;
 #define KERNEL_END (uint32_t)(&kernel_end)
 #define KERNEL_SIZE KERNEL_END - KERNEL_START
 
-#define MEMORY_MAP 0x9000
+#define MEMORY_MAP 0xC0009000
 
 enum bios_memmap_type
 {
@@ -205,7 +205,7 @@ void _kmain(unsigned int initium_signature)
 
     printk("Kernel Start: 0x%x, Kernel End: 0x%x, Kernel Size: %d bytes (%d KB)\n", KERNEL_START, KERNEL_END, KERNEL_SIZE, ((KERNEL_END - KERNEL_START) / 1024));
 
-    //mem_init();
+    mem_init();
 
 	if (i386_gdt_install() == 1)
 	{
