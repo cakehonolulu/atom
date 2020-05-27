@@ -1,7 +1,5 @@
 # Thanks to Octocontrabass, Combuster and MichaelPetch for the help @ forum.osdev.org
 
-.set MEMORY_MAP, 0x9000
-
 .code16
 
 .global init1
@@ -12,6 +10,7 @@
 .set BOOT1_PROTECTED_MODE_STACK_ADDRESS, 0x9C000
 .set VGA_MEMORY_LOCATION, 0xB8000
 .set VGA_MEMORY_ATTRIBUTES, 0x0F
+.set MEMORY_MAP, 0x9000
 
 /* Basic GDT. set-up for Unreal Mode, change descriptor 1 & 2 alongside 16->32 bit segment mode later on */
 gdt_start:
@@ -68,6 +67,9 @@ VGA_TEXT_MODE_SCREEN_HEIGHT: .long 0x00
 BOOT_DRIVE_NUMBER: .byte 0
 
 .section .text
+
+.extern I386_KERNEL_SIZE
+
 init1:
 	pop %bx														# Get the boot drive value from stack.
 	mov %bx, BOOT_DRIVE_NUMBER									# Place the boot drive value on a temporal buffer.
@@ -122,11 +124,11 @@ boot1HugeUnrealMode:
 	xor %ax, %ax
 	mov %ax, %es
 	mov %ax, %ds
-	mov %ax, %ss												# Set up stack segment.
-	mov $0x7C00, %sp											# Set the stack pointer register with 0x7C00.
+	mov $0x9000, %sp											# Set the stack pointer register with 0x9000.
 																# Stack Dissasembly:
-																# Top stack adress:		-> 0x7C00
-	mov %sp, %bp												# Move sp (Which now is 0x7C00) to the base pointer register.
+																# Top stack adress:		-> 0x9000
+	mov %ax, %ss												# Set up stack segment
+	mov %sp, %bp												# Move sp (Which now is 0x9000) to the base pointer register.
 	mov $EnteredUnrealModeMessage, %bx
 	call boot1print
 	call boot1printnl
@@ -201,7 +203,7 @@ boot1ResetDrive:									# Function to reset floppy drive in order to ensure it'
 jc boot1ResetDrive
 	mov $0x02, %ah									# Set ah to 2 (AH=0x02 -> Disk Read Function).
 	# Sectors per track on a 1.44 MB floppy disk is 18. Since 18*4 = 72 (Which is the max theoretical sectors we can read)
-	mov $0x25, %al						# Set al to I386_KERNEL_SIZE (AL=$I386_KERNEL_SIZE0h) -> Sectors to be readed.
+	mov $I386_KERNEL_SIZE, %al						# Set al to I386_KERNEL_SIZE (AL=$I386_KERNEL_SIZE0h) -> Sectors to be readed.
 													# Where I386_KERNEL_SIZE equals to the number of sectors occupied by the kernel binary rounded 1 sector up.
 	mov $0x0, %ch									# Set ch to 0 (CH=0x00) -> Track 0 of the drive.
 													# TODO: Get boot1 size at runtime! For now, hardcode the size.

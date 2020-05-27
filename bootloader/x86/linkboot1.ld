@@ -28,4 +28,9 @@ SECTIONS {
         *(.bss)
     }
 
+    /DISCARD/ :
+    {
+      *(.kernel_discard)
+    }
+
 }

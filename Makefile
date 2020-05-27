@@ -42,7 +42,7 @@ LDFLAGS =
 
 all: clean floppy.img
 
-floppy.img: bloader arch
+floppy.img: arch bloader
 	-@mkfs.msdos -C floppy.img 1440 >/dev/null
 	-@dd conv=notrunc if=bootloader/$(ARCH)/boot0.bin of=floppy.img bs=512 seek=$(FLOPPY_SECTOR1) status=none
 	-@dd conv=notrunc if=bootloader/$(ARCH)/boot1.bin of=floppy.img bs=512 seek=$(FLOPPY_SECTOR2) status=none

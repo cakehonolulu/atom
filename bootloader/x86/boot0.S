@@ -1,12 +1,8 @@
-.section .stage2_discard							# Maybe hacky, but hey, it works!
-stage2_start:
-.incbin "boot1.bin"
-stage2_end:
-
 .code16												# Produce 16-Bit Code (For Real Mode).
-.section .text										# Text section.
 
-I386_BOOT1_SIZE = ((stage2_end - stage2_start) + 512) / 512 # Rounded up one sector
+.extern I386_BOOT1_SIZE
+
+.section .text										# Text section.
 
 .set BOOT1_STARTING_SECTOR, 0x2						# This is a constant! It will always be the same!
 
