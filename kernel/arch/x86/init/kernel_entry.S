@@ -14,7 +14,10 @@
 
 .type _bootstrap, @function
 _bootstrap:
-	movl $stack_top, %esp
+	# Setup the kernel stack
+	mov $stack_top, %esp
+
+	# Stack is 16 byte aligned
 	and $-16, %esp
 
 	xor %eax, %eax
@@ -23,7 +26,9 @@ _bootstrap:
 	rep stosl
 
 	mov $0xA1B0516C, %eax
-	push %eax
+
+	pushl %esp
+	pushl %eax
 	
 	call _kmain
 
