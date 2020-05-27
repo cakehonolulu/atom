@@ -1,6 +1,8 @@
 .code32
 .section .text
 .extern _kmain
+.extern __bss_start
+.extern __bss_sizel
 .global _bootstrap
 .type _bootstrap, @function
 _bootstrap:
@@ -9,6 +11,11 @@ _bootstrap:
     pushl %esp
     pushl $0
     popf
+
+	xor %eax, %eax
+	mov $__bss_sizel, %ecx
+	mov $__bss_start, %edi
+	rep stosl
 
 	mov $0xA1B0516C, %eax
 	push %eax
