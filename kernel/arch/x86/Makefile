@@ -23,9 +23,11 @@ endif
 
 ARCH_C_SOURCE_FILES=$(shell find . -name '*.c')
 ARCH_S_SOURCE_FILES=$(shell find . -name '*.S')
+ARCH_ASM_SOURCE_FILES=$(shell find . -name '*.asm')
 
 ARCH_OBJECT_FILES=$(patsubst %.S,%.o,$(ARCH_S_SOURCE_FILES))
 ARCH_OBJECT_FILES+=$(patsubst %.c,%.o,$(ARCH_C_SOURCE_FILES))
+ARCH_OBJECT_FILES+=$(patsubst %.asm,%.o,$(ARCH_ASM_SOURCE_FILES))
 
 KERNEL_IMAGE = nucleus.elf
 
@@ -44,6 +46,10 @@ $(KERNEL_IMAGE): $(ARCH_OBJECT_FILES)
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 	@echo " \033[0;35mCC\033[0m $<"
+
+%.o: %.asm
+	$(NASM) -f elf $< -o $@
+	@echo " \033[0;35mAS\033[0m $<"
 
 %.o: %.S
 	$(AS) $(ASFLAGS) -c $< -o $@
