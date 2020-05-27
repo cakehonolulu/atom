@@ -18,6 +18,8 @@ SECTIONS {
 
     . += 0xC0000000;
 
+    kernel_hh_start = .; _kernel_hh_start = .; __kernel_hh_start = .;
+
     .text ALIGN (0x1000) : AT(ADDR(.text) - 0xC0000000)
     {
         *(.text)

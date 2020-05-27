@@ -3,9 +3,9 @@
 #include <stdint.h>
 
 extern void *kernel_end;
-extern void *kernel_start;
+extern void *kernel_hh_start;
 
-#define KERNEL_START (uint32_t)(&kernel_start)
+#define KERNEL_START (uint32_t)(&kernel_hh_start)
 #define KERNEL_END (uint32_t)(&kernel_end)
 #define KERNEL_SIZE KERNEL_END - KERNEL_START
 
