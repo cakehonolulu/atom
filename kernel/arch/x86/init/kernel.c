@@ -172,7 +172,7 @@ void _kmain(unsigned int initium_signature)
 	// 0xA1B0516C =  Atom (A) Initium (I) Bootloader (B0) Signature (516) Check (C)
 	if (initium_signature == 0xA1B0516C)
 	{
-		unsigned char* vga = (unsigned char*) 0xB8000;
+		unsigned char* vga = (unsigned char*) 0xC00B8000;
 		unsigned char bootedfrominitium[] = "[ATOM] Initium Bootloader detected!";
 
 		for (int i = 0; i < (sizeof(bootedfrominitium) - 1); i++)
@@ -182,7 +182,7 @@ void _kmain(unsigned int initium_signature)
 				initial_vga_offset += 2;
 		}
 	} else {
-		unsigned char* vga = (unsigned char*) 0xB8000;
+		unsigned char* vga = (unsigned char*) 0xC00B8000;
 		unsigned char notbootedfrominitium[] = "[ATOM] Initium Bootloader not detected!";
 
 		for (int i = 0; i < (sizeof(notbootedfrominitium) - 1); i++)
@@ -205,7 +205,7 @@ void _kmain(unsigned int initium_signature)
 
     printk("Kernel Start: 0x%x, Kernel End: 0x%x, Kernel Size: %d bytes (%d KB)\n", KERNEL_START, KERNEL_END, KERNEL_SIZE, ((KERNEL_END - KERNEL_START) / 1024));
 
-    mem_init();
+    //mem_init();
 
 	if (i386_gdt_install() == 1)
 	{

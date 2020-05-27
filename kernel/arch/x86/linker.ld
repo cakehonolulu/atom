@@ -1,4 +1,4 @@
-ENTRY(_bootstrap)
+ENTRY(_kernel_entry)
 
 OUTPUT_FORMAT(elf32-i386)
 
@@ -8,25 +8,32 @@ SECTIONS {
 
 	. = 1M;
 
-	kernel_start = .;
+	kernel_start = .; _kernel_start = .; __kernel_start = .;
 
-    .text BLOCK(4K) : ALIGN(4K)
+    .kernel.entry BLOCK(4K) : ALIGN(4K)
     {
-        *(.kernel.entry)
+        *(.kernel.entry.text)
+        *(.kernel.entry.data)
+    }
+
+    . += 0xC0000000;
+
+    .text ALIGN (0x1000) : AT(ADDR(.text) - 0xC0000000)
+    {
         *(.text)
     }
 
-    .rodata BLOCK(4K) : ALIGN(4K)
+    .rodata ALIGN (0x1000) : AT(ADDR(.rodata) - 0xC0000000)
     {
         *(.rodata)
     }
 
-    .data BLOCK(4K) : ALIGN(4K)
+    .data ALIGN (0x1000) : AT(ADDR(.data) - 0xC0000000)
     {
         *(.data)
     }
 
-    .bss BLOCK(4K) : ALIGN(4K)
+    .bss : AT(ADDR(.bss) - 0xC0000000)
     {
         __bss_start = .;
         *(COMMON)            /* all COMMON sections from all files */
