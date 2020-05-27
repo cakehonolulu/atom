@@ -16,9 +16,6 @@
 _bootstrap:
 	movl $stack_top, %esp
 	and $-16, %esp
-    pushl %esp
-    pushl $0
-    popf
 
 	xor %eax, %eax
 	mov $__bss_sizel, %ecx
@@ -35,8 +32,7 @@ _bootstrap:
 1:	hlt
 	jmp 1b
 
-.section .bss
-.align 16
+.section .stack, "aw", @nobits
 stack_bottom:
-.skip 16384 # 16 KiB
+.skip 32768 # 32 KiB
 stack_top:
