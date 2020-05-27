@@ -5,6 +5,7 @@ AR = i786-elf-ar
 AS = i786-elf-as
 CC = i786-elf-gcc
 LD = i786-elf-ld
+NASM = nasm
 OBJCOPY = i786-elf-objcopy
 
 # Tool flags
@@ -26,9 +27,6 @@ ARCH_S_SOURCE_FILES=$(shell find . -name '*.S')
 ARCH_OBJECT_FILES=$(patsubst %.S,%.o,$(ARCH_S_SOURCE_FILES))
 ARCH_OBJECT_FILES+=$(patsubst %.c,%.o,$(ARCH_C_SOURCE_FILES))
 
-ARCH_OFILES_NOENTRY := $(filter-out ./init/kernel_entry.o,$(ARCH_OBJECT_FILES))
-ARCH_FINAL_OFILES := $(filter-out ./init/kernel.o,$(ARCH_OFILES_NOENTRY))
-
 KERNEL_IMAGE = nucleus.elf
 
 .PHONY: x86 clean
@@ -41,7 +39,7 @@ x86: $(KERNEL_IMAGE)
 # We should probably switch to nostdlib soon
 $(KERNEL_IMAGE): $(ARCH_OBJECT_FILES)
 	@echo " \033[0;36mLD \033[0mnucleus.elf"
-	$(LD) $(LDFLAGS) -T $(LDSCRIPT) -o $@ init/kernel_entry.o init/kernel.o $(ARCH_FINAL_OFILES)
+	$(LD) $(LDFLAGS) -T $(LDSCRIPT) -o $@ $(ARCH_OBJECT_FILES)
 	
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
