@@ -10,22 +10,23 @@ SECTIONS {
 
 	kernel_start = .;
 
-    .text :
+    .text BLOCK(4K) : ALIGN(4K)
     {
         *(.text)
     }
 
-    .rodata :
+    .rodata BLOCK(4K) : ALIGN(4K)
     {
         *(.rodata)
     }
 
-    .data :
+    .data BLOCK(4K) : ALIGN(4K)
     {
         *(.data)
     }
 
-    .bss : SUBALIGN(4) {
+    .bss BLOCK(4K) : ALIGN(4K)
+    {
         __bss_start = .;
         *(COMMON)            /* all COMMON sections from all files */
         *(.bss)              /* all BSS sections from all files */
@@ -35,6 +36,10 @@ SECTIONS {
     __bss_sizeb = __bss_end - __bss_start;       /* BSS size in bytes */
     __bss_sizel = (__bss_end - __bss_start) / 4; /* BSS size in longs/DWORDs */
 
+    /DISCARD/ : {            /* Remove Unneeded sections */
+        *(.eh_frame);
+        *(.comment);
+    }
 
-    kernel_end = .;
+    kernel_end = .; _kernel_end = .; __kernel_end = .;
 }
