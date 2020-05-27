@@ -12,7 +12,8 @@ It is designed for being used on i386+ processors using BIOS (Or UEFI's Legacy-C
 #### a - Compile Prerequisites:
 Compiling Atom only depends on:
 
-	* i[3-6]86-elf Cross Compiler Toolchain 
+	* i[3-6]86-elf Cross Compiler Toolchain
+	* nasm
 	* make
 	* dosfstools
 
