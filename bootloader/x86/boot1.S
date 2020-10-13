@@ -66,6 +66,8 @@ VGA_TEXT_MODE_SCREEN_HEIGHT: .long 0x00
 
 BOOT_DRIVE_NUMBER: .byte 0
 
+Load64Bit: .byte 0
+
 .section .text
 
 .extern I386_KERNEL_SIZE
@@ -77,13 +79,41 @@ init1:
 	xor %ax, %ax												# Set ax to 0.
 	mov %ax, %ds												# Set ds to 0.
 	mov %ax, %ss												# Set up stack segment.
-	mov $0x7C00, %sp											# Set the stack pointer register with 0x7C00.
+	mov $0x8C00, %sp											# Set the stack pointer register with 0x7C00.
 																# Stack Dissasembly:
 																# Top stack adress:		-> 0x7C00
 	mov %sp, %bp												# Move sp (Which now is 0x7C00) to the base pointer register.
 	mov $Stage2LoadedMessage, %bx								# Print a message that tells we're currently on second stage bootloader.
+
 	call boot1print
-	call boot1printnl								
+	call boot1printnl
+
+AskBootMode:
+	xor %ax, %ax
+	int  $0x16
+	cmp $0x6c, %al
+	je .LMO
+
+	cmp $0x70, %al
+	je .PMO
+
+	jmp AskBootMode
+
+.PMO:
+	# xchg %bx, %bx	# DEBUG!
+	xor %ax, %ax
+	mov $0, %ax
+	mov %ax, Load64Bit
+	call .Continue
+
+.LMO:
+	# xchg %bx, %bx	# DEBUG!
+	xor %ax, %ax
+	mov $1, %ax
+	mov %ax, Load64Bit
+	call .Continue
+	
+.Continue:								
 	call boot1EnableA20
 
 	cli															# Disable interrupts.
@@ -187,7 +217,6 @@ boot1UnrealModePrepareKernel:
 	mov $0x200, %cx
 	mov $0x9, %bx
 .loop:
-	xchg %bx, %bx
 	addr32 rep movsb
 	dec %bx
 	jnz .loop
@@ -366,11 +395,26 @@ boot1Start32:
 	mov $EnteredProtectedModeMessage, %ebx				# We've landed correctly onto Protected Mode, using a new
 	call boot1pmprintstring							# function that doesn't rely on BIOS Interrupts (Since we are
 													# on Protected Mode, print to the screen to inform the user.
+	
+
+	# xchg %bx, %bx # DEBUG!
+	xor %eax, %eax
+	mov Load64Bit, %ax
+	cmp $0, %ax
+	je .Continue32
+
+	cli
+	hlt
+
+.Continue32:
 	ljmp $GDT_CODE_SEGMENT, $0x100000
+	cli
+	hlt
 
 .boot1pmendloop:
 	hlt
 	jmp .boot1pmendloop
+
 
 boot1pmgetbioscurpos:
     xor %eax, %eax									# Set EAX to 0.
