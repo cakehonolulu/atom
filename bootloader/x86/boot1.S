@@ -41,6 +41,26 @@ gdt:
 	.word (gdt_end - gdt_start - 1)
 	.long gdt_start
 
+.set PAGING_BIT, 0x80000000
+.set NO_PAGING_BIT, 0x7FFFFFFF
+.set PAGE_TABLE_START, 0
+.set PAGE_TABLE_SIZE, 0x1000 /* Combined size of all page tables divided by 4 */
+.set PAGE_SIZE, 0x1000 /* Size of a memory page. Also the size of a single page table */
+.set PAE_BIT, 0x20
+.set EFER_MSR, 0xC0000080 /* Extended Feature Enable Register Model Specific Register */
+.set LONG_MODE, 0x100
+
+/* Address of first table of a type OR'd with 3
+   (3 indicates present and readable) */
+.set PDPT, 0x1003	/* Page Directory Pointer Table */
+.set PDT, 0x2003	/* Page Directory Table */
+.set PT, 0x3003		/* Page Table */
+
+/* These parameter will identity map the first 2 Megabytes */
+.set MEM_START, 3		/* Address (OR'd with 3) of first mapped physical memory */
+.set NUM_PAGES, 0x200	/* Number of memory pages */
+
+
 /* Bootloader Strings */
 A20AlreadyEnabledMessage: .asciz "A20 Line is already enabled, skipping..." // Bochs for example, enables it regardless the OS
 A20EnabledMessage: .asciz "A20 Line enabled Successfully!"
@@ -51,6 +71,10 @@ UnrealModeGDTLoadedMessage: .asciz "Unreal Mode GDT Loaded"
 
 EnteredProtectedModeMessage: .asciz "Entered Protected Mode"
 EnteredUnrealModeMessage: .asciz "Entered Unreal Mode"
+
+BootModeText: .asciz "Which Mode you want Atom to work? (PMode = P, Long Mode = L)"
+LMOBitText: .asciz "64 Bit Mode Selected"
+PMOBitText: .asciz "32 Bit Mode Selected"
 
 LoadingKernelMessage: .asciz "Loading Kernel..."
 LoadedKernelMessage: .asciz "Loaded Kernel"
@@ -79,7 +103,7 @@ init1:
 	xor %ax, %ax												# Set ax to 0.
 	mov %ax, %ds												# Set ds to 0.
 	mov %ax, %ss												# Set up stack segment.
-	mov $0x8C00, %sp											# Set the stack pointer register with 0x7C00.
+	mov $0x7C00, %sp											# Set the stack pointer register with 0x7C00.
 																# Stack Dissasembly:
 																# Top stack adress:		-> 0x7C00
 	mov %sp, %bp												# Move sp (Which now is 0x7C00) to the base pointer register.
@@ -89,6 +113,10 @@ init1:
 	call boot1printnl
 
 AskBootMode:
+	mov $BootModeText, %bx								# Print a message that tells we're currently on second stage bootloader.
+
+	call boot1print
+	call boot1printnl
 	xor %ax, %ax
 	int  $0x16
 	cmp $0x6c, %al
@@ -236,7 +264,7 @@ jc boot1ResetDrive
 													# Where I386_KERNEL_SIZE equals to the number of sectors occupied by the kernel binary rounded 1 sector up.
 	mov $0x0, %ch									# Set ch to 0 (CH=0x00) -> Track 0 of the drive.
 													# TODO: Get boot1 size at runtime! For now, hardcode the size.
-	mov $0x4, %cl									# Set cl to I386_KERNEL_STARTING_LOCATION (CL=I386_KERNEL_STARTING_LOCATION)
+	mov $0x7, %cl									# Set cl to I386_KERNEL_STARTING_LOCATION (CL=I386_KERNEL_STARTING_LOCATION)
 													# Which is sector of the drive from which we start reading the kernel from.
 	mov $0x0, %dh									# Set dh to 0 (DH=0x00) -> Head 0 of the drive.
 	xor %bx, %bx									# Set bx to 0.
@@ -403,6 +431,60 @@ boot1Start32:
 	cmp $0, %ax
 	je .Continue32
 
+	call DetectCPUID
+	call DetectLongMode
+	
+		/* Disable old paging */
+	movl %cr0, %eax
+	andl $NO_PAGING_BIT, %eax
+	movl %eax, %cr0
+
+	/* Clear page tables */
+	movl $PAGE_TABLE_START, %edi	/* Set destination */
+	xorl %eax, %eax					/* clear eax */
+	movl $PAGE_TABLE_SIZE, %ecx		/* Set number of iterations */
+	movl %edi, %cr3					/* Set cr3 to page table start */
+	rep stosl						/* Set memory */
+	movl %cr3, %edi					/* Reset destination */
+
+	/* Populate first entry of each table */
+	movl $PDPT, (%edi)
+	addl $PAGE_SIZE, %edi
+	movl $PDT, (%edi)
+	addl $PAGE_SIZE, %edi
+	movl $PT, (%edi)
+
+	/* Map virtual to physical memory using the first page table */
+	addl $PAGE_SIZE, %edi
+	movl $MEM_START, %ebx
+	movl $NUM_PAGES, %ecx
+setEntry:
+	movl %ebx, (%edi)
+	addl $PAGE_SIZE, %ebx	/* Address of next page */
+	addl $8, %edi			/* Address of next entry */
+	loop setEntry
+	
+	/* Enable PAE paging */
+	movl %cr4, %eax
+	orl $PAE_BIT, %eax
+	movl %eax, %cr4
+
+	/* Switch to long mode */
+	movl $EFER_MSR, %ecx
+	rdmsr
+	orl $LONG_MODE, %eax
+	wrmsr
+
+	/* Enable Paging */
+	movl %cr0, %eax
+	orl $PAGING_BIT, %eax
+	movl %eax, %cr0
+
+	mov $0b10101111, %al
+	mov %al, (gdt_code + 6)										# We dynamically modify the GDT structure to try optimizing
+	mov %al, (gdt_data + 6)										# the size, change both segment's bitmode to 32-bit.
+
+	ljmpl $GDT_CODE_SEGMENT, $boot1Start64
 	cli
 	hlt
 
@@ -414,6 +496,35 @@ boot1Start32:
 .boot1pmendloop:
 	hlt
 	jmp .boot1pmendloop
+
+
+DetectCPUID:
+	pushfl
+	pop %eax
+	mov %eax, %ecx
+	xor $(1 << 21), %eax
+	push %eax
+	popfl
+	pushfl
+	pop %eax
+	push %ecx
+	popfl
+	xor %ecx, %eax
+	jz NoCPUID
+	ret
+
+NoCPUID:
+	hlt
+
+DetectLongMode:
+	mov $0x80000001, %eax
+	cpuid
+	test $(1 << 29), %edx
+	jz NoLongMode
+	ret
+
+NoLongMode:
+	hlt
 
 
 boot1pmgetbioscurpos:
@@ -484,3 +595,13 @@ boot1pmprintstring:
 	call boot1pmsetcursor
 	popa
 	ret
+
+
+.code64
+
+boot1Start64:
+	mov $0xb8000, %edi
+	mov $0x1f201f201f201f20, %rax
+	mov $500, %ecx
+	rep stosq
+	hlt

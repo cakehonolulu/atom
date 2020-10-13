@@ -33,7 +33,7 @@ FLOPPY_SECTOR1 = 0
 FLOPPY_SECTOR2 = 1
 # Hardcoded to 3 for now! Find a way to find this variable dynamically using Second Stage Bootloader's
 # (boot1) size.
-FLOPPY_KERNEL_STARTING_SECTOR = 3
+FLOPPY_KERNEL_STARTING_SECTOR = 6
 
 LDSCRIPT = kernel/arch/$(ARCH)/linker.ld
 LDFLAGS =
