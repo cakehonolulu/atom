@@ -23,7 +23,8 @@ bootloader:
 	$(OBJCOPY) -O binary boot0.elf boot0.bin
 
 clean:
-	rm -f *.o
+	rm -f boot1/*.o
+	rm -f boot0/*.o
 	rm -f *.sym
 	rm -f *.bin
 	rm -f *.elf
