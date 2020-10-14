@@ -25,6 +25,7 @@ bootloader:
 clean:
 	rm -f boot1/*.o
 	rm -f boot0/*.o
+	rm -f boot0/*.bin
 	rm -f *.sym
 	rm -f *.bin
 	rm -f *.elf
