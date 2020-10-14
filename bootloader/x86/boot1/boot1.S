@@ -70,15 +70,25 @@ UnrealModeGDTLoadedMessage: .asciz "Unreal Mode GDT Loaded"
 EnteredProtectedModeMessage: .asciz "Entered Protected Mode"
 EnteredUnrealModeMessage: .asciz "Entered Unreal Mode"
 
+ResettingFloppyMessage: .asciz "Resetting Floppy..."
+ResettedFloppyMessage: .asciz "Resetted Floppy!"
+
+ReadingKernelMessage: .asciz "Reading Kernel from Disk..."
+ReadedKernelMessage: .asciz "Readed Kernel from Disk!"
+ReadKernelFailMessage: .asciz "Failed to Read the Kernel!"
+DiskErrorMessage: .asciz "Disk Read Error!"
+
+RelocatingKernelMessage: .asciz "Relocating Kernel at Address: 0x10000 (1MB Mark)..."
+RelocatedKernelMessage: .asciz "Relocated Successfully!"
+RelocateKernelFailMessage: .asciz "Kernel Relocation Went Wrong, Halting!"
+
+LoadingKernelMessage: .asciz "Loading Kernel..."
+LoadedKernelMessage: .asciz "Loaded Kernel!"
+
+
 BootModeText: .asciz "Which Mode you want Atom to work? (PMode = P, Long Mode = L)"
 LMOBitText: .asciz "64 Bit Mode Selected"
 PMOBitText: .asciz "32 Bit Mode Selected"
-
-LoadingKernelMessage: .asciz "Loading Kernel..."
-LoadedKernelMessage: .asciz "Loaded Kernel"
-LoadKernelFailMessage: .asciz "Failed to load the kernel!"
-
-DiskErrorMessage: .asciz "Disk Read Error!"
 
 /* Bootloader Variables */
 VGA_TEXT_MODE_CURRENT_ROW: .long 0x00
@@ -190,18 +200,20 @@ boot1HugeUnrealMode:
 	call boot1printnl
 	call boot1UnrealModePrepareKernel
 	cmp $0, %ax
-	jnz boot1UnrealModeLoadKernelFail
-	cli
-    xor %bp, %bp            // counter variable
-    xor %ebx, %ebx          // initially ebx=0
-    mov %bx, %es            // es:di -> buffer
-    mov $MEMORY_MAP + 8, %di
+	jnz boot1UnrealModeRelocateKernelFail
+
+	call boot1UMRelocatedKernel
+
+    xor %ebx, %ebx
+    xor %bp, %bp
+    
+    mov $MEMORY_MAP + 8, %di // Destination Location (Add 8 to MEMORY_MAP else int15 will freeze after adding entries)
 0:
-    movl $1, %es:20(%di)    // allow ACPI 3.x entry
-    mov $0x534d4150, %edx   // magic number
-    mov $24, %ecx           // request 24 bytes
+    movl $1, %es:20(%di)
+    mov $0x534d4150, %edx
+    mov $24, %ecx
     mov $0xe820, %eax
-    int $0x15               // ebx <- some internal value
+    int $0x15
     jc boot1UnrealModeLoadKernelFail
     cmp $0x534d4150, %eax
     jne boot1UnrealModeLoadKernelFail
@@ -228,6 +240,7 @@ boot1HugeUnrealMode:
 	mov $0b11001111, %al
 	mov %al, (gdt_code + 6)										# We dynamically modify the GDT structure to try optimizing
 	mov %al, (gdt_data + 6)										# the size, change both segment's bitmode to 32-bit.
+	cli
 	lgdt gdt
 	ljmpl $GDT_CODE_SEGMENT, $boot1Start32
 	cli
@@ -235,6 +248,7 @@ boot1HugeUnrealMode:
 
 boot1UnrealModePrepareKernel:
 	call boot1UnrealModeLoadKernel
+	call boot1UMRelocatingKernel
 	mov $0x1000, %esi
 	mov $0x100000, %edi
 	mov $0x200, %cx
@@ -248,11 +262,19 @@ boot1UnrealModePrepareKernel:
 .done: ret
 
 boot1UnrealModeLoadKernel:
-boot1ResetDrive:									# Function to reset floppy drive in order to ensure it's working correctly.
-	mov	$0x00, %ah									# Set ah to 0 (AH=0x00 -> Reset Disk Function).
-	mov BOOT_DRIVE_NUMBER, %dl							# Move BOOT_DRIVE_NUMBER value back into dl.
-	int	$0x13										# Call BIOS interrupt 13.
-jc boot1ResetDrive
+	call boot1UMLoadingKernel
+
+	call boot1UMResettingFloppy
+	boot1ResetDrive:									# Function to reset floppy drive in order to ensure it's working correctly.
+		mov	$0x00, %ah									# Set ah to 0 (AH=0x00 -> Reset Disk Function).
+		mov BOOT_DRIVE_NUMBER, %dl						# Move BOOT_DRIVE_NUMBER value back into dl.
+		int	$0x13										# Call BIOS interrupt 13.
+		jc boot1ResetDrive
+
+	call boot1UMResettedFloppy
+
+	call boot1UMReadingKernel
+
 	mov $0x02, %ah									# Set ah to 2 (AH=0x02 -> Disk Read Function).
 	# Sectors per track on a 1.44 MB floppy disk is 18. Since 18*4 = 72 (Which is the max theoretical sectors we can read)
 	mov $I386_KERNEL_SIZE, %al						# Set al to I386_KERNEL_SIZE (AL=$I386_KERNEL_SIZE0h) -> Sectors to be readed.
@@ -266,11 +288,21 @@ jc boot1ResetDrive
 	mov %bx, %es									# Move bx onto our extra segment register to prepare the jump.
 	mov $0x1000, %bx								# Set our bx register with the adress we'll jump to.
 	int $0x13										# Call BIOS interrupt 13.
-	jc boot1UnrealModeLoadKernelFail
+	jc boot1UnrealModeReadKernelFail
+
+	call boot1UMReadedKernel
+
 	ret
 
-boot1UnrealModeLoadKernelFail:
-	mov $LoadKernelFailMessage, %bx
+boot1UnrealModeReadKernelFail:
+	mov $ReadKernelFailMessage, %bx
+	call boot1print
+	call boot1printnl
+	cli
+	jmp boot1Halt
+
+boot1UnrealModeRelocateKernelFail:
+	mov $RelocateKernelFailMessage, %bx
 	call boot1print
 	call boot1printnl
 	cli
@@ -345,6 +377,10 @@ boot1CheckA20LineState:
 	popw %ds
 	ret
 
+boot1UnrealModeLoadKernelFail:
+	cli
+	hlt
+
 boot1A20HasBeenEnabled:
 	mov $A20EnabledMessage, %bx
 	call boot1print
@@ -371,6 +407,42 @@ boot1LandedUnrealMode:
 
 boot1UMLoadingKernel:
 	mov $LoadingKernelMessage, %bx
+	call boot1print
+	call boot1printnl
+	ret
+
+boot1UMResettingFloppy:
+	mov $ResettingFloppyMessage, %bx
+	call boot1print
+	call boot1printnl
+	ret
+
+boot1UMResettedFloppy:
+	mov $ResettedFloppyMessage, %bx
+	call boot1print
+	call boot1printnl
+	ret
+
+boot1UMReadingKernel:
+	mov $ReadingKernelMessage, %bx
+	call boot1print
+	call boot1printnl
+	ret
+
+boot1UMReadedKernel:
+	mov $ReadedKernelMessage, %bx
+	call boot1print
+	call boot1printnl
+	ret
+
+boot1UMRelocatingKernel:
+	mov $RelocatingKernelMessage, %bx
+	call boot1print
+	call boot1printnl
+	ret
+
+boot1UMRelocatedKernel:
+	mov $RelocatedKernelMessage, %bx
 	call boot1print
 	call boot1printnl
 	ret
