@@ -669,4 +669,22 @@ boot1Start64:
 	mov $0x1f201f201f201f20, %rax
 	mov $500, %ecx
 	rep stosq
+
+	mov $0xb8000, %edi
+
+	mov $0x1F651F741F6e1F45, %rax    
+    mov %rax, (%edi)
+ 
+    mov $0x1F201F641F651F72, %rax
+    mov %rax, 8(%edi) 
+ 
+    mov $0x1F671F6e1F6f1F4c, %rax
+    mov %rax, 16(%edi)
+
+    mov $0x1F641F6f1F4d1F20, %rax
+    mov %rax, 24(%edi)
+
+    mov $0x1f001f001F211F65, %rax
+    mov %rax, 32(%edi)
+
 	hlt
