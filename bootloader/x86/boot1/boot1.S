@@ -1,7 +1,5 @@
 # Thanks to Octocontrabass, Combuster and MichaelPetch for the help @ forum.osdev.org
 
-.code16
-
 .global init1
 
 .section .data
@@ -92,9 +90,12 @@ BOOT_DRIVE_NUMBER: .byte 0
 
 Load64Bit: .byte 0
 
+.extern I386_KERNEL_SIZE
+.extern main
+
 .section .text
 
-.extern I386_KERNEL_SIZE
+.code16
 
 init1:
 	pop %bx														# Get the boot drive value from stack.
@@ -157,8 +158,6 @@ AskBootMode:
 	or $0x1, %al												# Set the Protected Mode Bit of EAX.
 	mov %eax, %cr0												# Move back EAX to CR0, enabling Protected Mode.
 
-.code32
-	.byte 0x66
 	ljmp $GDT_CODE_SEGMENT, $boot1TemporalProtectedMode			# Enable Protected Mode by Long-Jumping (This changes the Instruction
 																# Pointer Register alongside the Code Segment).
 																# After jumping to Protected Mode (32-BIT) and setting the 4GiB Code/Data
@@ -168,7 +167,6 @@ AskBootMode:
 																# of Real Mode called Unreal Mode where we will be able to load the Kernel
 																# over the 1MiB mark due to the fact that we have 4GiB Code & Data Segments.
 
-.code16
 boot1TemporalProtectedMode:
 	mov $GDT_DATA_SEGMENT, %bx									# Set bx to use the "higher-than-64KiB" segment...
 	mov %bx, %ds												# ...and set the remaining segments with this value.
@@ -231,13 +229,10 @@ boot1HugeUnrealMode:
 	mov %al, (gdt_code + 6)										# We dynamically modify the GDT structure to try optimizing
 	mov %al, (gdt_data + 6)										# the size, change both segment's bitmode to 32-bit.
 	lgdt gdt
-.code32
-	.byte 0x66
 	ljmpl $GDT_CODE_SEGMENT, $boot1Start32
 	cli
 	jmp boot1Halt
 
-.code16
 boot1UnrealModePrepareKernel:
 	call boot1UnrealModeLoadKernel
 	mov $0x1000, %esi
@@ -409,7 +404,6 @@ boot1Halt:
 	jmp boot1Halt
 
 .code32
-.extern main
 
 boot1Start32:
 	mov $GDT_DATA_SEGMENT, %eax
@@ -595,7 +589,6 @@ boot1pmprintstring:
 	call boot1pmsetcursor
 	popa
 	ret
-
 
 .code64
 
