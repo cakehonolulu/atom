@@ -264,7 +264,7 @@ jc boot1ResetDrive
 													# Where I386_KERNEL_SIZE equals to the number of sectors occupied by the kernel binary rounded 1 sector up.
 	mov $0x0, %ch									# Set ch to 0 (CH=0x00) -> Track 0 of the drive.
 													# TODO: Get boot1 size at runtime! For now, hardcode the size.
-	mov $0x7, %cl									# Set cl to I386_KERNEL_STARTING_LOCATION (CL=I386_KERNEL_STARTING_LOCATION)
+	mov $0x7, %cl									# FLOPPY_KERNEL_STARTING_SECTOR + 1
 													# Which is sector of the drive from which we start reading the kernel from.
 	mov $0x0, %dh									# Set dh to 0 (DH=0x00) -> Head 0 of the drive.
 	xor %bx, %bx									# Set bx to 0.
