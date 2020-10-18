@@ -1,4 +1,5 @@
 #include <stdarg.h>
+#include <stddef.h>
 #include <stdint.h>
 
 void memcpy(unsigned char *source, unsigned char *dest, int nbytes) {
@@ -6,6 +7,14 @@ void memcpy(unsigned char *source, unsigned char *dest, int nbytes) {
     for (i = 0; i < nbytes; i++) {
         *(dest + i) = *(source + i);
     }
+}
+
+void *memmove(void *dest, const void *src, size_t n)
+{
+    unsigned char tmp[n];
+    memcpy(tmp,src,n);
+    memcpy(dest,tmp,n);
+    return dest;
 }
 
 void memset(unsigned char *dest, unsigned char val, unsigned int len) {
