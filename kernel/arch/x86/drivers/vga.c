@@ -112,25 +112,8 @@ void x86_update_screen_mode_info(int mode)
 
 void scroll()
 {
-    unsigned char attributeByte = (0 << 4) | (15 & 0x0F);
-    unsigned short blank = 0x20 | (attributeByte << 8);
-
-    if(col >= VGA_MAXIMUM_ROWS)
-    {
-        int i;
-
-        for (i = 0*VGA_MAXIMUM_COLUMNS; i < (VGA_MAXIMUM_ROWS-1)*VGA_MAXIMUM_COLUMNS; i++)
-        {
-            textmemptr[i] = textmemptr[i+VGA_MAXIMUM_COLUMNS];
-        }
-
-        for (i = (VGA_MAXIMUM_ROWS-1)*VGA_MAXIMUM_COLUMNS; i < VGA_MAXIMUM_ROWS*VGA_MAXIMUM_COLUMNS; i++)
-        {
-            textmemptr[i] = blank;
-        }
-
-        col = (VGA_MAXIMUM_ROWS-1);
-    }
+	memmove(textmemptr, textmemptr + VGA_MAXIMUM_COLUMNS, (VGA_MAXIMUM_ROWS - 1) * VGA_MAXIMUM_COLUMNS);
+	memset(textmemptr + (VGA_MAXIMUM_ROWS - 1) * VGA_MAXIMUM_COLUMNS, ' ', VGA_MAXIMUM_COLUMNS);
 }
 
 void move_csr()
