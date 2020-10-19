@@ -1,31 +1,22 @@
 #include <stddef.h>
 #include <drivers/vga.h>
 
-int currmode = 0;
-int currheight = 0;
-int currwidth = 0;
+unsigned char vga_current_mode = 0; // No need for more than 255
+unsigned char vga_current_mode_max_height = 0;       // Same
+unsigned char vga_current_mode_max_width = 0;        // Same
 char vga_default_colour = 0;
-unsigned short *textmemptr = (unsigned short *)VGA_VIDEO_ADDRESS;
-int attrib = 0x0F;
-int row = 0;
-int col = 0;
+
+unsigned short *vga_memory_pointer;;
+unsigned char vga_current_attribute = 0x0F;
+
+unsigned char vga_row = 0;
+unsigned char vga_column = 0;
 
 // Code snippet taken from osdev.org Wiki
 unsigned char vga_set_color(enum vga_color vga_foreground_colour, enum vga_color vga_background_colour) 
 {
     return vga_foreground_colour | vga_background_colour << 4;
 }
-
-/*void i386_setup_vga()
-{
-    vga_default_colour = vga_set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
-    int initial_vga_offset = vga_get_cursor_offset();
-    int initial_vga_row = vga_get_offset_row(initial_vga_offset);
-    initial_vga_row = vga_get_offset_row(initial_vga_offset);
-    // Add 1 to the initial vga row so that it jumps to a new line right after we give control to the kernel
-    initial_vga_offset = vga_get_offset(0, initial_vga_row + 1);
-    vga_set_cursor_offset(initial_vga_offset);
-}*/
 
 int vga_get_cursor_offset()
 {
@@ -92,19 +83,20 @@ void x86_screen_write_regs(unsigned char* regs)
     outb(VGA_AC_INDEX, 0x20);
 }
 
-void x86_update_screen_mode_info(int mode)
+void x86_update_screen_mode_info(unsigned char mode)
 {
     switch(mode)
     {
         case(VGA_80x25_TEXT_MODE):
-            currmode = VGA_80x25_TEXT_MODE; // 80x25 Text Mode
-            currheight = 80;
-            currwidth = 25;
+            vga_memory_pointer = (unsigned short *)VGA_TEXT_MODE_VIDEO_ADDRESS;
+            vga_current_mode = VGA_80x25_TEXT_MODE; // 80x25 Text Mode
+            vga_current_mode_max_height = 80;
+            vga_current_mode_max_width = 25;
             break;
         case(VGA_320x200x256_MODE):
-            currmode = VGA_320x200x256_MODE; // 320x200x256 SD Mode
-            currheight = 320;
-            currwidth = 200;
+            vga_current_mode = VGA_320x200x256_MODE; // 320x200x256 SD Mode
+            vga_current_mode_max_height = 320;
+            vga_current_mode_max_width = 200;
         default:
             break;
     }
@@ -112,21 +104,31 @@ void x86_update_screen_mode_info(int mode)
 
 void scroll(void)
 {
-	unsigned blank = 0 , temp;
+    unsigned char attributeByte = (0 << 4) | (15 & 0x0F);
+    unsigned short blank = 0x20 | (attributeByte << 8);
 
-	if (col >= VGA_MAXIMUM_ROWS)
-	{
-		temp = col - VGA_MAXIMUM_ROWS + 1;
-		memmove (textmemptr , textmemptr + temp * VGA_MAXIMUM_COLUMNS, (VGA_MAXIMUM_ROWS - temp) * VGA_MAXIMUM_COLUMNS * 2);
-		memset (textmemptr + (VGA_MAXIMUM_ROWS - temp) * VGA_MAXIMUM_COLUMNS, blank, 500);
-		col = VGA_MAXIMUM_ROWS - 1;
-	}
+    if(vga_column >= VGA_MAXIMUM_ROWS)
+    {
+        int i;
+
+        for (i = 0*VGA_MAXIMUM_COLUMNS; i < (VGA_MAXIMUM_ROWS-1)*VGA_MAXIMUM_COLUMNS; i++)
+        {
+            vga_memory_pointer[i] = vga_memory_pointer[i+VGA_MAXIMUM_COLUMNS];
+        }
+
+        for (i = (VGA_MAXIMUM_ROWS-1)*VGA_MAXIMUM_COLUMNS; i < VGA_MAXIMUM_ROWS*VGA_MAXIMUM_COLUMNS; i++)
+        {
+            vga_memory_pointer[i] = blank;
+        }
+
+        vga_column = (VGA_MAXIMUM_ROWS-1);
+    }
 }
 
 void move_csr()
 {
     unsigned temp;
-    temp = col * VGA_MAXIMUM_COLUMNS + row;
+    temp = vga_column * VGA_MAXIMUM_COLUMNS + vga_row;
     outb(0x3D4, 14);
     outb(0x3D5, temp >> 8);
     outb(0x3D4, 15);
@@ -140,19 +142,19 @@ void update_cursor(int newrow, int newcol)
     outb(0x3D5, (unsigned char)(position&0xFF));
     outb(0x3D4, 0x0E);
     outb(0x3D5, (unsigned char)((position>>8)&0xFF));
-    row = newrow;
-    col = newcol;
+    vga_row = newrow;
+    vga_column = newcol;
     move_csr();
 }
 
 int get_row()
 {
-    return row;
+    return vga_row;
 }
 
 int get_col()
 {
-    return col;
+    return vga_column;
 }
 
 void disable_cursor(void)
@@ -174,7 +176,7 @@ void cls(void)
     update_cursor(0, 0);
     int i = 0;
     for (i = 0; i < VGA_MAXIMUM_COLUMNS * VGA_MAXIMUM_ROWS; i++)
-        textmemptr[i] = (attrib << 8) | 0x20;
+        vga_memory_pointer[i] = (vga_current_attribute << 8) | 0x20;
 }
 
 void printkcenter(char* c)
@@ -254,43 +256,43 @@ void printkfail(char *text)
 void putch(char c)
 {
     unsigned short *where;
-    unsigned att = attrib << 8;
+    unsigned att = vga_current_attribute << 8;
 
     if(c == 0x08)
     {
-        if(row != 0) row--;
+        if(vga_row != 0) vga_row--;
     }
     else if(c == 0x09)
     {
-        row = (row + 8) & ~(8 - 1);
+        vga_row = (vga_row + 8) & ~(8 - 1);
     }
     else if(c == '\r')
     {
-        row = 0;
+        vga_row = 0;
     }
     else if(c == '\n')
     {
-        row = 0;
-        col++;
+        vga_row = 0;
+        vga_column++;
     }
     else if(c >= ' ')
     {
-        where = textmemptr + (col * VGA_MAXIMUM_COLUMNS + row);
+        where = vga_memory_pointer + (vga_column * VGA_MAXIMUM_COLUMNS + vga_row);
         *where = c | att;
-        row++;
+        vga_row++;
     }
 
-    if(row >= VGA_MAXIMUM_COLUMNS)
+    if(vga_row >= VGA_MAXIMUM_COLUMNS)
     {
-        row = 0;
-        col++;
+        vga_row = 0;
+        vga_column++;
     }
 
     scroll();
     move_csr();
 }
 
-int vga_get_offset(int vga_column, int vga_row)
+int vga_get_offset(int vga_row, int vga_column)
 {
     return 2 * (vga_row * VGA_MAXIMUM_COLUMNS + vga_column);
 }
@@ -316,21 +318,21 @@ void print(char *text)
 
 void settextcolor(unsigned char forecolor, unsigned char backcolor)
 {
-    attrib = (backcolor << 4) | (forecolor & 0x0F);
+    vga_current_attribute = (backcolor << 4) | (forecolor & 0x0F);
 }
 
-void i386_setup_vga_text_mode()
+void x86_setup_vga_text_mode()
 {
+    x86_update_screen_mode_info(VGA_80x25_TEXT_MODE);
     vga_default_colour = vga_set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
-    int initial_vga_offset = vga_get_cursor_offset();
-    int initial_vga_row = vga_get_offset_row(initial_vga_offset);
+    unsigned int initial_vga_offset = vga_get_cursor_offset();
+    unsigned char initial_vga_row = vga_get_offset_row(initial_vga_offset);
     // Add 1 to the initial vga row so that it jumps to a new line right after we give control to the kernel
-    initial_vga_offset = vga_get_offset(0, initial_vga_row + 1);
+    initial_vga_offset = vga_get_offset(initial_vga_row + 1, 0);
     vga_set_cursor_offset(initial_vga_offset);
     disable_cursor();
     update_cursor(0, initial_vga_row + 1); // row , col
     enable_cursor(14, 15);
-    //x86_update_screen_mode_info(TEXT_80x25);
 }
 
 void init_text_mode()
@@ -350,7 +352,7 @@ void init_text_mode()
 
     /* cakeh: We still need to clear screen and
        finish up last things */
-    i386_setup_vga_text_mode();
+    x86_setup_vga_text_mode();
 }
 
 void printkint(const int number)
@@ -478,18 +480,26 @@ void delete_last()
   update_cursor(get_row()-1, get_col());
 }
 
-/*void x86_switch_screen_mode_command(char *regs)
+void enable_cursorq() {
+    outb(0x3D4, 0x0A);
+    char curstart = inb(0x3D5) & 0x1F; // get cursor scanline start
+
+    outb(0x3D4, 0x0A);
+    outb(0x3D5, curstart | 0x20); // set enable bit
+}
+
+void x86_switch_screen_mode_command(char *regs)
 {
     if (!strcmp(regs, "modes")) {
         /* Make mode gathering automatic
            either by using multiboot header
            or using GPU and Monitor values
-           or maybe EDID? 
+           or maybe EDID? */
         printkc("Available VESA modes:\n", VGA_COLOR_LIGHT_BLUE);
         printkc("Height     Width     BPP\n", VGA_COLOR_GREEN);
         printk("80      x  25\n");
     } else if (!strcmp(regs, "80x25")) {
-        if (currmode == VGA_80x25_TEXT_MODE) {
+        if (vga_current_mode == VGA_80x25_TEXT_MODE) {
             printkc("You can't set a mode you're already using!\n", VGA_COLOR_RED);
         } else {
             x86_screen_write_regs(vga_80x25_text_mode);
@@ -505,4 +515,4 @@ void delete_last()
     } else {
         printkc("VESA mode not found!\n", VGA_COLOR_RED);
     }
-}*/
+}
