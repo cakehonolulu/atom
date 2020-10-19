@@ -2,11 +2,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
-void memcpy(unsigned char *source, unsigned char *dest, int nbytes) {
-    int i;
-    for (i = 0; i < nbytes; i++) {
-        *(dest + i) = *(source + i);
-    }
+void * memcpy(void * restrict dest, const void * restrict src, size_t n) {
+    asm volatile("cld; rep movsb"
+                : "=c"((int){0})
+                : "D"(dest), "S"(src), "c"(n)
+                : "flags", "memory");
+    return dest;
 }
 
 void *memmove(void *dest, const void *src, size_t n)
