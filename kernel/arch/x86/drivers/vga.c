@@ -110,10 +110,17 @@ void x86_update_screen_mode_info(int mode)
     }
 }
 
-void scroll()
+void scroll(void)
 {
-	memmove(textmemptr, textmemptr + VGA_MAXIMUM_COLUMNS, (VGA_MAXIMUM_ROWS - 1) * VGA_MAXIMUM_COLUMNS);
-	memset(textmemptr + (VGA_MAXIMUM_ROWS - 1) * VGA_MAXIMUM_COLUMNS, ' ', VGA_MAXIMUM_COLUMNS);
+	unsigned blank = 0 , temp;
+
+	if (col >= VGA_MAXIMUM_ROWS)
+	{
+		temp = col - VGA_MAXIMUM_ROWS + 1;
+		memmove (textmemptr , textmemptr + temp * VGA_MAXIMUM_COLUMNS, (VGA_MAXIMUM_ROWS - temp) * VGA_MAXIMUM_COLUMNS * 2);
+		memset (textmemptr + (VGA_MAXIMUM_ROWS - temp) * VGA_MAXIMUM_COLUMNS, blank, 500);
+		col = VGA_MAXIMUM_ROWS - 1;
+	}
 }
 
 void move_csr()
