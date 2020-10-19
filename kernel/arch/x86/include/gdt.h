@@ -36,9 +36,13 @@ struct i386_gdt_descriptor
 extern void i386_gdt_update(struct i386_gdt_descriptor *i386_gdt_pointer, unsigned int i386_gdt_code_segment, unsigned int i386_gdt_data_segment);
 int i386_gdt_install();
 
-// Flags! TODO!
-#define SEG_SIZE(x)      ((x) << 0x0E) // Size (0 for 16-bit, 1 for 32)
-#define SEG_GRAN(x)      ((x) << 0x0F) // Granularity (0 for 1B - 1MB, 1 for 4KB - 4GB)
+// Flag Encoding (And Limit's 16 to 19 bits)
+#define SEG_RESERVED_ALWAYS_0 00
+#define SEG_SIZE(x)      ((x) << 6) // Size (0 for 16-bit, 1 for 32)
+#define SEG_GRAN(x)      ((x) << 7) // Granularity (0 for 1B - 1MB, 1 for 4KB - 4GB)
+#define SEG_16_19_LIMIT(x) ((x) << 3) // If we choose 4KiB page granularity, we should set bits 16-19 of the limit to access the full 4GB of memory
+
+#define I386_GDT_FLAGS SEG_SIZE(1) | SEG_GRAN(1) | SEG_RESERVED_ALWAYS_0 | SEG_16_19_LIMIT(0xFFFF)
 
 // Access
 #define I386_GDT_ACCESS_BIT(x)              (x)
