@@ -69,9 +69,9 @@ void _kmain(unsigned int initium_signature)
 
     arch_mmu_init(memory_management_region_start);
 
-    //initialise_paging();
+    initialise_paging();
 
-    //printkok("Initialized Paging");
+    printkok("Initialized Paging");
 
 #ifdef DEBUG
     uintptr_t *p = (size_t*)kmalloc(sizeof(p));
