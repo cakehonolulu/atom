@@ -205,32 +205,46 @@ void _kmain(unsigned int initium_signature)
 
     printk("Kernel Start: 0x%x, Kernel End: 0x%x, Kernel Size: %d bytes (%d KB)\n", KERNEL_START, KERNEL_END, KERNEL_SIZE, ((KERNEL_END - KERNEL_START) / 1024));
 
+    if (i386_gdt_install() == 1)
+    {
+        printkok("Re-initialized GDT");
+    } else {
+        printkfail("Failed to re-initialize GDT");
+    }
+
+    if (isr_install() == 1)
+    {
+        printkok("Initialized ISRs");
+    } else {
+        printkfail("Failed to initialize ISRs");
+    }
+
+    if (irq_install() == 1)
+    {
+        printkok("Initialized IRQs");
+    } else {
+        printkfail("Failed to initialize IRQs");
+    }
+
     mem_init();
 
-	if (i386_gdt_install() == 1)
-	{
-		printkok("Re-initialized GDT");
-	} else {
-		printkfail("Failed to re-initialize GDT");
-	}
-
-	if (isr_install() == 1)
-	{
-		printkok("Initialized ISRs");
-	} else {
-		printkfail("Failed to initialize ISRs");
-	}
-
-	if (irq_install() == 1)
-	{
-		printkok("Initialized IRQs");
-	} else {
-		printkfail("Failed to initialize IRQs");
-	}
+    arch_mmu_init(memory_management_region_start);
 
     initialise_paging();
 
     printkok("Initialized Paging");
+
+#ifdef DEBUG
+    uintptr_t *p = (size_t*)kmalloc(sizeof(p));
+    printk("p allocated at 0x%x\n", p);
+
+    uintptr_t *p2 = (size_t*)kmalloc(sizeof(p2));
+    printk("allocated 2 blocks for p2 at 0x%x\n", p2);
+
+    /*kfree (p); TEST whenever we implement kfree
+    p = (size_t*)kmalloc(sizeof(p));
+    printk("Unallocated p to free block 1. p is reallocated to 0x%x", p);*/
+#endif
 
     /* IRQ0: timer */
     init_timer(50);
