@@ -40,6 +40,10 @@ static void keyboard_callback(registers_t regs) {
 
 void init_keyboard()
 {
-    printk("\n> ");
+    while (inb(0x64) & 1) // Clear Keyboard Buffer
+    {
+        inb(0x60);
+    }
+
     register_interrupt_handler(IRQ1, keyboard_callback);
 }
