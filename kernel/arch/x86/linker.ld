@@ -8,7 +8,7 @@ SECTIONS {
 
 	. = 1M;
 
-	kernel_start = .; _kernel_start = .; __kernel_start = .;
+    kernel_entry_start = .; _kernel_entry_start = .; __kernel_entry_start = .;
 
     .kernel.entry BLOCK(4K) : ALIGN(4K)
     {
@@ -16,9 +16,11 @@ SECTIONS {
         *(.kernel.entry.data)
     }
 
+    kernel_entry_end = .; _kernel_entry_end = .; __kernel_entry_end = .;
+
     . += 0xC0000000;
 
-    kernel_hh_start = .; _kernel_hh_start = .; __kernel_hh_start = .;
+    kernel_start = .; _kernel_start = .; __kernel_start = .;
 
     .text ALIGN (0x1000) : AT(ADDR(.text) - 0xC0000000)
     {

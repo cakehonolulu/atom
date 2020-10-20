@@ -1,12 +1,21 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <kernel.h>
+
 
 uintptr_t placement_address = 0;
 
-void arch_mmu_init(uintptr_t *physAddr)
+
+void arch_mmu_init()
 {
-	placement_address = physAddr;
+	placement_address = arch_mmap_init();
+
+	if (!placement_address)
+	{
+		printk("No placement address! Halting...");
+		asm volatile ("cli;hlt");
+	}
 }
 
 size_t kmalloc_s(size_t size, bool align, uintptr_t *physAddr)
