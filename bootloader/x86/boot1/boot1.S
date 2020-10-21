@@ -122,7 +122,7 @@ init1:
 
 	call boot1print
 	call boot1printnl
-
+.ifdef LONGMODE
 AskBootMode:
 	mov $BootModeText, %bx								# Print a message that tells we're currently on second stage bootloader.
 
@@ -137,12 +137,14 @@ AskBootMode:
 	je .PMO
 
 	jmp AskBootMode
-
+.endif
 .PMO:
+.ifdef LONGMODE
 	# xchg %bx, %bx	# DEBUG!
 	xor %ax, %ax
 	mov $0, %ax
 	mov %ax, Load64Bit
+.endif
 	call .Continue
 
 .LMO:
@@ -490,7 +492,7 @@ boot1Start32:
 	call boot1pmprintstring							# function that doesn't rely on BIOS Interrupts (Since we are
 													# on Protected Mode, print to the screen to inform the user.
 	
-
+.ifdef LONGMODE
 	# xchg %bx, %bx # DEBUG!
 	xor %eax, %eax
 	mov Load64Bit, %ax
@@ -553,7 +555,7 @@ setEntry:
 	ljmpl $GDT_CODE_SEGMENT, $boot1Start64
 	cli
 	hlt
-
+.endif
 .Continue32:
 	ljmp $GDT_CODE_SEGMENT, $0x100000
 	cli
