@@ -80,8 +80,8 @@ page_directory[768] = 0x83 | 3;
 
    memset(frames, 0, INDEX_FROM_BIT(nframes));
     for (int i = 0; i < 1024; i++) {
-        set_frame(i * 0xC0000000);
-        set_frame(i * 0xC0000000 + mem_start /*KHEAP_START*/);
+        set_frame(i * 0x1000);
+        set_frame(i * 0x1000 + mem_start /*KHEAP_START*/);
     }
     
     unsigned int addr = (unsigned int) page_directory - 0xC0000000;    
