@@ -40,10 +40,10 @@ _kernel_entry:
 .type _bootstrap, @function
 _bootstrap:
 	# Null-ify the first kernel location at 1MB
-    movl $0, (BootPageDirectory)
+    //movl $0, (BootPageDirectory)
 
     # Invalidate the page
-    invlpg (0)
+    //invlpg (0)
 
 	# Setup the kernel stack
 	mov $stack_top, %esp

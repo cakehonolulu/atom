@@ -7,7 +7,7 @@ uint32_t *frames;
 uint32_t nframes;
 
 // Static function to set a bit in the frames bitset
-static void set_frame(uint32_t frame_addr)
+void set_frame(uint32_t frame_addr)
 {
    uint32_t frame = frame_addr/0x1000;
    uint32_t idx = INDEX_FROM_BIT(frame);

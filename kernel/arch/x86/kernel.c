@@ -71,7 +71,7 @@ void _kmain(unsigned int initium_signature)
 
     bool inMegaBytes = true;
 
-    initialise_paging(arch_mmu_get_max_phys_mem(inMegaBytes));
+    initialise_paging(arch_mmu_get_max_phys_mem(inMegaBytes), memory_management_region_start);
 
     printkok("Initialized Paging");
 
@@ -85,6 +85,21 @@ void _kmain(unsigned int initium_signature)
     /*kfree (p); TEST whenever we implement kfree
     p = (size_t*)kmalloc(sizeof(p));
     printk("Unallocated p to free block 1. p is reallocated to 0x%x", p);*/
+#endif
+
+#ifdef DEBUG
+    // This code should work!
+    uint32_t *ptr = (uintptr_t*)memory_management_region_start;
+    uint32_t do_page_fault = *ptr;
+
+    printk("Memory pointer: 0x%x\n", do_page_fault);
+
+    // This code should page fault
+    uint32_t *ptr2 = (uintptr_t*)0xA0000000;
+    uint32_t do_page_fault2 = *ptr2;
+
+    printk("Memory pointer: 0x%x\n", do_page_fault2);
+    
 #endif
 
     /* IRQ0: timer */
