@@ -67,9 +67,11 @@ void _kmain(unsigned int initium_signature)
         printkfail("Failed to initialize IRQs");
     }
 
-    arch_mmu_init(memory_management_region_start);
+    arch_mmu_init();
 
-    initialise_paging();
+    bool inMegaBytes = true;
+
+    initialise_paging(arch_mmu_get_max_phys_mem(inMegaBytes));
 
     printkok("Initialized Paging");
 
@@ -87,9 +89,12 @@ void _kmain(unsigned int initium_signature)
 
     /* IRQ0: timer */
     init_timer(50);
+    
     /* IRQ1: keyboard */
     init_keyboard();
-    
+
+    printk("\n> ");
+
 	for(;;);
 }
 

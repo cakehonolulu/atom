@@ -1,5 +1,10 @@
 #include <isr.h>
 #include <stdint.h>
+#include <stddef.h>
+
+// Macros used in the bitset algorithms.
+#define INDEX_FROM_BIT(a) (a/(8*4))
+#define OFFSET_FROM_BIT(a) (a%(8*4))
 
 typedef struct page
 {
@@ -35,3 +40,7 @@ typedef struct page_directory
    **/
    uint32_t physicalAddr;
 } page_directory_t;
+
+void initialise_paging();
+void switch_page_directory(page_directory_t *new);
+page_t *get_page(uint32_t address, int make, page_directory_t *dir);

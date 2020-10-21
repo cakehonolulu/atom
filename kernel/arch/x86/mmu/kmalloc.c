@@ -3,9 +3,19 @@
 #include <stdbool.h>
 #include <kernel.h>
 
-
 uintptr_t placement_address = 0;
 
+size_t arch_mmu_get_max_phys_mem(bool inMegaBytes)
+{
+	if (inMegaBytes == true)
+	{
+		return (((memory_management_region_end - memory_management_region_start) / 1024) / 1024);
+	}
+	else
+	{
+		return (memory_management_region_end - memory_management_region_start);
+	}
+} 
 
 void arch_mmu_init()
 {

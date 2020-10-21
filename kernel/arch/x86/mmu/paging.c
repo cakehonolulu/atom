@@ -1,6 +1,15 @@
 #include <paging.h>
 #include <stdint.h>
 
+// The kernel's page directory
+page_directory_t *kernel_directory=0;
+
+// The current page directory;
+page_directory_t *current_directory=0;
+
+extern uint32_t *frames;
+extern uint32_t nframes;
+
 void page_fault(registers_t *regs)
 {
    // A page fault has occurred.
@@ -22,12 +31,78 @@ void page_fault(registers_t *regs)
    if (us) {printk("user-mode ");}
    if (reserved) {printk("reserved ");}
    printk(") at 0x%x\n", faulting_address);
-   __asm__ __volatile__ ("cli");
-   __asm__ __volatile__ ("hlt");
+   __asm__ __volatile__ ("cli; hlt");
    // PANIC!
 }
 
-void initialise_paging()
+uint32_t read_cr0() {
+    uint32_t value;
+    __asm__ __volatile__("mov %%cr0, %%eax" : "=a"(value));
+    return value;
+}
+
+uint32_t read_cr3() {
+    uint32_t value;
+    __asm__ __volatile__("mov %%cr3, %%eax" : "=a"(value));
+    return value;
+}
+
+void print_control_registers()
 {
-	register_interrupt_handler(14, page_fault);
+	printk("cr0: 0x%x, cr3: 0x%x\n", read_cr0(),read_cr3());
+}
+
+void initialise_paging(size_t memsize)
+{
+	if (!memsize)
+	{
+		printk("No memory available for paging! Halting...");
+   		__asm__ __volatile__ ("cli; hlt");
+	}
+
+	printk("Available memory size: %d MB\n", memsize);
+
+	nframes = memsize / 0x1000;
+   frames = (uint32_t*)kmalloc(INDEX_FROM_BIT(nframes));
+   memset(frames, 0, INDEX_FROM_BIT(nframes));
+
+   kernel_directory = read_cr3();
+   current_directory = kernel_directory;
+
+   // Before we enable paging, we must register our page fault handler.
+   register_interrupt_handler(14, page_fault);
+}
+
+void switch_page_directory(page_directory_t *dir)
+{
+   current_directory = dir;
+   asm volatile("mov %0, %%cr3":: "r"(&dir->tablesPhysical));
+   uint32_t cr0;
+   asm volatile("mov %%cr0, %0": "=r"(cr0));
+   cr0 |= 0x80000000; // Enable paging!
+   asm volatile("mov %0, %%cr0":: "r"(cr0));
+}
+
+page_t *get_page(uint32_t address, int make, page_directory_t *dir)
+{
+   // Turn the address into an index.
+   address /= 0x1000;
+   // Find the page table containing this address.
+   uint32_t table_idx = address / 1024;
+   if (dir->tables[table_idx]) // If this table is already assigned
+   {
+       return &dir->tables[table_idx]->pages[address%1024];
+   }
+   else if(make)
+   {
+       uint32_t tmp;
+       dir->tables[table_idx] = (page_table_t*)kmalloc_ap(sizeof(page_table_t), &tmp);
+       memset(dir->tables[table_idx], 0, 0x1000);
+       dir->tablesPhysical[table_idx] = tmp | 0x7; // PRESENT, RW, US.
+       return &dir->tables[table_idx]->pages[address%1024];
+   }
+   else
+   {
+       return 0;
+   }
 }
