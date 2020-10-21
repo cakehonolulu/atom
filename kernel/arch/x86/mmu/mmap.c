@@ -98,14 +98,20 @@ uintptr_t arch_mmap_init()
     {
         if (arch_memory_map[i].end_address != 0) // For now use end!
         {
+#ifdef DEBUG
             printk("MMAP i: %d\n", i);
+#endif
             size = (arch_memory_map[i].end_address - arch_memory_map[i].base_address);
+#ifdef DEBUG
             printk("MMAP baddr: 0x%x endaddr: 0x%x, size: %d\n", arch_memory_map[i].base_address, arch_memory_map[i].end_address, size);
+#endif
 
             if (size >= 0x100000) // 1MB
             {
+#ifdef DEBUG
                 printk("HEY!, we got start: 0x%x, end: 0x%x\n", arch_memory_map[i].base_address, arch_memory_map[i].end_address);
-
+#endif
+                
                 memory_management_region_start = arch_memory_map[i].base_address;
                 memory_management_region_end = arch_memory_map[i].end_address;
             }
