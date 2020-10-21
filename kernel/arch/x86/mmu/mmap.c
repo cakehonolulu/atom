@@ -37,8 +37,9 @@ uintptr_t arch_mmap_init()
     {
         arch_memory_map[arch_e820_counted_entries].base_address = 0;
         arch_memory_map[arch_e820_counted_entries].end_address = 0;
+#ifdef DEBUG
         printk("%d base: %d end %d\n", i, arch_memory_map[arch_e820_counted_entries].base_address, arch_memory_map[arch_e820_counted_entries].end_address);
-        
+#endif  
     }
 
     size_t arch_e820_mmap_total_entries = *(uintptr_t*)ARCH_MEMORY_MAP_LOCATION;
@@ -111,7 +112,7 @@ uintptr_t arch_mmap_init()
 #ifdef DEBUG
                 printk("HEY!, we got start: 0x%x, end: 0x%x\n", arch_memory_map[i].base_address, arch_memory_map[i].end_address);
 #endif
-                
+
                 memory_management_region_start = arch_memory_map[i].base_address;
                 memory_management_region_end = arch_memory_map[i].end_address;
             }
