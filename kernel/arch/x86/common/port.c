@@ -21,3 +21,9 @@ void outw(unsigned short port, unsigned short data)
 {
     __asm__ __volatile__("outw %w0, %w1" : : "a" (data), "Nd" (port));
 }
+
+void invlpg(void* m)
+{
+    /* Clobber memory to avoid optimizer re-ordering access before invlpg, which may cause nasty bugs. */
+    __asm__ __volatile__ ( "invlpg (%0)" : : "b"(m) : "memory" );
+}
