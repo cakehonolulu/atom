@@ -70,9 +70,24 @@ for (int i = 0; i < 1024; i++) {
         page_directory[i] = 0x00000002;
     }
 
-page_directory[768] = 0x83 | 3;
-    page_directory[0] = 0x83 | 3;
-    page_directory[1] = mem_start | 3;
+    unsigned  long * first_megabyte_remap = ( unsigned  long *) mem_start ;
+
+    printk("first 1mb remap: 0x%x\n", first_megabyte_remap);
+
+    unsigned long kernel_address = 0;
+    for (int i = 0 ; i < 1024 ; i ++) {
+        first_megabyte_remap [i] = kernel_address;     // 0011 binary.
+        kernel_address = kernel_address + 4096*4 ;    // 4KB page.
+    };
+    // Creating the first directory entry.
+    // This maps the first 4MB of RAM.
+    page_directory [ 0 ] = ( unsigned  long ) & first_megabyte_remap [ 0 ];
+    page_directory [ 0 ] = page_directory [ 0 ] | 3 ;    // Setting attributes.
+
+
+    // without this, kernel crashes
+  page_directory[768] = 0x83 | 3;
+
 
 	nframes = memsize / 0x1000;
    frames = (uint32_t*)kmalloc_a(INDEX_FROM_BIT(nframes), 1);

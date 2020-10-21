@@ -89,7 +89,7 @@ void _kmain(unsigned int initium_signature)
 
 #ifdef DEBUG
     // This code should work!
-    uint32_t *ptr = (uintptr_t*)memory_management_region_start;
+    uint32_t *ptr = (uintptr_t*)0xC0000000;
     uint32_t do_page_fault = *ptr;
 
     printk("Memory pointer: 0x%x\n", do_page_fault);
@@ -127,6 +127,12 @@ void user_input(char *input)
     	printk("Ticks: %u\n", tick);    
     } else if (strcmp(input, "pfault") == 0) {
         uint32_t *ptr = (uint32_t*)0xA0000000;
+        uint32_t do_page_fault = *ptr;
+    } else if (strcmp(input, "a") == 0) {
+        uint32_t *ptr = (uint32_t*)0x00100000;
+        uint32_t do_page_fault = *ptr;
+    } else if (strcmp(input, "b") == 0) {
+        uint32_t *ptr = (uint32_t*)0xC0100000;
         uint32_t do_page_fault = *ptr;
     } else if (strcmp(input, "memloc") == 0) {
         printk("Memory management is using a %d MB region located \nfrom 0x%x to 0x%x\n", (((memory_management_region_end - memory_management_region_start) / 1024) / 1024),
