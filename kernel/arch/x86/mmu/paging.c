@@ -1,4 +1,4 @@
-#include "isr.h"
+#include <paging.h>
 #include <stdint.h>
 
 void page_fault(registers_t *regs)
