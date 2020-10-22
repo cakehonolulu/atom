@@ -6,6 +6,39 @@
 .section .kernel.entry.data
 
 .align 0x1000
+.global arch_higher_half_pd, arch_higher_half_pt
+
+# Temporary page directory entry to identity-map the first 4 MiB of the 32
+# bit physical address space. We have this here so that when we enable
+# paging, we don't crash. Add more page tables as needed if kernel is too big
+# to fit (more than 3 MiB). The bits set are 4MiB, read-write and present.
+arch_higher_half_pd:
+
+# Page Directory Entry
+# 31						11		9				  0
+# (4KB Aligned) PT Address  Available G S 0 A D W U R P
+# G = Ignored; S = Page Size (0 for 4KB, 1 for 4MB -> Needs PSE bit enabled)
+# A = Accessed; D = Cache Disabled; W = Write Through; U = User/Supervisor
+# R = Read/Write; P = Present
+
+# Page Table
+# 1 to 1 Identity Mapped (Physical Addresses = Virtual Addresses)
+# Page located before Kernel Space
+# KERNEL_PAGE_NUMBER = Decimal -> 768
+.long 0b10000011				# 0x00000083
+.rept KERNEL_PAGE_NUMBER - 1	# (768 - 1) = 767
+.long 0							# Fill With 0
+.endr
+
+# Page Table 1
+# (physAddr -> virtAddr 'HigherHalf' Transition)
+arch_higher_half_pt:
+.long 0b10000011					# 0x00000083
+.rept 1024 - KERNEL_PAGE_NUMBER - 1 # Pages after the Kernel
+.long 0
+.endr
+
+.align 0x1000
 BootPageDirectory:
 .int 0x00000083
 .fill KERNEL_PAGE_NUMBER - 1, 4, 0    
