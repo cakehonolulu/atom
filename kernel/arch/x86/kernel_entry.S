@@ -1,56 +1,41 @@
+# This just acts kind of a wrapper between the boot1 second stage bootloader
+
 .set KERNEL_VIRTUAL_BASE, 0xC0000000
 .set KERNEL_PAGE_NUMBER, (KERNEL_VIRTUAL_BASE >> 22)
+.set KERNEL_NUM_UPPER_PAGES, 2
 
-.code32				# This just acts kind of a wrapper between the boot1 second stage bootloader
+.global arch_higher_half_pd
 
 .section .kernel.entry.data
 
-.align 0x1000
-.global arch_higher_half_pd, arch_higher_half_pt
+.align 4096
 
 # Temporary page directory entry to identity-map the first 4 MiB of the 32
 # bit physical address space. We have this here so that when we enable
 # paging, we don't crash. Add more page tables as needed if kernel is too big
 # to fit (more than 3 MiB). The bits set are 4MiB, read-write and present.
 arch_higher_half_pd:
-
-# Page Directory Entry
-# 31						11		9				  0
-# (4KB Aligned) PT Address  Available G S 0 A D W U R P
-# G = Ignored; S = Page Size (0 for 4KB, 1 for 4MB -> Needs PSE bit enabled)
-# A = Accessed; D = Cache Disabled; W = Write Through; U = User/Supervisor
-# R = Read/Write; P = Present
-
-# Page Table
-# 1 to 1 Identity Mapped (Physical Addresses = Virtual Addresses)
-# Page located before Kernel Space
-# KERNEL_PAGE_NUMBER = Decimal -> 768
-.long 0b10000011				# 0x00000083
-.rept KERNEL_PAGE_NUMBER - 1	# (768 - 1) = 767
-.long 0							# Fill With 0
-.endr
-
-# Page Table 1
-# (physAddr -> virtAddr 'HigherHalf' Transition)
-arch_higher_half_pt:
-.long 0b10000011					# 0x00000083
-.rept 1024 - KERNEL_PAGE_NUMBER - 1 # Pages after the Kernel
-.long 0
-.endr
-
-.align 0x1000
-BootPageDirectory:
-.int 0x00000083
-.fill KERNEL_PAGE_NUMBER - 1, 4, 0    
-.int 0x00000083
-.fill 0x400 - KERNEL_PAGE_NUMBER - 1, 4, 0
+	.long 0x00000083
+	.fill (KERNEL_PAGE_NUMBER - 1), 4
+    # Set higher half pages, starting from 0 and increasing by 4MiB
+    .long 0x00000083
+    .long 0x00000083 | (1 << 22)
+    #.long 0x00000083 | (2 << 22)
+    #.long 0x00000083 | (3 << 22)
+    #.long 0x00000083 | (4 << 22)
+    #.long 0x00000083 | (5 << 22)
+    #.long 0x00000083 | (6 << 22)
+     # Fill all succeeding pages with 4 bytes
+    .fill (1024 - KERNEL_PAGE_NUMBER - KERNEL_NUM_UPPER_PAGES), 4
 
 .section .kernel.entry.text,"axw",@progbits
+.align 16
+
 .global _kernel_entry
 _kernel_entry:
 	cli
 
-    mov $BootPageDirectory, %ecx
+    mov $arch_higher_half_pd, %ecx
     mov %ecx, %cr3
 
     mov %cr4, %ecx
@@ -73,10 +58,10 @@ _kernel_entry:
 .type _bootstrap, @function
 _bootstrap:
 	# Null-ify the first kernel location at 1MB
-    //movl $0, (BootPageDirectory)
+    movl $0, (arch_higher_half_pd)
 
     # Invalidate the page
-    //invlpg (0)
+    invlpg (0)
 
 	# Setup the kernel stack
 	mov $stack_top, %esp
