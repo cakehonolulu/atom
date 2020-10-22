@@ -254,7 +254,7 @@ boot1UnrealModePrepareKernel:
 	mov $0x1000, %esi
 	mov $0x100000, %edi
 	mov $0x200, %cx
-	mov $0x9, %bx
+	mov $0x32, %bx // Relocate more sectors
 .loop:
 	addr32 rep movsb
 	dec %bx
