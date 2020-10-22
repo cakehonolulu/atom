@@ -276,7 +276,7 @@ boot1UnrealModeLoadKernel:
 	call boot1UMResettedFloppy
 
 	call boot1UMReadingKernel
-
+	xchg %bx, %bx
 	mov $0x02, %ah									# Set ah to 2 (AH=0x02 -> Disk Read Function).
 	# Sectors per track on a 1.44 MB floppy disk is 18. Since 18*4 = 72 (Which is the max theoretical sectors we can read)
 	mov $I386_KERNEL_SIZE, %al						# Set al to I386_KERNEL_SIZE (AL=$I386_KERNEL_SIZE0h) -> Sectors to be readed.

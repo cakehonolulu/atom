@@ -4,9 +4,13 @@ OUTPUT_FORMAT(elf32-i386)
 
 OUTPUT_ARCH(i386)
 
+KERNEL_ADDR_OFFSET = 0xC0000000;
+KERNEL_VADDR_START = 0xC0100000;
+
 SECTIONS {
 
 	. = 1M;
+    KERNEL_PHYSADDR_START = .;
 
     kernel_entry_start = .; _kernel_entry_start = .; __kernel_entry_start = .;
 
@@ -54,5 +58,7 @@ SECTIONS {
         *(.comment);
     }
 
+    KERNEL_PHYSADDR_END = . - KERNEL_ADDR_OFFSET;
+    KERNEL_VADDR_END = .;
     kernel_end = .; _kernel_end = .; __kernel_end = .;
 }

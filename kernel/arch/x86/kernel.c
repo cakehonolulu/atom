@@ -1,5 +1,7 @@
 #include <kernel.h>
 
+extern void* KERNEL_VADDR_END, * KERNEL_VADDR_START, * KERNEL_PHYSADDR_END, * KERNEL_PHYSADDR_START;
+
 void _kmain(unsigned int initium_signature)
 {
 	x86_setup_vga_text_mode();
@@ -69,9 +71,9 @@ void _kmain(unsigned int initium_signature)
 
     arch_mmu_init();
 
-    bool inMegaBytes = true;
+    bool inKiloBytes = false;
 
-    initialise_paging(arch_mmu_get_max_phys_mem(inMegaBytes), memory_management_region_start);
+    initialise_paging(arch_mmu_get_max_phys_mem(inKiloBytes), (uint32_t) &KERNEL_VADDR_START, (uint32_t) &KERNEL_VADDR_END, (uint32_t) &KERNEL_PHYSADDR_START, (uint32_t) &KERNEL_PHYSADDR_END);
 
     printkok("Initialized Paging");
 

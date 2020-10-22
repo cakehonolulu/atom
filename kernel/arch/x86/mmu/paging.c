@@ -1,41 +1,43 @@
 #include <paging.h>
 #include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+
+#define PAGE_FAULT_PROTECTION (1 << 0)
+#define PAGE_FAULT_WRITE (1 << 1)
+#define PAGE_FAULT_USER (1 << 2)
+#define PAGE_FAULT_RESERVED (1 << 3)
+#define PAGE_FAULT_EXEC (1 << 4)
 
 // The kernel's page directory
-page_directory_t *kernel_directory=0;
-uint32_t page_directory[1024] __attribute__((aligned(4096)));
+page_directory_t* kernel_directory = NULL;
 
-
-// The current page directory;
-page_directory_t *current_directory=0;
-
-extern uint32_t *frames;
-extern uint32_t nframes;
+uint32_t num_frames = 0, num_frames_aligned = 0;
+FRAME_BITMAP_TYPE* frame_bitmaps = NULL;
 
 void page_fault(registers_t *regs)
 {
-   // A page fault has occurred.
-   // The faulting address is stored in the CR2 register.
-   uint32_t faulting_address;
-   __asm__ __volatile__("mov %%cr2, %0" : "=r" (faulting_address));
-
-   // The error code gives us details of what happened.
-   int present   = !(regs->err_code & 0x1); // Page not present
-   int rw = regs->err_code & 0x2;           // Write operation?
-   int us = regs->err_code & 0x4;           // Processor was in user-mode?
-   int reserved = regs->err_code & 0x8;     // Overwritten CPU-reserved bits of page entry?
-   int id = regs->err_code & 0x10;          // Caused by an instruction fetch?
-
-   // Output an error message.
-   printk("Page fault! ( ");
-   if (present) {printk("present ");}
-   if (rw) {printk("read-only ");}
-   if (us) {printk("user-mode ");}
-   if (reserved) {printk("reserved ");}
-   printk(") at 0x%x\n", faulting_address);
-   __asm__ __volatile__ ("cli; hlt");
-   // PANIC!
+    uint32_t err_code = regs->err_code;
+    bool protection_err = (bool)(err_code & PAGE_FAULT_PROTECTION), write_err = (bool)(err_code & PAGE_FAULT_WRITE),
+        user_err = (bool)(err_code & PAGE_FAULT_USER), reserved_err = (bool)(err_code & PAGE_FAULT_RESERVED),
+        exec_err = (bool)(err_code & PAGE_FAULT_EXEC);
+    uint32_t bad_addr;
+    asm volatile("mov %%cr2, %0": "=r"(bad_addr));
+    printk("Page fault for address 0x%x: %s%s%s, %s, %s\n", bad_addr, reserved_err ? "reserved, " : "", exec_err ? "execution, " : "",
+            protection_err ? "protection" : "non-present", write_err ? "write" : "read", user_err ? "user" : "supervisor");
+    asm volatile("cli; hlt");
 }
+
+void paging_set_frame(uint32_t frame) {
+    if(frame < num_frames) SET_FRAME(BITMAP_FOR_FRAME(frame), BIT_OFFSET(frame));
+}
+
+// Mark continuous frames as allocated, from phys_start up to phys_end
+void paging_set_frames(uint32_t phys_start, uint32_t phys_end) {
+    phys_start = ALIGN_DOWN(phys_start);
+    for (uint32_t frame = FRAME_FOR(phys_start); frame < FRAME_FOR(phys_end); ++frame) paging_set_frame(frame);
+}
+
 
 uint32_t read_cr0() {
     uint32_t value;
@@ -54,7 +56,76 @@ void print_control_registers()
 	printk("cr0: 0x%x, cr3: 0x%x\n", read_cr0(),read_cr3());
 }
 
-void initialise_paging(size_t memsize, uintptr_t mem_start)
+void paging_map_4mb_page(page_directory_t* dir, uint32_t page, uint32_t phys_addr) {
+    page_dir_entry_t* dir_entry = &dir->entries[page];
+    dir_entry->accessed = 0;
+    dir_entry->caching_disabled = 0;
+    dir_entry->four_megabyte_pages = 1;
+    dir_entry->available = 0;
+    dir_entry->present = 1;
+    dir_entry->user_level = 0;
+    dir_entry->writable = 1;
+    dir_entry->write_through = 1;
+    //ASSERT_PAGE_ALIGNED("table physical alignment", phys_addr);
+    // Shift to isolate the top 10 bits (the 4MiB aligned physical address)
+    dir_entry->page_physical_addr = phys_addr >> 22;
+}
+
+void paging_map_4mb_dir(page_directory_t* dir, uint32_t phys_start, uint32_t phys_end, uint32_t virtual_start, uint32_t virtual_end) {
+    if (phys_start > phys_end)
+    {
+      //PANIC("Improper start and end physical addresses");
+      printk("Improper start and end physical addresses");
+      asm volatile("cli; hlt");
+    }
+
+    if(!IS_PAGE_ALIGNED(phys_start) || !IS_PAGE_ALIGNED(phys_end))
+    {
+      //PANIC("Physical addresses are not page aligned");
+      printk("Physical addresses are not page aligned");
+      asm volatile("cli; hlt");
+    }
+
+    if (virtual_start > virtual_end)
+    {
+      //PANIC("Improper start and end virtual addresses");
+      printk("Improper start and end virtual addresses");
+      asm volatile("cli; hlt");
+    }
+
+    if(!IS_PAGE_ALIGNED(virtual_start) || !IS_PAGE_ALIGNED(virtual_end))
+    {
+      //PANIC("Virtual addresses are not page aligned");
+      printk("Virtual addresses are not page aligned");
+      asm volatile("cli; hlt");
+    }
+
+    if(virtual_end - virtual_start != phys_end - phys_start)
+    {
+      //PANIC("Virtual space is not equal to physical space");
+      printk("Virtual space is not equal to physical space");
+      asm volatile("cli; hlt");
+    }
+
+    if (dir) {
+        memset(dir, 0, sizeof(page_directory_t));
+        uint32_t virtual_addr = virtual_start, phys_addr = phys_start;
+        uint32_t page = virtual_addr / PAGE_SIZE;
+
+        while (page < PAGE_TABLE_ENTRIES_PER_DIRECTORY && virtual_addr <= virtual_end) {
+            paging_map_4mb_page(dir, page, phys_addr);
+            phys_addr += PAGE_SIZE;
+            virtual_addr += PAGE_SIZE;
+            page++;
+        }
+    }
+}
+
+void arch_set_page_directory(page_directory_t* page_dir) {
+    asm volatile("mov %0, %%cr3":: "r"((physaddr_t)page_dir));
+}
+
+void initialise_paging(size_t memsize, uint32_t virtual_start, uint32_t virtual_end, uint32_t phys_start, uint32_t phys_end)
 {
 	if (!memsize)
 	{
@@ -62,83 +133,48 @@ void initialise_paging(size_t memsize, uintptr_t mem_start)
    		__asm__ __volatile__ ("cli; hlt");
 	}
 
-	printk("Available memory size: %d MB\n", memsize);
+	printk("Available memory size: %d B, %d KB, %d MB\n", memsize, memsize/1024, memsize/1024/1024);
 
-  unsigned int mem_end_page = 0x1000000;
+  uint32_t mem_aligned = ALIGN_UP(memsize);
+  printk("Aligned memory: %d\n", mem_aligned);
+  uint32_t code_phys_start = phys_start;
+  uint32_t code_phys_end = phys_end;
+  uint32_t code_virt_start = virtual_start;
+  uint32_t code_virt_end = virtual_end;
 
-for (int i = 0; i < 1024; i++) {
-        page_directory[i] = 0x00000002;
+  uint32_t map_phys_start = ALIGN_DOWN(code_phys_start);
+  uint32_t map_phys_end = ALIGN_UP(code_phys_end);
+  uint32_t map_virt_start = ALIGN_DOWN(code_virt_start);
+  uint32_t map_virt_end = ALIGN_UP(code_virt_end);
+
+  printk("a ");
+  kernel_directory = kmalloc_a(sizeof(page_directory_t));
+
+  printk("b ");
+  paging_map_4mb_dir(kernel_directory, map_phys_start, map_phys_end, map_virt_start, map_virt_end);
+  printk("c ");
+  uint32_t dir_physaddr = VIRTUAL_TO_PHYSICAL((uint32_t) kernel_directory);
+  printk("dir_physaddr: 0x%x, kern_dir: 0x%x\n", dir_physaddr, (uint32_t) kernel_directory);
+  arch_set_page_directory((page_directory_t *) (uint32_t) kernel_directory);
+  printk("e ");
+
+  /*  num_frames = mem_aligned / PAGE_SIZE;
+    printk("f ");
+    // Align so as not to lose frames that fall between bitmap boundaries
+    num_frames_aligned = num_frames % FRAMES_PER_BITMAP != 0 ? num_frames - (num_frames % FRAMES_PER_BITMAP) + FRAMES_PER_BITMAP : num_frames;
+    printk("g ");
+    size_t bitmap_size = (size_t) (num_frames_aligned / FRAMES_PER_BITMAP) * sizeof(FRAME_BITMAP_TYPE);
+    printk("h ");
+    frame_bitmaps = kmalloc(bitmap_size);
+    printk("i ");
+    if(frame_bitmaps) {
+      printk("j ");
+        memset(frame_bitmaps, 0, bitmap_size);
+        printk("k ");
+        paging_set_frames(map_phys_start, map_phys_end);
+        
     }
 
-    unsigned  long * first_megabyte_remap = ( unsigned  long *) mem_start ;
-
-    printk("first 1mb remap: 0x%x\n", first_megabyte_remap);
-
-    unsigned long kernel_address = 0;
-    for (int i = 0 ; i < 1024 ; i ++) {
-        first_megabyte_remap [i] = kernel_address;     // 0011 binary.
-        kernel_address = kernel_address + 4096*4 ;    // 4KB page.
-    };
-    // Creating the first directory entry.
-    // This maps the first 4MB of RAM.
-    page_directory [ 0 ] = ( unsigned  long ) & first_megabyte_remap [ 0 ];
-    page_directory [ 0 ] = page_directory [ 0 ] | 3 ;    // Setting attributes.
-
-
-    // without this, kernel crashes
-  page_directory[768] = 0x83 | 3;
-
-
-	nframes = memsize / 0x1000;
-   frames = (uint32_t*)kmalloc_a(INDEX_FROM_BIT(nframes), 1);
-   frames = (unsigned int *) ( frames + 0xC0000010);
-
-   memset(frames, 0, INDEX_FROM_BIT(nframes));
-    for (int i = 0; i < 1024; i++) {
-        set_frame(i * 0x1000);
-        set_frame(i * 0x1000 + mem_start /*KHEAP_START*/);
-    }
-    
-    unsigned int addr = (unsigned int) page_directory - 0xC0000000;    
-
-    printk("page_directory_address: 0x%x\n", addr);
-
-    loadPageDirectory(addr);
-    switch_page_directory(addr);
-   // Before we enable paging, we must register our page fault handler.
-   register_interrupt_handler(14, page_fault);
-}
-
-void switch_page_directory(page_directory_t *dir)
-{
-   current_directory = dir;
-    page_directory_t * newDir = dir;
-    newDir -= 0xC0000000;
-    //loadPageDirectory((unsigned int * )newDir->tables);
-    enablePaging();
-}
-
-page_t *get_page(uint32_t address, int make, page_directory_t *dir)
-{
-   // Turn the address into an index.
-   address /= 0x1000;
-   // Find the page table containing this address.
-   uint32_t table_idx = address / 1024;
-   if (dir->tables[table_idx]) // If this table is already assigned
-   {
-       return &dir->tables[table_idx]->pages[address%1024];
-   }
-   else if(make)
-   {
-       uint32_t tmp;
-       dir->tables[table_idx] = (page_table_t*)kmalloc_ap(sizeof(page_table_t), &tmp);
-       // Check if is higher halfhttps://github.com/JoniSuominen/PolarOS/blob/master/segmentation/pages.c
-       memset(dir->tables[table_idx] + 0xC0000000, 0, 0x1000);
-       dir->tablesPhysical[table_idx] = tmp | 0x7; // PRESENT, RW, US.
-       return &dir->tables[table_idx]->pages[address%1024];
-   }
-   else
-   {
-       return 0;
-   }
+*/
+  register_interrupt_handler(14, page_fault);
 }
