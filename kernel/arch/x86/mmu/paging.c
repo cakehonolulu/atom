@@ -133,10 +133,17 @@ void initialise_paging(size_t memsize, uint32_t virtual_start, uint32_t virtual_
    		__asm__ __volatile__ ("cli; hlt");
 	}
 
-	printk("Available memory size: %d B, %d KB, %d MB\n", memsize, memsize/1024, memsize/1024/1024);
+#ifdef DEBUG
+    printk("Available memory size: %d B, %d KB, %d MB\n", memsize, memsize/1024, memsize/1024/1024);
+
+#endif
 
   uint32_t mem_aligned = ALIGN_UP(memsize);
-  printk("Aligned memory: %d\n", mem_aligned);
+
+#ifdef DEBUG
+    printk("Aligned memory: %d\n", mem_aligned);
+#endif
+
   uint32_t code_phys_start = phys_start;
   uint32_t code_phys_end = phys_end;
   uint32_t code_virt_start = virtual_start;
@@ -147,34 +154,34 @@ void initialise_paging(size_t memsize, uint32_t virtual_start, uint32_t virtual_
   uint32_t map_virt_start = ALIGN_DOWN(code_virt_start);
   uint32_t map_virt_end = ALIGN_UP(code_virt_end);
 
-  printk("a ");
   kernel_directory = kmalloc_a(sizeof(page_directory_t));
 
-  printk("b ");
   paging_map_4mb_dir(kernel_directory, map_phys_start, map_phys_end, map_virt_start, map_virt_end);
-  printk("c ");
-  uint32_t dir_physaddr = VIRTUAL_TO_PHYSICAL((uint32_t) kernel_directory);
-  printk("dir_physaddr: 0x%x, kern_dir: 0x%x\n", dir_physaddr, (uint32_t) kernel_directory);
-  arch_set_page_directory((page_directory_t *) (uint32_t) dir_physaddr);
-  printk("e ");
 
-  /*  num_frames = mem_aligned / PAGE_SIZE;
-    printk("f ");
+  uint32_t dir_physaddr = VIRTUAL_TO_PHYSICAL((uint32_t) kernel_directory);
+#ifdef DEBUG
+  printk("dir_physaddr: 0x%x, kern_dir: 0x%x\n", dir_physaddr, (uint32_t) kernel_directory);
+#endif
+  arch_set_page_directory((page_directory_t *) (uint32_t) dir_physaddr);
+
+
+    num_frames = mem_aligned / PAGE_SIZE;
+    //printk("f ");
     // Align so as not to lose frames that fall between bitmap boundaries
     num_frames_aligned = num_frames % FRAMES_PER_BITMAP != 0 ? num_frames - (num_frames % FRAMES_PER_BITMAP) + FRAMES_PER_BITMAP : num_frames;
-    printk("g ");
+    //printk("g ");
     size_t bitmap_size = (size_t) (num_frames_aligned / FRAMES_PER_BITMAP) * sizeof(FRAME_BITMAP_TYPE);
-    printk("h ");
+    //printk("h ");
     frame_bitmaps = kmalloc(bitmap_size);
-    printk("i ");
+    //printk("i ");
     if(frame_bitmaps) {
-      printk("j ");
+      //printk("j ");
         memset(frame_bitmaps, 0, bitmap_size);
-        printk("k ");
+        //printk("k ");
         paging_set_frames(map_phys_start, map_phys_end);
         
     }
 
-*/
+
   register_interrupt_handler(14, page_fault);
 }
