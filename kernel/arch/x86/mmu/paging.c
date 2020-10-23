@@ -15,6 +15,12 @@ page_directory_t* kernel_directory = NULL;
 uint32_t num_frames = 0, num_frames_aligned = 0;
 FRAME_BITMAP_TYPE* frame_bitmaps = NULL;
 
+uint32_t log2_floor(uint32_t n) {
+    #define S(k) if (n >= (UINT32_C(1) << k)) { i += k; n >>= k; }
+    int i = -(n == 0); S(16); S(8); S(4); S(2); S(1); return i;
+    #undef S
+}
+
 void page_fault(registers_t *regs)
 {
     uint32_t err_code = regs->err_code;
@@ -38,23 +44,59 @@ void paging_set_frames(uint32_t phys_start, uint32_t phys_end) {
     for (uint32_t frame = FRAME_FOR(phys_start); frame < FRAME_FOR(phys_end); ++frame) paging_set_frame(frame);
 }
 
-
-uint32_t read_cr0() {
-    uint32_t value;
-    __asm__ __volatile__("mov %%cr0, %%eax" : "=a"(value));
-    return value;
+// Mark a frame as free
+void paging_clear_frame(uint32_t frame) {
+    if(frame < num_frames) CLEAR_FRAME(BITMAP_FOR_FRAME(frame), BIT_OFFSET(frame));
 }
 
-uint32_t read_cr3() {
-    uint32_t value;
-    __asm__ __volatile__("mov %%cr3, %%eax" : "=a"(value));
-    return value;
+// Mark contiguous frames as free, from phys_start up to phys_end
+void paging_clear_frames(uint32_t phys_start, uint32_t phys_end) {
+    phys_start = ALIGN_DOWN(phys_start);
+    for (uint32_t frame = FRAME_FOR(phys_start); frame < FRAME_FOR(phys_end); ++frame) paging_clear_frame(frame);
 }
 
-void print_control_registers()
-{
-	printk("cr0: 0x%x, cr3: 0x%x\n", read_cr0(),read_cr3());
+int paging_get_free_frame() {
+    for (uint32_t i = 0; i < NUM_BITMAPS; ++i) {
+        FRAME_BITMAP_TYPE bitmap = frame_bitmaps[i];
+        // If at least one bit in the bitmap is clear
+        if(bitmap != FRAME_FULL) {
+            uint32_t frame = 0;
+            // If it's zero then bit 1 is the first one free
+            if(bitmap == 0) frame = 0;
+            else {
+                // The bit corresponding to the free page
+                FRAME_BITMAP_TYPE mask = 0;
+                mask = ~bitmap & (bitmap + 1);
+                // Log in order to get the bit's position in the bitmap
+                frame = log2_floor(mask);
+            }
+            return frame + i * FRAMES_PER_BITMAP;
+        }
+    }
+    return -1;
 }
+
+physaddr_t paging_alloc_frame() {
+    // Search for a free frame
+    int free_frame = paging_get_free_frame();
+    if(free_frame >= 0) {
+        paging_set_frame((uint32_t) free_frame);
+        return (physaddr_t) (free_frame * PAGE_SIZE);
+    }
+    return 0;
+}
+
+void paging_free_frame(physaddr_t addr) {
+    uint32_t frame = FRAME_FOR(addr);
+    if(!FRAME_IS_SET(frame))
+    {
+      printk("Attempting to free unallocated frame %d (0x%x)\n", frame, addr);
+      asm volatile ("cli; hlt");
+    } else {
+      paging_clear_frame(frame);
+    }
+}
+
 
 void paging_map_4mb_page(page_directory_t* dir, uint32_t page, uint32_t phys_addr) {
     page_dir_entry_t* dir_entry = &dir->entries[page];
