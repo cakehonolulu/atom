@@ -19,7 +19,7 @@ size_t arch_mmu_get_max_phys_mem(bool inKiloBytes)
 
 void arch_mmu_init()
 {
-	placement_address = arch_mmap_init();
+	placement_address = (arch_mmap_init() + 0xC0000000);
 
 	if (!placement_address)
 	{

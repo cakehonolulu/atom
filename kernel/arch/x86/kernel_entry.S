@@ -2,7 +2,7 @@
 
 .set KERNEL_VIRTUAL_BASE, 0xC0000000
 .set KERNEL_PAGE_NUMBER, (KERNEL_VIRTUAL_BASE >> 22)
-.set KERNEL_NUM_UPPER_PAGES, 1
+.set KERNEL_NUM_UPPER_PAGES, 7
 
 .global arch_higher_half_pd
 
@@ -19,12 +19,12 @@ arch_higher_half_pd:
 	.fill (KERNEL_PAGE_NUMBER - 1), 4
     # Set higher half pages, starting from 0 and increasing by 4MiB
     .long 0x00000083
-    #.long 0x00000083 | (1 << 22)
-    #.long 0x00000083 | (2 << 22)
-    #.long 0x00000083 | (3 << 22)
-    #.long 0x00000083 | (4 << 22)
-    #.long 0x00000083 | (5 << 22)
-    #.long 0x00000083 | (6 << 22)
+    .long 0x00000083 | (1 << 22)
+    .long 0x00000083 | (2 << 22)
+    .long 0x00000083 | (3 << 22)
+    .long 0x00000083 | (4 << 22)
+    .long 0x00000083 | (5 << 22)
+    .long 0x00000083 | (6 << 22)
      # Fill all succeeding pages with 4 bytes
     .fill (1024 - KERNEL_PAGE_NUMBER - KERNEL_NUM_UPPER_PAGES), 4
 
@@ -58,10 +58,10 @@ _kernel_entry:
 .type _bootstrap, @function
 _bootstrap:
 	# Null-ify the first kernel location at 1MB
-    //movl $0, (arch_higher_half_pd)
+    movl $0, (arch_higher_half_pd)
 
     # Invalidate the page
-    //invlpg (0)
+    invlpg (0)
 
 	# Setup the kernel stack
 	mov $stack_top, %esp

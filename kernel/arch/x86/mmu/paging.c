@@ -155,7 +155,7 @@ void initialise_paging(size_t memsize, uint32_t virtual_start, uint32_t virtual_
   printk("c ");
   uint32_t dir_physaddr = VIRTUAL_TO_PHYSICAL((uint32_t) kernel_directory);
   printk("dir_physaddr: 0x%x, kern_dir: 0x%x\n", dir_physaddr, (uint32_t) kernel_directory);
-  arch_set_page_directory((page_directory_t *) (uint32_t) kernel_directory);
+  arch_set_page_directory((page_directory_t *) (uint32_t) dir_physaddr);
   printk("e ");
 
   /*  num_frames = mem_aligned / PAGE_SIZE;
