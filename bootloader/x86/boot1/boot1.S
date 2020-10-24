@@ -2,7 +2,10 @@
 
 .global init1
 
+
 .section .data
+
+.extern I386_KERNEL_SIZE
 
 /* Static Bootloader Values */
 .set BOOT1_PROTECTED_MODE_STACK_ADDRESS, 0x9C000
@@ -100,7 +103,6 @@ BOOT_DRIVE_NUMBER: .byte 0
 
 Load64Bit: .byte 0
 
-.extern I386_KERNEL_SIZE
 .extern main
 
 .section .text
@@ -254,7 +256,7 @@ boot1UnrealModePrepareKernel:
 	mov $0x1000, %esi
 	mov $0x100000, %edi
 	mov $0x200, %cx
-	mov $0x3d, %bx // Relocate more sectors
+	mov $0x37, %bx // Relocate more sectors
 .loop:
 	addr32 rep movsb
 	dec %bx
@@ -276,24 +278,25 @@ boot1UnrealModeLoadKernel:
 	call boot1UMResettedFloppy
 
 	call boot1UMReadingKernel
+	
 	xchg %bx, %bx
+
 	mov $0x02, %ah									# Set ah to 2 (AH=0x02 -> Disk Read Function).
 	# Sectors per track on a 1.44 MB floppy disk is 18. Since 18*4 = 72 (Which is the max theoretical sectors we can read)
-	mov $I386_KERNEL_SIZE, %al						# Set al to I386_KERNEL_SIZE (AL=$I386_KERNEL_SIZE0h) -> Sectors to be readed.
+	mov $0x37, %al						# Set al to I386_KERNEL_SIZE (AL=$I386_KERNEL_SIZE0h) -> Sectors to be readed.
 													# Where I386_KERNEL_SIZE equals to the number of sectors occupied by the kernel binary rounded 1 sector up.
 	mov $0x0, %ch									# Set ch to 0 (CH=0x00) -> Track 0 of the drive.
 													# TODO: Get boot1 size at runtime! For now, hardcode the size.
-	mov $0x7, %cl									# FLOPPY_KERNEL_STARTING_SECTOR + 1
+	mov $0x6, %cl									# FLOPPY_KERNEL_STARTING_SECTOR + 1
 													# Which is sector of the drive from which we start reading the kernel from.
 	mov $0x0, %dh									# Set dh to 0 (DH=0x00) -> Head 0 of the drive.
 	xor %bx, %bx									# Set bx to 0.
 	mov %bx, %es									# Move bx onto our extra segment register to prepare the jump.
 	mov $0x1000, %bx								# Set our bx register with the adress we'll jump to.
 	int $0x13										# Call BIOS interrupt 13.
-	jc boot1UnrealModeReadKernelFail
+    jc boot1UnrealModeReadKernelFail
 
 	call boot1UMReadedKernel
-
 	ret
 
 boot1UnrealModeReadKernelFail:
