@@ -95,10 +95,12 @@ init1:
 	xor %ax, %ax												# Set ax to 0.
 	mov %ax, %ds												# Set ds to 0.
 	mov %ax, %ss												# Set up stack segment.
-	mov $0x7C00, %sp											# Set the stack pointer register with 0x7C00.
+	mov $0x7C00, %bx											# Set the stack pointer register with 0x7C00.
 																# Stack Dissasembly:
-																# Top stack adress:		-> 0x7C00
-	mov %sp, %bp												# Move sp (Which now is 0x7C00) to the base pointer register.
+																# Top stack address:	-> 0x7C00
+	mov %bx, %ss 												# Base stack address:	-> 0x7FFF (1023 bytes of Stack)
+																# Stack runs from 0x7C00:0x0000 to 0x7C00:0xFFFF
+	mov %ax, %sp												# Move 0 to the stack pointer
 	mov $Stage2LoadedMessage, %bx								# Print a message that tells we're currently on second stage bootloader.
 
 	call boot1print
@@ -155,7 +157,7 @@ boot1HugeUnrealMode:
 	mov $EnteredUnrealModeMessage, %bx
 	call boot1print
 	call boot1printnl
-	call boot1UnrealModePrepareKernel
+	call boot1UnrealModeReadKernel
 	cmp $0, %ax
 	jnz boot1UnrealModeRelocateKernelFail
 
@@ -205,26 +207,8 @@ boot1HugeUnrealMode:
 	cli
 	jmp boot1Halt
 
-boot1UnrealModePrepareKernel:
-	call boot1UnrealModeLoadKernel
+boot1UnrealModeReadKernel:
 
-	mov $RelocatingKernelMessage, %bx
-	call boot1print
-	call boot1printnl
-
-	mov $0x1000, %esi
-	mov $0x100000, %edi
-	mov $0x200, %cx
-	mov $0x37, %bx // Relocate more sectors
-.loop:
-	addr32 rep movsb
-	dec %bx
-	jnz .loop
-	mov $0, %ax
-	jc .done
-.done: ret
-
-boot1UnrealModeLoadKernel:
 	mov $LoadingKernelMessage, %bx
 	call boot1print
 	call boot1printnl
@@ -237,7 +221,7 @@ boot1UnrealModeLoadKernel:
 		mov	$0x00, %ah									# Set ah to 0 (AH=0x00 -> Reset Disk Function).
 		mov BOOT_DRIVE_NUMBER, %dl						# Move BOOT_DRIVE_NUMBER value back into dl.
 		int	$0x13										# Call BIOS interrupt 13.
-		jc boot1ResetDrive
+	jc boot1ResetDrive
 
 	mov $ResettedFloppyMessage, %bx
 	call boot1print
@@ -251,7 +235,7 @@ boot1UnrealModeLoadKernel:
 
 	mov $0x02, %ah									# Set ah to 2 (AH=0x02 -> Disk Read Function).
 	# Sectors per track on a 1.44 MB floppy disk is 18. Since 18*4 = 72 (Which is the max theoretical sectors we can read)
-	mov $0x37, %al						# Set al to I386_KERNEL_SIZE (AL=$I386_KERNEL_SIZE0h) -> Sectors to be readed.
+	mov $I386_KERNEL_SIZE, %al						# Set al to I386_KERNEL_SIZE (AL=$I386_KERNEL_SIZE0h) -> Sectors to be readed.
 													# Where I386_KERNEL_SIZE equals to the number of sectors occupied by the kernel binary rounded 1 sector up.
 	mov $0x0, %ch									# Set ch to 0 (CH=0x00) -> Track 0 of the drive.
 													# TODO: Get boot1 size at runtime! For now, hardcode the size.
@@ -260,7 +244,7 @@ boot1UnrealModeLoadKernel:
 	mov $0x0, %dh									# Set dh to 0 (DH=0x00) -> Head 0 of the drive.
 	xor %bx, %bx									# Set bx to 0.
 	mov %bx, %es									# Move bx onto our extra segment register to prepare the jump.
-	mov $0x1000, %bx								# Set our bx register with the adress we'll jump to.
+	mov $0x9000, %bx								# Set our bx register with the adress we'll jump to.
 	int $0x13										# Call BIOS interrupt 13.
     jc boot1UnrealModeReadKernelFail
 
@@ -268,7 +252,21 @@ boot1UnrealModeLoadKernel:
 	call boot1print
 	call boot1printnl
 
-	ret
+	mov $RelocatingKernelMessage, %bx
+	call boot1print
+	call boot1printnl
+
+	mov $0x9000, %esi
+	mov $0x100000, %edi
+	mov $0x200, %cx
+	mov $I386_KERNEL_SIZE, %bx // Relocate more sectors
+.loop:
+	addr32 rep movsb
+	dec %bx
+	jnz .loop
+	mov $0, %ax
+	jc .done
+.done: ret
 
 boot1UnrealModeReadKernelFail:
 	mov $ReadKernelFailMessage, %bx
