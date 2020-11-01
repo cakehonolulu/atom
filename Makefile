@@ -54,7 +54,7 @@ floppy.img: arch bloader
 	-@dd conv=notrunc if=kernel/arch/$(ARCH)/kernel.bin of=floppy.img bs=512 seek=$(FLOPPY_KERNEL_STARTING_SECTOR) status=none
 
 hdd.img: arch bloader
-	-@mkfs.msdos -C hdd.img 16777216 >/dev/null # 16777216 Bytes = 16 Mega Bytes
+	-@bximage -mode=create -hd=16M -q hdd.img >/dev/null # 16777216 Bytes = 16 Mega Bytes
 	-@dd conv=notrunc if=bootloader/$(ARCH)/boot0.bin of=hdd.img bs=512 seek=$(HDD_MBR_SECTOR) status=none
 	-@dd conv=notrunc if=bootloader/$(ARCH)/boot1.bin of=hdd.img bs=512 seek=$(HDD_SECOND_STAGE_SECTOR) status=none
 	-@dd conv=notrunc if=kernel/arch/$(ARCH)/kernel.bin of=hdd.img bs=512 seek=$(HDD_KERNEL_STARTING_SECTOR) status=none
