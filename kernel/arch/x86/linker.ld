@@ -46,7 +46,6 @@ SECTIONS {
         __bss_start = .;
         *(COMMON)            /* all COMMON sections from all files */
         *(.bss)              /* all BSS sections from all files */
-        *(.stack)
     }
     . = ALIGN(4);
     __bss_end = .;

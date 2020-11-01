@@ -66,9 +66,6 @@ _bootstrap:
 	# Setup the kernel stack
 	mov $stack_top, %esp
 
-	# Stack is 16 byte aligned
-	and $-16, %esp
-
 	xor %eax, %eax
 	mov $__bss_sizel, %ecx
 	mov $__bss_start, %edi
@@ -86,7 +83,9 @@ _bootstrap:
 1:	hlt
 	jmp 1b
 
-.section .stack, "aw", @nobits
+.section .bss
+# Stack is 16 byte aligned
+.align 16
 stack_bottom:
-.skip 32768 # 32 KiB
+.skip 16384 # 16 KiB
 stack_top:

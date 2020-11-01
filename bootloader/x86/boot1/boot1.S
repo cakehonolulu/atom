@@ -11,12 +11,8 @@
 
 .section .data
 
-.extern I386_KERNEL_SIZE
+.code16
 
-/* Static Bootloader Values */
-.set BOOT1_PROTECTED_MODE_STACK_ADDRESS, 0x9C000
-.set VGA_MEMORY_LOCATION, 0xB8000
-.set VGA_MEMORY_ATTRIBUTES, 0x0F
 .set MEMORY_MAP, 0x9000
 
 /* Basic GDT. set-up for Unreal Mode, change descriptor 1 & 2 alongside 16->32 bit segment mode later on */
@@ -48,26 +44,24 @@ gdt:
 	.word (gdt_end - gdt_start - 1)
 	.long gdt_start
 
+.extern I386_KERNEL_SIZE
+
+BOOT_DRIVE_NUMBER: .byte 0
 
 /* Bootloader Strings */
 A20AlreadyEnabledMessage: .asciz "A20 Line is already enabled, skipping..." // Bochs for example, enables it regardless the OS
 A20EnabledMessage: .asciz "A20 Line enabled Successfully!"
 Stage2LoadedMessage: .asciz "Entered 2nd Stage"
 
-ProtectedModeGDTLoadedMessage: .asciz "Protected Mode GDT Loaded"
 UnrealModeGDTLoadedMessage: .asciz "Unreal Mode GDT Loaded"
-
-EnteredProtectedModeMessage: .asciz "Entered Protected Mode"
 EnteredUnrealModeMessage: .asciz "Entered Unreal Mode"
 
 ResettingFloppyMessage: .asciz "Resetting Floppy..."
 ResettedFloppyMessage: .asciz "Resetted Floppy!"
-
 ReadingKernelMessage: .asciz "Reading Kernel from Disk..."
 ReadedKernelMessage: .asciz "Readed Kernel from Disk!"
 ReadKernelFailMessage: .asciz "Failed to Read the Kernel!"
 DiskErrorMessage: .asciz "Disk Read Error!"
-
 RelocatingKernelMessage: .asciz "Relocating Kernel at Address: 0x10000 (1MB Mark)..."
 RelocatedKernelMessage: .asciz "Relocated Successfully!"
 RelocateKernelFailMessage: .asciz "Kernel Relocation Went Wrong, Halting!"
@@ -75,22 +69,20 @@ RelocateKernelFailMessage: .asciz "Kernel Relocation Went Wrong, Halting!"
 LoadingKernelMessage: .asciz "Loading Kernel..."
 LoadedKernelMessage: .asciz "Loaded Kernel!"
 
+.code32
 
-BootModeText: .asciz "Which Mode you want Atom to work? (PMode = P, Long Mode = L)"
-LMOBitText: .asciz "64 Bit Mode Selected"
-PMOBitText: .asciz "32 Bit Mode Selected"
+/* Static Bootloader Values */
+.set BOOT1_PROTECTED_MODE_STACK_ADDRESS, 0x9C000
+.set VGA_MEMORY_LOCATION, 0xB8000
+.set VGA_MEMORY_ATTRIBUTES, 0x0F
+
+EnteredProtectedModeMessage: .asciz "Entered Protected Mode"
 
 /* Bootloader Variables */
 VGA_TEXT_MODE_CURRENT_ROW: .long 0x00
 VGA_TEXT_MODE_CURRENT_COLUMN: .long 0x00
 VGA_TEXT_MODE_SCREEN_WIDTH: .long 0x00
 VGA_TEXT_MODE_SCREEN_HEIGHT: .long 0x00
-
-BOOT_DRIVE_NUMBER: .byte 0
-
-Load64Bit: .byte 0
-
-.extern main
 
 .section .text
 
@@ -167,7 +159,9 @@ boot1HugeUnrealMode:
 	cmp $0, %ax
 	jnz boot1UnrealModeRelocateKernelFail
 
-	call boot1UMRelocatedKernel
+	mov $RelocatedKernelMessage, %bx
+	call boot1print
+	call boot1printnl
 
     xor %ebx, %ebx
     xor %bp, %bp
@@ -213,7 +207,11 @@ boot1HugeUnrealMode:
 
 boot1UnrealModePrepareKernel:
 	call boot1UnrealModeLoadKernel
-	call boot1UMRelocatingKernel
+
+	mov $RelocatingKernelMessage, %bx
+	call boot1print
+	call boot1printnl
+
 	mov $0x1000, %esi
 	mov $0x100000, %edi
 	mov $0x200, %cx
@@ -227,18 +225,27 @@ boot1UnrealModePrepareKernel:
 .done: ret
 
 boot1UnrealModeLoadKernel:
-	call boot1UMLoadingKernel
+	mov $LoadingKernelMessage, %bx
+	call boot1print
+	call boot1printnl
 
-	call boot1UMResettingFloppy
+	mov $ResettingFloppyMessage, %bx
+	call boot1print
+	call boot1printnl
+
 	boot1ResetDrive:									# Function to reset floppy drive in order to ensure it's working correctly.
 		mov	$0x00, %ah									# Set ah to 0 (AH=0x00 -> Reset Disk Function).
 		mov BOOT_DRIVE_NUMBER, %dl						# Move BOOT_DRIVE_NUMBER value back into dl.
 		int	$0x13										# Call BIOS interrupt 13.
 		jc boot1ResetDrive
 
-	call boot1UMResettedFloppy
+	mov $ResettedFloppyMessage, %bx
+	call boot1print
+	call boot1printnl
 
-	call boot1UMReadingKernel
+	mov $ReadingKernelMessage, %bx
+	call boot1print
+	call boot1printnl
 	
 	xchg %bx, %bx
 
@@ -248,7 +255,7 @@ boot1UnrealModeLoadKernel:
 													# Where I386_KERNEL_SIZE equals to the number of sectors occupied by the kernel binary rounded 1 sector up.
 	mov $0x0, %ch									# Set ch to 0 (CH=0x00) -> Track 0 of the drive.
 													# TODO: Get boot1 size at runtime! For now, hardcode the size.
-	mov $0x6, %cl									# FLOPPY_KERNEL_STARTING_SECTOR + 1
+	mov $5, %cl 									# FLOPPY_KERNEL_STARTING_SECTOR + 1
 													# Which is sector of the drive from which we start reading the kernel from.
 	mov $0x0, %dh									# Set dh to 0 (DH=0x00) -> Head 0 of the drive.
 	xor %bx, %bx									# Set bx to 0.
@@ -257,7 +264,10 @@ boot1UnrealModeLoadKernel:
 	int $0x13										# Call BIOS interrupt 13.
     jc boot1UnrealModeReadKernelFail
 
-	call boot1UMReadedKernel
+	mov $ReadedKernelMessage, %bx
+	call boot1print
+	call boot1printnl
+
 	ret
 
 boot1UnrealModeReadKernelFail:
@@ -269,13 +279,6 @@ boot1UnrealModeReadKernelFail:
 
 boot1UnrealModeRelocateKernelFail:
 	mov $RelocateKernelFailMessage, %bx
-	call boot1print
-	call boot1printnl
-	cli
-	jmp boot1Halt
-
-boot1DiskErrorMessage:
-	mov $DiskErrorMessage, %bx
 	call boot1print
 	call boot1printnl
 	cli
@@ -353,62 +356,8 @@ boot1A20HasBeenEnabled:
 	call boot1printnl
 	ret
 
-boot1UMLK:
-	mov $LoadedKernelMessage, %bx
-	call boot1print
-	call boot1printnl
-	ret
-
 boot1A20HasAlreadyBeenEnabled:
 	mov $A20AlreadyEnabledMessage, %bx
-	call boot1print
-	call boot1printnl
-	ret
-
-boot1LandedUnrealMode: 
-	mov $EnteredUnrealModeMessage, %bx
-	call boot1print
-	call boot1printnl
-	ret
-
-boot1UMLoadingKernel:
-	mov $LoadingKernelMessage, %bx
-	call boot1print
-	call boot1printnl
-	ret
-
-boot1UMResettingFloppy:
-	mov $ResettingFloppyMessage, %bx
-	call boot1print
-	call boot1printnl
-	ret
-
-boot1UMResettedFloppy:
-	mov $ResettedFloppyMessage, %bx
-	call boot1print
-	call boot1printnl
-	ret
-
-boot1UMReadingKernel:
-	mov $ReadingKernelMessage, %bx
-	call boot1print
-	call boot1printnl
-	ret
-
-boot1UMReadedKernel:
-	mov $ReadedKernelMessage, %bx
-	call boot1print
-	call boot1printnl
-	ret
-
-boot1UMRelocatingKernel:
-	mov $RelocatingKernelMessage, %bx
-	call boot1print
-	call boot1printnl
-	ret
-
-boot1UMRelocatedKernel:
-	mov $RelocatedKernelMessage, %bx
 	call boot1print
 	call boot1printnl
 	ret
