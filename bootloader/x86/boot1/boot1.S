@@ -233,7 +233,8 @@ boot1UnrealModeReadKernel:
 	mov BOOT_DRIVE_NUMBER, %dl
 	int $0x13
 	
-	mov %dh, NOH # DH = Number of Heads - 1
+	add $1, %dh # DH = Number of Heads - 1
+	mov %dh, NOH # Number of heads
 	and $0x3f, %cl
 	mov %cl, SPT # AND 0x3f to CL to get Sectors per Track
 
