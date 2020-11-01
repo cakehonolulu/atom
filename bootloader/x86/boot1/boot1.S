@@ -47,6 +47,8 @@ gdt:
 .extern I386_KERNEL_SIZE
 
 BOOT_DRIVE_NUMBER: .byte 0
+SPT: .byte 0
+NOH: .byte 0
 
 /* Bootloader Strings */
 A20AlreadyEnabledMessage: .asciz "A20 Line is already enabled, skipping..." // Bochs for example, enables it regardless the OS
@@ -217,11 +219,7 @@ boot1UnrealModeReadKernel:
 	call boot1print
 	call boot1printnl
 
-	boot1ResetDrive:									# Function to reset floppy drive in order to ensure it's working correctly.
-		mov	$0x00, %ah									# Set ah to 0 (AH=0x00 -> Reset Disk Function).
-		mov BOOT_DRIVE_NUMBER, %dl						# Move BOOT_DRIVE_NUMBER value back into dl.
-		int	$0x13										# Call BIOS interrupt 13.
-	jc boot1ResetDrive
+	call boot1ResetDrive
 
 	mov $ResettedFloppyMessage, %bx
 	call boot1print
@@ -231,7 +229,15 @@ boot1UnrealModeReadKernel:
 	call boot1print
 	call boot1printnl
 	
-	xchg %bx, %bx
+	mov $0x08, %ah
+	mov BOOT_DRIVE_NUMBER, %dl
+	int $0x13
+	
+	mov %dh, NOH # DH = Number of Heads - 1
+	and $0x3f, %cl
+	mov %cl, SPT # AND 0x3f to CL to get Sectors per Track
+
+	call boot1ResetDrive
 
 	mov $0x02, %ah									# Set ah to 2 (AH=0x02 -> Disk Read Function).
 	# Sectors per track on a 1.44 MB floppy disk is 18. Since 18*4 = 72 (Which is the max theoretical sectors we can read)
@@ -247,6 +253,7 @@ boot1UnrealModeReadKernel:
 	mov $0x9000, %bx								# Set our bx register with the adress we'll jump to.
 	int $0x13										# Call BIOS interrupt 13.
     jc boot1UnrealModeReadKernelFail
+
 
 	mov $ReadedKernelMessage, %bx
 	call boot1print
@@ -267,6 +274,13 @@ boot1UnrealModeReadKernel:
 	mov $0, %ax
 	jc .done
 .done: ret
+
+boot1ResetDrive:									# Function to reset floppy drive in order to ensure it's working correctly.
+	mov	$0x00, %ah									# Set ah to 0 (AH=0x00 -> Reset Disk Function).
+	mov BOOT_DRIVE_NUMBER, %dl						# Move BOOT_DRIVE_NUMBER value back into dl.
+	int	$0x13										# Call BIOS interrupt 13.
+	jc boot1ResetDrive
+	ret
 
 boot1UnrealModeReadKernelFail:
 	mov $ReadKernelFailMessage, %bx
