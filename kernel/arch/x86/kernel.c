@@ -71,6 +71,8 @@ void _kmain(unsigned int initium_signature)
 
     arch_mmu_init();
 
+    printkok("Initialized MMU");
+
     bool inKiloBytes = false;
 
     initialise_paging(arch_mmu_get_max_phys_mem(inKiloBytes), (uint32_t) &KERNEL_VADDR_START, (uint32_t) &KERNEL_VADDR_END, (uint32_t) &KERNEL_PHYSADDR_START, (uint32_t) &KERNEL_PHYSADDR_END);

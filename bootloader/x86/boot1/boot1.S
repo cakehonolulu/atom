@@ -13,7 +13,7 @@
 
 .code16
 
-.set MEMORY_MAP, 0x9000
+.set MEMORY_MAP, 0x0500
 
 /* Basic GDT. set-up for Unreal Mode, change descriptor 1 & 2 alongside 16->32 bit segment mode later on */
 gdt_start:
