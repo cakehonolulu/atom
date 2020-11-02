@@ -121,10 +121,6 @@ void isr_handler(registers_t *r) {
         isr_t handler = interrupt_handlers[r->int_no];
         handler(&r);
     }
-    else if (r->int_no == 14)
-    {
-        page_fault(&r);
-    }
     else
     {
         printk("Unhandled Interrupt: 0x%x\n", r->int_no);
