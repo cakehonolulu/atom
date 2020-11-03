@@ -1,6 +1,6 @@
 #include "isr.h"
 
-isr_t interrupt_handlers[256];
+isr_handler_t interrupt_handlers[256];
 
 unsigned int arch_isr_install() {
     arch_set_idt_gate(0, (unsigned int)isr0);
@@ -78,18 +78,17 @@ char *exception_messages[] = {
     "Reserved"
 };
 
-void isr_handler(registers_t *r) {
-    if (interrupt_handlers[r->int_no] != 0)
-    {
-        isr_t handler = interrupt_handlers[r->int_no];
-        handler(&r);
-    }
-    else
-    {
-        printk("Unhandled Interrupt: 0x%x\n", r->int_no);
+void arch_isr_handler(struct regs * r) {
+    isr_handler_t handler = interrupt_handlers[r->int_no];
+
+    if (handler) {
+        handler(r);
+    } else {
+        printk("Unhandled exception: [%d] %s", r->int_no, exception_messages[r->int_no]);
+        asm volatile ("cli; hlt");
     }
 }
 
-void register_interrupt_handler(unsigned char n, isr_t handler) {
+void register_interrupt_handler(unsigned char n, isr_handler_t handler) {
     interrupt_handlers[n] = handler;
 }

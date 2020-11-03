@@ -1,6 +1,6 @@
 #include "isr.h"
 
-extern isr_t interrupt_handlers[256];
+extern isr_handler_t interrupt_handlers[256];
 
 unsigned int arch_pic_remap()
 {
@@ -64,7 +64,7 @@ void irq_handler(registers_t *r) {
 
     /* Handle the interrupt in a more modular way */
     if (interrupt_handlers[r->int_no] != 0) {
-        isr_t handler = interrupt_handlers[r->int_no];
+        isr_handler_t handler = interrupt_handlers[r->int_no];
         handler(&r);
     }
 }

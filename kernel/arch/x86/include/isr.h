@@ -79,10 +79,18 @@ typedef struct {
    unsigned int eip, cs, eflags, esp, ss; /* Pushed by the processor automatically */
 } registers_t;
 
+struct regs {
+    unsigned int gs, fs, es, ds;
+    unsigned int edi, esi, ebp, esp, ebx, edx, ecx, eax;
+    unsigned int int_no, err_code;
+    unsigned int eip, cs, eflags, useresp, ss;
+};
+
+typedef void (*isr_handler_t) (struct regs *);
+
 unsigned int isr_install();
-void isr_handler(registers_t *r);
+void isr_handler(struct regs *r);
 unsigned int irq_install();
 
-typedef void (*isr_t)(registers_t*);
-void register_interrupt_handler(unsigned char n, isr_t handler);
+void register_interrupt_handler(unsigned char n, isr_handler_t handler);
 

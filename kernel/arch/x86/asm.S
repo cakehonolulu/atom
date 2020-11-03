@@ -48,35 +48,43 @@ arch_gdt_update:
     ret											# Return to C
 
 # Defined in isr.c
-.extern isr_handler
+.extern arch_isr_handler
 .extern irq_handler
 
 # Common ISR code
 isr_common_stub: 
-    # 1. Save CPU state
-        pusha # Pushes edi,esi,ebp,esp,ebx,edx,ecx,eax
-        mov %ds,%ax # Lower 16-bits of eax = ds.
-        push %eax # save the data segment descriptor
-        mov ARCH_GDT_KERNEL_CODE_SEGMENT_SELECTOR, %ax # kernel data segment descriptor
-        mov %ax,%ds
-        mov %ax,%es
-        mov %ax,%fs
-        mov %ax,%gs
-        push %esp # registers_t *r
-    # 2. Call C handler
-    cld # C code following the sysV ABI requires DF to be clear on function entry
-        call isr_handler
+   /* Push all registers */
+    pusha
 
-    # 3. Restore state
-        pop %eax
-    pop %eax
-        mov %ax,%ds
-        mov %ax,%es
-        mov %ax,%fs
-        mov %ax,%gs
-        popa
-        add $8,%esp # Cleans up the pushed error code and pushed ISR number
-        iret # pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP
+    /* Save segment registers */
+    push %ds
+    push %es
+    push %fs
+    push %gs
+    mov ARCH_GDT_KERNEL_CODE_SEGMENT_SELECTOR, %ax
+    mov %ax, %ds
+    mov %ax, %es
+    mov %ax, %fs
+    mov %ax, %gs
+    cld
+
+    /* Call fault handler */
+    push %esp
+    call arch_isr_handler
+    add $4, %esp
+
+    /* Restore segment registers */
+    pop %gs
+    pop %fs
+    pop %es
+    pop %ds
+
+    /* Restore registers */
+    popa
+    /* Cleanup error code and ISR # */
+    add $8, %esp
+    /* pop CS, EIP, EFLAGS, SS and ESP */
+    iret
 
 # Common IRQ code. Identical to ISR code except for the 'call' 
 # and the 'pop ebx'
