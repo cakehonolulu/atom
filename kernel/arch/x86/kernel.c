@@ -46,27 +46,50 @@ void _kmain(unsigned int initium_signature)
     
     printkok("Booted to kernel mode!");
 
+#ifdef DEBUG // TODO: Differentiate / divide debug into subgroups
     printk("Kernel Start: 0x%x, Kernel End: 0x%x, Kernel Size: %d bytes (%d KB)\n", KERNEL_START, KERNEL_END, KERNEL_SIZE, ((KERNEL_END - KERNEL_START) / 1024));
+#endif
 
-    if (i386_gdt_install() == 1)
+    if (arch_gdt_install() == 1)
     {
-        printkok("Re-initialized GDT");
+        printkok("Configured GDT");
     } else {
-        printkfail("Failed to re-initialize GDT");
+        printkfail("Failed to configure GDT");
     }
 
-    if (isr_install() == 1)
+    if (arch_idt_install() == 1)
     {
-        printkok("Initialized ISRs");
+        printkok("Configured IDTs");
     } else {
-        printkfail("Failed to initialize ISRs");
+        printkfail("Failed to configure IDTs");
     }
 
-    if (irq_install() == 1)
+    if (arch_isr_install() == 1)
     {
-        printkok("Initialized IRQs");
+        printkok("Configured ISRs");
     } else {
-        printkfail("Failed to initialize IRQs");
+        printkfail("Failed to configure ISRs");
+    }
+
+    if (arch_irq_install() == 1)
+    {
+        printkok("Configured IRQs");
+    } else {
+        printkfail("Failed to confiugure IRQs");
+    }
+
+    if (arch_update_idt() == 1)
+    {
+        printkok("Flushed IDT");
+    } else {
+        printkfail("Failed to flush IDT");
+    }
+
+    if (arch_enable_interrupts() == 1)
+    {
+        printkok("Enabled Interrupts");
+    } else {
+        printkfail("Failed to enable Interrupts");
     }
 
     arch_mmu_init();
@@ -141,6 +164,8 @@ void user_input(char *input)
     } else if (strcmp(input, "memloc") == 0) {
         printk("Memory management is using a %d MB region located \nfrom 0x%x to 0x%x\n", (((memory_management_region_end - memory_management_region_start) / 1024) / 1024),
         memory_management_region_start, memory_management_region_end);
+    } else if (strcmp(input, "kinfo") == 0) {
+        printk("Kernel Start: 0x%x, Kernel End: 0x%x, Kernel Size: %d bytes (%d KB)\n", KERNEL_START, KERNEL_END, KERNEL_SIZE, ((KERNEL_END - KERNEL_START) / 1024));
     } else {
     	printk("Unknown Command: ");
     	printk(input);

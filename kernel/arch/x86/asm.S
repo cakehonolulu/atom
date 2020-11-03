@@ -1,9 +1,18 @@
 .code32
+
 .section .data
-i386_GDT_KERNEL_CODE_SEGMENT_SELECTOR: .long 0x00
+ARCH_GDT_KERNEL_CODE_SEGMENT_SELECTOR: .long 0x00
+
 .section .text
-.global i386_gdt_update
-i386_gdt_update:
+
+.global arch_idt_update
+arch_idt_update:
+    mov 4(%esp), %eax       # IDT Pointer ()
+    lidt (%eax)             # Update the IDT with IDT record pointer passed as 1st argument.
+    ret
+
+.global arch_gdt_update
+arch_gdt_update:
 	/* Load GDT */
 	// Found this solution on StackOverflow, thanks MichaelPetch again!
 	# So before landing here, we pushed 3 arguments to the stack:
@@ -17,7 +26,7 @@ i386_gdt_update:
 
     mov 4(%esp), %edx		# GDT Pointer ()
     mov 12(%esp), %eax		# We'll place the Data Segment Selector (3rd Argument) on EAX...
-    mov %eax, i386_GDT_KERNEL_CODE_SEGMENT_SELECTOR # ...and we'll also save it for future use.
+    mov %eax, ARCH_GDT_KERNEL_CODE_SEGMENT_SELECTOR # ...and we'll also save it for future use.
     lgdt (%edx)				# Update the GDT with GDT record pointer passed as 1st argument.
     mov %eax, %ds			# Reload all the segment descriptors with EAX (Now containing
     						# Data Segment Selector, the 3rd Argument).
@@ -48,7 +57,7 @@ isr_common_stub:
         pusha # Pushes edi,esi,ebp,esp,ebx,edx,ecx,eax
         mov %ds,%ax # Lower 16-bits of eax = ds.
         push %eax # save the data segment descriptor
-        mov i386_GDT_KERNEL_CODE_SEGMENT_SELECTOR,%ax # kernel data segment descriptor
+        mov ARCH_GDT_KERNEL_CODE_SEGMENT_SELECTOR, %ax # kernel data segment descriptor
         mov %ax,%ds
         mov %ax,%es
         mov %ax,%fs
@@ -75,7 +84,7 @@ irq_common_stub:
     pusha
     mov %ds,%ax
     push %eax
-    mov i386_GDT_KERNEL_CODE_SEGMENT_SELECTOR,%ax
+    mov ARCH_GDT_KERNEL_CODE_SEGMENT_SELECTOR, %ax
     mov %ax,%ds
     mov %ax,%es
     mov %ax,%fs

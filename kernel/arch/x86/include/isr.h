@@ -85,3 +85,4 @@ unsigned int irq_install();
 
 typedef void (*isr_t)(registers_t*);
 void register_interrupt_handler(unsigned char n, isr_t handler);
+

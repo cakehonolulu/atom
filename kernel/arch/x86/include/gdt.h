@@ -24,11 +24,11 @@ struct i386_gdt_descriptor
 } __attribute__ ((packed));
 
 // TODO: Find a way to dynamically set this value
-#define I386_GDT_MAX_ENTRIES 5
+#define ARCH_MAX_GDT_ENTRIES 5
 
 // TODO: Fix next 2 line's math!
-#define i386_GDT_KERNEL_CODE_SEGMENT_SELECTOR ((sizeof(struct i386_gdt_entry) * I386_GDT_MAX_ENTRIES)/I386_GDT_MAX_ENTRIES)
-#define i386_GDT_KERNEL_DATA_SEGMENT_SELECTOR ((((sizeof(struct i386_gdt_entry) * (I386_GDT_MAX_ENTRIES))/I386_GDT_MAX_ENTRIES))*2)
+#define ARCH_GDT_KERNEL_CODE_SEGMENT_SELECTOR ((sizeof(struct i386_gdt_entry) * ARCH_MAX_GDT_ENTRIES)/ARCH_MAX_GDT_ENTRIES)
+#define ARCH_GDT_KERNEL_DATA_SEGMENT_SELECTOR ((((sizeof(struct i386_gdt_entry) * (ARCH_MAX_GDT_ENTRIES))/ARCH_MAX_GDT_ENTRIES))*2)
 
 /* cake: Function declared on another file
    to reload the segment registers and swap
