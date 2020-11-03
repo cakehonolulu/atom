@@ -56,7 +56,8 @@ unsigned int arch_irq_install()
     return 1;
 }
 
-void irq_handler(registers_t *r) {
+void arch_irq_handler(struct regs *r) {
+    __asm__ __volatile__ ("cli");
     /* After every interrupt we need to send an EOI to the PICs
      * or they will not send another interrupt again */
     if (r->int_no >= 40) outb(0xA0, 0x20); /* slave */
@@ -67,4 +68,6 @@ void irq_handler(registers_t *r) {
         isr_handler_t handler = interrupt_handlers[r->int_no];
         handler(&r);
     }
+
+    __asm__ __volatile__ ("sti");
 }

@@ -49,7 +49,7 @@ arch_gdt_update:
 
 # Defined in isr.c
 .extern arch_isr_handler
-.extern irq_handler
+.extern arch_irq_handler
 
 # Common ISR code
 isr_common_stub: 
@@ -89,25 +89,37 @@ isr_common_stub:
 # Common IRQ code. Identical to ISR code except for the 'call' 
 # and the 'pop ebx'
 irq_common_stub: 
+    /* Save all registers */
     pusha
-    mov %ds,%ax
-    push %eax
+
+    /* Save segment registers */
+    push %ds
+    push %es
+    push %fs
+    push %gs
     mov ARCH_GDT_KERNEL_CODE_SEGMENT_SELECTOR, %ax
-    mov %ax,%ds
-    mov %ax,%es
-    mov %ax,%fs
-    mov %ax,%gs
-    push %esp
+    mov %ax, %ds
+    mov %ax, %es
+    mov %ax, %fs
+    mov %ax, %gs
     cld
-    call irq_handler # Different than the ISR code
-    pop %ebx # Different than the ISR code
-    pop %ebx
-    mov %bx,%ds
-    mov %bx,%es
-    mov %bx,%fs
-    mov %bx,%gs
+
+    /* Call interrupt handler */
+    push %esp
+    call arch_irq_handler
+    add $4, %esp
+
+    /* Restore segment registers */
+    pop %gs
+    pop %fs
+    pop %es
+    pop %ds
+
+    /* Restore all registers */
     popa
-    add $8,%esp
+    /* Cleanup error code and IRQ # */
+    add $8, %esp
+    /* pop CS, EIP, EFLAGS, SS and ESP */
     iret
 
 # We don't get information about which interrupt was caller

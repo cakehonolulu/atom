@@ -17,7 +17,7 @@ const char sc_ascii[] = { '?', '?', '1', '2', '3', '4', '5', '6',
         'h', 'j', 'k', 'l', ';', '\'', '`', '?', '\\', 'z', 'x', 'c', 'v', 
         'b', 'n', 'm', ',', '.', '/', '?', '?', '?', ' '};
 
-static void keyboard_callback(registers_t regs) {
+static void keyboard_callback(struct regs * r) {
     /* The PIC leaves us the scancode in port 0x60 */
     unsigned char scancode = inb(0x60);
     

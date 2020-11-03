@@ -21,7 +21,7 @@ uint32_t log2_floor(uint32_t n) {
     #undef S
 }
 
-void page_fault(registers_t *regs)
+void page_fault(struct regs * regs)
 {
     uint32_t err_code = regs->err_code;
     bool protection_err = (bool)(err_code & PAGE_FAULT_PROTECTION), write_err = (bool)(err_code & PAGE_FAULT_WRITE),

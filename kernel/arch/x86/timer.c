@@ -2,7 +2,7 @@
 
 unsigned int tick = 0;
 
-static void timer_callback(registers_t regs)
+static void timer_callback(struct regs * r)
 {
     tick++;
 }
