@@ -166,6 +166,26 @@ void user_input(char *input)
         memory_management_region_start, memory_management_region_end);
     } else if (strcmp(input, "kinfo") == 0) {
         printk("Kernel Start: 0x%x, Kernel End: 0x%x, Kernel Size: %d bytes (%d KB)\n", KERNEL_START, KERNEL_END, KERNEL_SIZE, ((KERNEL_END - KERNEL_START) / 1024));
+    } else if (strcmp(input, "loop") == 0) {
+    int i = 0;
+    while (true) {
+        switch (i) {
+            case 0:
+                printk("\b|");
+                break;
+            case 1:
+                printk("\b/");
+                break;
+            case 2:
+                printk("\b-");
+                break;
+            case 3:
+                printk("\b\\");
+                i = -1;
+                break;
+        }
+        i++;
+        }
     } else {
     	printk("Unknown Command: ");
     	printk(input);
