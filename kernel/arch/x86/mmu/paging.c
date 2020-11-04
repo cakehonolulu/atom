@@ -10,9 +10,9 @@
 #define PAGE_FAULT_EXEC (1 << 4)
 
 // The kernel's page directory
-page_directory_t* kernel_directory = NULL;
+page_directory_t* arch_mmu_kernel_directory = NULL;
 
-uint32_t num_frames = 0, num_frames_aligned = 0;
+size_t num_frames = 0, num_frames_aligned = 0;
 FRAME_BITMAP_TYPE* frame_bitmaps = NULL;
 
 uint32_t log2_floor(uint32_t n) {
@@ -163,67 +163,62 @@ void paging_map_4mb_dir(page_directory_t* dir, uint32_t phys_start, uint32_t phy
     }
 }
 
-void arch_set_page_directory(page_directory_t* page_dir) {
-    asm volatile("mov %0, %%cr3":: "r"((physaddr_t)page_dir));
+void arch_set_page_directory(page_directory_t* page_dir)
+{
+    asm volatile("mov %0, %%cr3":: "r"((physaddr_t) page_dir));
 }
 
-void initialise_paging(size_t memsize, uint32_t virtual_start, uint32_t virtual_end, uint32_t phys_start, uint32_t phys_end)
+/*
+ TODO: arch_usable_memory is only the available memory from the portion passed to the function by the mmap routines (Which, FOR NOW
+ only support one memory region that is available and is larger than 1MB, in future, make a list of available regions and concatenate them for
+ use in this function).
+ */
+
+void arch_mmu_init_paging(size_t arch_usable_memory, uintptr_t arch_mmu_virtual_base_ptr, uintptr_t arch_mmu_virtual_top_ptr, 
+  uintptr_t arch_mmu_physical_base_ptr, uintptr_t arch_mmu_physical_top_ptr)
 {
-	if (!memsize)
+	if (!arch_usable_memory)
 	{
 		printk("No memory available for paging! Halting...");
    		__asm__ __volatile__ ("cli; hlt");
 	}
 
 #ifdef DEBUG
-    printk("Available memory size: %d B, %d KB, %d MB\n", memsize, memsize/1024, memsize/1024/1024);
+    printk("Available memory size: %d B, %d KB, %d MB\n", arch_usable_memory, arch_usable_memory/1024, arch_usable_memory/1024/1024);
 
 #endif
-
-  uint32_t mem_aligned = ALIGN_UP(memsize);
 
 #ifdef DEBUG
     printk("Aligned memory: %d\n", mem_aligned);
 #endif
 
-  uint32_t code_phys_start = phys_start;
-  uint32_t code_phys_end = phys_end;
-  uint32_t code_virt_start = virtual_start;
-  uint32_t code_virt_end = virtual_end;
+  arch_mmu_kernel_directory = kmalloc_a(sizeof(page_directory_t));
 
-  uint32_t map_phys_start = ALIGN_DOWN(code_phys_start);
-  uint32_t map_phys_end = ALIGN_UP(code_phys_end);
-  uint32_t map_virt_start = ALIGN_DOWN(code_virt_start);
-  uint32_t map_virt_end = ALIGN_UP(code_virt_end);
+  paging_map_4mb_dir(arch_mmu_kernel_directory, ALIGN_DOWN(arch_mmu_physical_base_ptr), ALIGN_UP(arch_mmu_physical_top_ptr),
+   ALIGN_DOWN(arch_mmu_virtual_base_ptr), ALIGN_UP(arch_mmu_virtual_top_ptr));
 
-  kernel_directory = kmalloc_a(sizeof(page_directory_t));
-
-  paging_map_4mb_dir(kernel_directory, map_phys_start, map_phys_end, map_virt_start, map_virt_end);
-
-  uint32_t dir_physaddr = VIRTUAL_TO_PHYSICAL((uint32_t) kernel_directory);
 #ifdef DEBUG
-  printk("dir_physaddr: 0x%x, kern_dir: 0x%x\n", dir_physaddr, (uint32_t) kernel_directory);
+  printk("arch_mmu_pd_phys_addr: 0x%x, kern_dir: 0x%x\n", VIRTUAL_TO_PHYSICAL((uintptr_t) arch_mmu_kernel_directory), (uintptr_t) arch_mmu_kernel_directory);
 #endif
-  arch_set_page_directory((page_directory_t *) (uint32_t) dir_physaddr);
+
+  arch_set_page_directory((page_directory_t *) (uintptr_t) VIRTUAL_TO_PHYSICAL((uintptr_t) arch_mmu_kernel_directory));
 
 
-    num_frames = mem_aligned / PAGE_SIZE;
-    //printk("f ");
+    num_frames = (ALIGN_UP(arch_usable_memory)/* Align Up the total memory segment */) / PAGE_SIZE;
+
     // Align so as not to lose frames that fall between bitmap boundaries
     num_frames_aligned = num_frames % FRAMES_PER_BITMAP != 0 ? num_frames - (num_frames % FRAMES_PER_BITMAP) + FRAMES_PER_BITMAP : num_frames;
-    //printk("g ");
+
     size_t bitmap_size = (size_t) (num_frames_aligned / FRAMES_PER_BITMAP) * sizeof(FRAME_BITMAP_TYPE);
-    //printk("h ");
+
     frame_bitmaps = kmalloc(bitmap_size);
-    //printk("i ");
-    if(frame_bitmaps) {
-      //printk("j ");
+
+    if(frame_bitmaps)
+    {
         memset(frame_bitmaps, 0, bitmap_size);
-        //printk("k ");
-        paging_set_frames(map_phys_start, map_phys_end);
+        paging_set_frames(ALIGN_DOWN(arch_mmu_physical_base_ptr), ALIGN_UP(arch_mmu_physical_top_ptr));
         
     }
-
 
   register_interrupt_handler(14, page_fault);
 }
