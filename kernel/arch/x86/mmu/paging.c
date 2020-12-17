@@ -177,6 +177,7 @@ void arch_set_page_directory(page_directory_t* page_dir)
 void arch_mmu_init_paging(size_t arch_usable_memory, uintptr_t arch_mmu_virtual_base_ptr, uintptr_t arch_mmu_virtual_top_ptr, 
   uintptr_t arch_mmu_physical_base_ptr, uintptr_t arch_mmu_physical_top_ptr)
 {
+  // Check if there is usable memory!
 	if (!arch_usable_memory)
 	{
 		printk("No memory available for paging! Halting...");
@@ -188,10 +189,7 @@ void arch_mmu_init_paging(size_t arch_usable_memory, uintptr_t arch_mmu_virtual_
 
 #endif
 
-#ifdef DEBUG
-    printk("Aligned memory: %d\n", mem_aligned);
-#endif
-
+  // We can allocate the structure needed for paging since we now have the MMU in a well-known state
   arch_mmu_kernel_directory = kmalloc_a(sizeof(page_directory_t));
 
   paging_map_4mb_dir(arch_mmu_kernel_directory, ALIGN_DOWN(arch_mmu_physical_base_ptr), ALIGN_UP(arch_mmu_physical_top_ptr),
@@ -206,6 +204,7 @@ void arch_mmu_init_paging(size_t arch_usable_memory, uintptr_t arch_mmu_virtual_
 
     num_frames = (ALIGN_UP(arch_usable_memory)/* Align Up the total memory segment */) / PAGE_SIZE;
 
+    printk("num_frames: %d, usable_memory: %d\n", num_frames, arch_usable_memory);
     // Align so as not to lose frames that fall between bitmap boundaries
     num_frames_aligned = num_frames % FRAMES_PER_BITMAP != 0 ? num_frames - (num_frames % FRAMES_PER_BITMAP) + FRAMES_PER_BITMAP : num_frames;
 

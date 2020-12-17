@@ -92,13 +92,15 @@ void _kmain(unsigned int initium_signature)
         printkfail("Failed to enable Interrupts");
     }
 
-    arch_mmu_init();
+    /* Let's init the MMU with a basic contiguous memory zone where we can place things */
+    arch_mmu_init((uint32_t) &KERNEL_PHYSADDR_START, (uint32_t) &KERNEL_PHYSADDR_END);
 
     printkok("Initialized MMU");
 
     bool inKiloBytes = false;
 
-    arch_mmu_init_paging(arch_mmu_get_max_phys_mem(inKiloBytes), (uint32_t) &KERNEL_VADDR_START, (uint32_t) &KERNEL_VADDR_END, (uint32_t) &KERNEL_PHYSADDR_START, (uint32_t) &KERNEL_PHYSADDR_END);
+    arch_mmu_init_paging(arch_mmu_get_max_phys_mem(inKiloBytes), (uint32_t) &KERNEL_VADDR_START,
+        (uint32_t) &KERNEL_VADDR_END, (uint32_t) &KERNEL_PHYSADDR_START, (uint32_t) &KERNEL_PHYSADDR_END);
 
     printkok("Initialized Paging");
 

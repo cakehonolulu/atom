@@ -3,12 +3,15 @@
 // FIXME: For now, we'll just use 1 memory region, later
 // on we'll keep track of all of them, order them and use
 // them accordingly.
-uint32_t memory_management_region_start = 0;
-uint32_t memory_management_region_end = 0;
+uintptr_t memory_management_region_start = 0;
+uintptr_t memory_management_region_end = 0;
 
 size_t arch_e820_usable_memory_regions = 0;
 
-uintptr_t arch_mmap_init()
+// HACK: Returns ONLY the usable memory region base address if it has a MB or more
+// TODO: Clean up the code, optimize it and return more information!
+// TODO: Maybe reconfigure the memory map location as a argument so that it can be changed?
+uintptr_t arch_mmap_init(uintptr_t arch_mmu_kernel_base_ptr, uintptr_t arch_mmu_kernel_top_ptr)
 {
     size_t arch_e820_mmap_total_entries_for_counting = *(uintptr_t*)ARCH_MEMORY_MAP_LOCATION;
     const struct bios_memmap_entry* entry = (const struct bios_memmap_entry*)(ARCH_MEMORY_MAP_LOCATION + 8);
@@ -119,5 +122,15 @@ uintptr_t arch_mmap_init()
         }
     }
 
-    return memory_management_region_start;
+    printk("memory_management_region_start: 0x%x\n", memory_management_region_start);
+
+    // Check if they collide!
+    // TODO: Revise the logic, there are many other possible cases where memory corruption might happen!
+    if (memory_management_region_start == arch_mmu_kernel_base_ptr)
+    {
+        printk("Masking the kernel portion of the first free memory hole as non-usable...\n");
+        return (memory_management_region_start + ((arch_mmu_kernel_top_ptr - arch_mmu_kernel_base_ptr) + 1));
+    } else {
+        return memory_management_region_start;
+    }
 }
