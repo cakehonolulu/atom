@@ -129,6 +129,7 @@ uintptr_t arch_mmap_init(uintptr_t arch_mmu_kernel_base_ptr, uintptr_t arch_mmu_
     if (memory_management_region_start == arch_mmu_kernel_base_ptr)
     {
         printk("Masking the kernel portion of the first free memory hole as non-usable...\n");
+        memory_management_region_start = (memory_management_region_start + ((arch_mmu_kernel_top_ptr - arch_mmu_kernel_base_ptr) + 1));
         return (memory_management_region_start + ((arch_mmu_kernel_top_ptr - arch_mmu_kernel_base_ptr) + 1));
     } else {
         return memory_management_region_start;
