@@ -55,7 +55,7 @@ void arch_gdt_add_entry(unsigned int arch_gdt_entry_num, unsigned long arch_gdt_
 int arch_gdt_install()
 {
 	/* Setup GDT limit */
-    arch_gdt_pointer.gdt_entry_size = (sizeof(struct i386_gdt_entry) * 5) - 1;
+    arch_gdt_pointer.gdt_entry_size = (sizeof(struct i386_gdt_entry) * ARCH_MAX_GDT_ENTRIES) - 1;
 
 #ifdef DEBUG
     printk("GDT Debugging:\nGDT Entry: 0x%x\n", arch_gdt_pointer.gdt_entry_size);
