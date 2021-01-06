@@ -96,5 +96,6 @@ Features:
 	* Add more support for the basic x86 components (APIC, ATA, ATAPIO, CMOS...)
 	* Enter Long Mode (64-Bit) (DONE, not enabled by default)
 	* Switch to UEFI (But preserving the Legacy code)
+	* Separate Arch Init and Kernel Init
 
 -----------------
