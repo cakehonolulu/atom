@@ -85,6 +85,8 @@ Features:
 	* Interrupt Routing Queue (IRQ) Handling and Registering
 	* PIT Handling (8253/825354)
 	* PS/2 Keyboard Handling (8042)
+	* System V i386 ABI
+	* cdecl
 
 - Atom roadmaps
 
