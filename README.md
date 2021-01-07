@@ -97,5 +97,5 @@ Features:
 	* Enter Long Mode (64-Bit) (DONE, not enabled by default)
 	* Switch to UEFI (But preserving the Legacy code)
 	* Separate Arch Init and Kernel Init
-
+	* For legacy, try differentiating the toolchain (Pre-Pentium, Max Compat, Use i386; Post-Pentium, MMX, SSE, Use i686+)
 -----------------
