@@ -2,7 +2,6 @@
 
 .set KERNEL_VIRTUAL_BASE, 0xC0000000
 .set KERNEL_PAGE_NUMBER, (KERNEL_VIRTUAL_BASE >> 22)
-.set KERNEL_NUM_UPPER_PAGES, 7
 
 .global arch_higher_half_pd
 
@@ -10,23 +9,40 @@
 
 .align 4096
 
-# Temporary page directory entry to identity-map the first 4 MiB of the 32
-# bit physical address space. We have this here so that when we enable
-# paging, we don't crash. Add more page tables as needed if kernel is too big
-# to fit (more than 3 MiB). The bits set are 4MiB, read-write and present.
 arch_higher_half_pd:
+    # Setup a Page Directory entry to Identity Map the first 4 MB of the 32
+    # bit physical address space. We do this so that when we enable
+    # paging, we don't crash due to the kernel still being executing 
+    # instructions that are being fetched still from the physical address space. 
+    # BIT 7: PS 4MB Page Size
+    # BIT 1: RW Read/Write BIT
+    # BIT 0: P  Page Present BIT
+    # TLDR: The bits set are 4MB Pages, Read/Write and Present.
 	.long 0x00000083
-	.fill (KERNEL_PAGE_NUMBER - 1), 4
-    # Set higher half pages, starting from 0 and increasing by 4MiB
+
+    # This are the pages before the Kernel Space Pages
+	.rept (KERNEL_PAGE_NUMBER - 1)
+    .long 0 
+    .endr
+
+    # Setup the Higher-Half Pages for Kernel to use
+    # TODO: If Kernel someday grows more than 4MB, we MAY have to map
+    # more pages!
+    # One of many ways to do it:
+    #.long 0x00000083 <- Original Kernel Page Directoy
+    #.long 0x00000083 | (1 << 22)
+    #.long 0x00000083 | (2 << 22)
+    #.long 0x00000083 | (3 << 22)
+    #.long 0x00000083 | (4 << 22)
+    #.long 0x00000083 | (5 << 22)
+    #.long 0x00000083 | (6 << 22)
+    # And so on...
     .long 0x00000083
-    .long 0x00000083 | (1 << 22)
-    .long 0x00000083 | (2 << 22)
-    .long 0x00000083 | (3 << 22)
-    .long 0x00000083 | (4 << 22)
-    .long 0x00000083 | (5 << 22)
-    .long 0x00000083 | (6 << 22)
-     # Fill all succeeding pages with 4 bytes
-    .fill (1024 - KERNEL_PAGE_NUMBER - KERNEL_NUM_UPPER_PAGES), 4
+
+     # Fill all the rest of the pages with null pages after the Kernel Space Pages
+    .rept (1024 - KERNEL_PAGE_NUMBER - 1)
+    .long 0
+    .endr
 
 .section .kernel.entry.text,"axw",@progbits
 .align 16
@@ -57,15 +73,15 @@ _kernel_entry:
 
 .type _bootstrap, @function
 _bootstrap:
-	# Zero out the page directory that contains the kernel 1MB into the address space
+	# Nullify the page directory that contains the kernel identity map
     movl $0, (arch_higher_half_pd)
 
-    # Invalidate the virtual page containing the identity map of 1MB
+    # Invalidate the page containing the identity map of the kernel
     invlpg (0)
 
     # Clear direction flag just for sanity pruposes
     cld
-    
+
 	# Setup the kernel stack
 	mov $stack_top, %esp
 
