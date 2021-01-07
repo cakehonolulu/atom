@@ -33,7 +33,7 @@ arch_higher_half_pd:
 
 .global _kernel_entry
 _kernel_entry:
-	cli
+	cli # We're going to deal with paging, let's disable interrupts
 
     mov $arch_higher_half_pd, %ecx
     mov %ecx, %cr3
@@ -57,15 +57,19 @@ _kernel_entry:
 
 .type _bootstrap, @function
 _bootstrap:
-	# Null-ify the first kernel location at 1MB
+	# Zero out the page directory that contains the kernel 1MB into the address space
     movl $0, (arch_higher_half_pd)
 
-    # Invalidate the page
+    # Invalidate the virtual page containing the identity map of 1MB
     invlpg (0)
 
+    # Clear direction flag just for sanity pruposes
+    cld
+    
 	# Setup the kernel stack
 	mov $stack_top, %esp
 
+    # Zero out the bss section
 	xor %eax, %eax
 	mov $__bss_sizel, %ecx
 	mov $__bss_start, %edi
