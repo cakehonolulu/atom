@@ -83,9 +83,12 @@ _bootstrap:
 1:	hlt
 	jmp 1b
 
-.section .bss
-# Stack is 16 byte aligned
+# Declare a stack for C, mark it as allocatable (a) and writable (w);
+# use the nobits typing to declare the section as non-data containing
+# so that it knows it only occupies space
+.section .bss, "aw", @nobits
+# Stack is 16 byte aligned to ensure proper SystemV ABI compliance
 .align 16
 stack_bottom:
-.skip 16384 # 16 KiB
+.skip 16384 # 16 KiB // TODO: Let the user change bootstrap stack (Maybe it's trying to run Atom on a machine with more limited resources where 16KB makes a world of a difference)
 stack_top:
