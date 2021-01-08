@@ -100,4 +100,5 @@ Features:
 	* Switch to UEFI (But preserving the Legacy code)
 	* Separate Arch Init and Kernel Init
 	* For legacy, try differentiating the toolchain (Pre-Pentium, Max Compat, Use i386; Post-Pentium, MMX, SSE, Use i686+)
+	* Stop using 4MB pages for kernel management (Bootloader sets up Higher Half using 4MB Page Size for simplicity) and switch to 4KB pages
 -----------------
