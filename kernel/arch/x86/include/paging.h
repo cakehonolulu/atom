@@ -14,6 +14,7 @@
 #define ALIGN_UP(addr) (ALIGN_DOWN(addr) + PAGE_SIZE)
 
 #define PAGE_TABLE_ENTRIES_PER_DIRECTORY 1024
+#define AMOUNT_OF_PAGES_PER_TABLE 1024
 
 #define KERNEL_ADDR_OFFSET 0xC0000000
 
@@ -46,6 +47,11 @@ typedef struct page
    uint32_t frame      : 20;  // Frame address (shifted right 12 bits)
 } page_t;
 
+typedef struct page_table
+{
+  page_t pages[AMOUNT_OF_PAGES_PER_TABLE];
+} page_table_t;
+
 typedef struct {
     uint8_t present : 1;
     uint8_t writable : 1;
@@ -66,7 +72,8 @@ typedef struct {
 typedef struct {
     page_dir_entry_t entries[PAGE_TABLE_ENTRIES_PER_DIRECTORY];
     // At the end of struct so should be ignored by MMU
-    //page_table_t* tables[PAGE_TABLE_ENTRIES_PER_DIRECTORY];
+    page_table_t *tables[PAGE_TABLE_ENTRIES_PER_DIRECTORY];
+    uint32_t      physicalAddress;
 } __attribute__((packed)) page_directory_t;
 
 
