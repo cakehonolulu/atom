@@ -1,4 +1,6 @@
 DEBUG ?= 0
+FOUR_MB_PAGE_SIZE ?= 0
+FOUR_KB_PAGE_SIZE ?= 0
 
 # Tools
 AR = i786-elf-ar
@@ -18,6 +20,16 @@ LDSCRIPT = linker.ld
 
 ifeq ($(DEBUG), 1)
     CFLAGS += -DDEBUG
+    ASFLAGS =
+endif
+
+ifeq ($(FOUR_MB_PAGE_SIZE), 1)
+    CFLAGS += -DFOUR_MB_PAGE_SIZE
+    ASFLAGS =
+endif
+
+ifeq ($(FOUR_KB_PAGE_SIZE), 1)
+    CFLAGS += -DFOUR_KB_PAGE_SIZE
     ASFLAGS =
 endif
 

@@ -97,7 +97,7 @@ void paging_free_frame(physaddr_t addr) {
     }
 }
 
-
+#ifdef FOUR_MB_PAGE_SIZE
 void paging_map_4mb_page(page_directory_t* dir, uint32_t page, uint32_t phys_addr) {
     page_dir_entry_t* dir_entry = &dir->entries[page];
     dir_entry->accessed = 0;
@@ -150,7 +150,7 @@ void paging_map_4mb_dir(page_directory_t* dir, uint32_t phys_start, uint32_t phy
     }
 
     if (dir) {
-        memset(dir, 0, sizeof(page_directory_t));
+      memset(arch_mmu_kernel_directory, 0, sizeof(page_directory_t));
         uint32_t virtual_addr = virtual_start, phys_addr = phys_start;
         uint32_t page = virtual_addr / PAGE_SIZE;
 
@@ -162,10 +162,11 @@ void paging_map_4mb_dir(page_directory_t* dir, uint32_t phys_start, uint32_t phy
         }
     }
 }
+#endif
 
 void arch_set_page_directory(page_directory_t* page_dir)
 {
-    asm volatile("mov %0, %%cr3":: "r"((physaddr_t) page_dir));
+  asm volatile("mov %0, %%cr3":: "r"((physaddr_t) page_dir));
 }
 
 /*
@@ -192,8 +193,10 @@ void arch_mmu_init_paging(size_t arch_usable_memory, uintptr_t arch_mmu_virtual_
   // We can allocate the structure needed for paging since we now have the MMU in a well-known state
   arch_mmu_kernel_directory = kmalloc_a(sizeof(page_directory_t));
 
+#ifdef FOUR_MB_PAGE_SIZE
   paging_map_4mb_dir(arch_mmu_kernel_directory, ALIGN_DOWN(arch_mmu_physical_base_ptr), ALIGN_UP(arch_mmu_physical_top_ptr),
    ALIGN_DOWN(arch_mmu_virtual_base_ptr), ALIGN_UP(arch_mmu_virtual_top_ptr));
+#endif
 
 #ifdef DEBUG
   printk("arch_mmu_pd_phys_addr: 0x%x, kern_dir: 0x%x\n", VIRTUAL_TO_PHYSICAL((uintptr_t) arch_mmu_kernel_directory), (uintptr_t) arch_mmu_kernel_directory);
@@ -201,23 +204,22 @@ void arch_mmu_init_paging(size_t arch_usable_memory, uintptr_t arch_mmu_virtual_
 
   arch_set_page_directory((page_directory_t *) (uintptr_t) VIRTUAL_TO_PHYSICAL((uintptr_t) arch_mmu_kernel_directory));
 
+  num_frames = (ALIGN_UP(arch_usable_memory)/* Align Up the total memory segment */) / PAGE_SIZE;
 
-    num_frames = (ALIGN_UP(arch_usable_memory)/* Align Up the total memory segment */) / PAGE_SIZE;
+  printk("num_frames: %d, usable_memory: %d\n", num_frames, arch_usable_memory);
+  // Align so as not to lose frames that fall between bitmap boundaries
+  num_frames_aligned = num_frames % FRAMES_PER_BITMAP != 0 ? num_frames - (num_frames % FRAMES_PER_BITMAP) + FRAMES_PER_BITMAP : num_frames;
 
-    printk("num_frames: %d, usable_memory: %d\n", num_frames, arch_usable_memory);
-    // Align so as not to lose frames that fall between bitmap boundaries
-    num_frames_aligned = num_frames % FRAMES_PER_BITMAP != 0 ? num_frames - (num_frames % FRAMES_PER_BITMAP) + FRAMES_PER_BITMAP : num_frames;
+  size_t bitmap_size = (size_t) (num_frames_aligned / FRAMES_PER_BITMAP) * sizeof(FRAME_BITMAP_TYPE);
 
-    size_t bitmap_size = (size_t) (num_frames_aligned / FRAMES_PER_BITMAP) * sizeof(FRAME_BITMAP_TYPE);
+  frame_bitmaps = kmalloc(bitmap_size);
 
-    frame_bitmaps = kmalloc(bitmap_size);
-
-    if(frame_bitmaps)
-    {
-        memset(frame_bitmaps, 0, bitmap_size);
-        paging_set_frames(ALIGN_DOWN(arch_mmu_physical_base_ptr), ALIGN_UP(arch_mmu_physical_top_ptr));
+  if(frame_bitmaps)
+  {
+    memset(frame_bitmaps, 0, bitmap_size);
+    paging_set_frames(ALIGN_DOWN(arch_mmu_physical_base_ptr), ALIGN_UP(arch_mmu_physical_top_ptr));
         
-    }
+  }
 
   register_interrupt_handler(14, page_fault);
 }
