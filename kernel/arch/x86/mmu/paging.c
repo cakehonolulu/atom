@@ -15,12 +15,6 @@ page_directory_t* arch_mmu_kernel_directory = NULL;
 size_t num_frames = 0, num_frames_aligned = 0;
 FRAME_BITMAP_TYPE* frame_bitmaps = NULL;
 
-uint32_t log2_floor(uint32_t n) {
-    #define S(k) if (n >= (UINT32_C(1) << k)) { i += k; n >>= k; }
-    int i = -(n == 0); S(16); S(8); S(4); S(2); S(1); return i;
-    #undef S
-}
-
 void page_fault(struct regs * regs)
 {
     uint32_t err_code = regs->err_code;
@@ -34,28 +28,45 @@ void page_fault(struct regs * regs)
     asm volatile("cli; hlt");
 }
 
+#ifdef FOUR_MB_PAGE_SIZE
+uint32_t log2_floor(uint32_t n) {
+    #define S(k) if (n >= (UINT32_C(1) << k)) { i += k; n >>= k; }
+    int i = -(n == 0); S(16); S(8); S(4); S(2); S(1); return i;
+    #undef S
+}
+#endif
+
 void paging_set_frame(uint32_t frame) {
+#ifdef FOUR_MB_PAGE_SIZE
     if(frame < num_frames) SET_FRAME(BITMAP_FOR_FRAME(frame), BIT_OFFSET(frame));
+#endif
 }
 
 // Mark continuous frames as allocated, from phys_start up to phys_end
 void paging_set_frames(uint32_t phys_start, uint32_t phys_end) {
+#ifdef FOUR_MB_PAGE_SIZE
     phys_start = ALIGN_DOWN(phys_start);
     for (uint32_t frame = FRAME_FOR(phys_start); frame < FRAME_FOR(phys_end); ++frame) paging_set_frame(frame);
+#endif
 }
 
 // Mark a frame as free
 void paging_clear_frame(uint32_t frame) {
+#ifdef FOUR_MB_PAGE_SIZE
     if(frame < num_frames) CLEAR_FRAME(BITMAP_FOR_FRAME(frame), BIT_OFFSET(frame));
+#endif
 }
 
 // Mark contiguous frames as free, from phys_start up to phys_end
 void paging_clear_frames(uint32_t phys_start, uint32_t phys_end) {
+#ifdef FOUR_MB_PAGE_SIZE
     phys_start = ALIGN_DOWN(phys_start);
     for (uint32_t frame = FRAME_FOR(phys_start); frame < FRAME_FOR(phys_end); ++frame) paging_clear_frame(frame);
+#endif
 }
 
 int paging_get_free_frame() {
+#ifdef FOUR_MB_PAGE_SIZE
     for (uint32_t i = 0; i < NUM_BITMAPS; ++i) {
         FRAME_BITMAP_TYPE bitmap = frame_bitmaps[i];
         // If at least one bit in the bitmap is clear
@@ -74,9 +85,11 @@ int paging_get_free_frame() {
         }
     }
     return -1;
+#endif
 }
 
 physaddr_t paging_alloc_frame() {
+#ifdef FOUR_MB_PAGE_SIZE
     // Search for a free frame
     int free_frame = paging_get_free_frame();
     if(free_frame >= 0) {
@@ -84,9 +97,11 @@ physaddr_t paging_alloc_frame() {
         return (physaddr_t) (free_frame * PAGE_SIZE);
     }
     return 0;
+#endif
 }
 
 void paging_free_frame(physaddr_t addr) {
+#ifdef FOUR_MB_PAGE_SIZE
     uint32_t frame = FRAME_FOR(addr);
     if(!FRAME_IS_SET(frame))
     {
@@ -95,6 +110,7 @@ void paging_free_frame(physaddr_t addr) {
     } else {
       paging_clear_frame(frame);
     }
+#endif
 }
 
 #ifdef FOUR_MB_PAGE_SIZE
@@ -185,15 +201,16 @@ void arch_mmu_init_paging(size_t arch_usable_memory, uintptr_t arch_mmu_virtual_
    		__asm__ __volatile__ ("cli; hlt");
 	}
 
+  register_interrupt_handler(14, page_fault);
+
 #ifdef DEBUG
     printk("Available memory size: %d B, %d KB, %d MB\n", arch_usable_memory, arch_usable_memory/1024, arch_usable_memory/1024/1024);
-
 #endif
 
+#ifdef FOUR_MB_PAGE_SIZE
   // We can allocate the structure needed for paging since we now have the MMU in a well-known state
   arch_mmu_kernel_directory = kmalloc_a(sizeof(page_directory_t));
 
-#ifdef FOUR_MB_PAGE_SIZE
   paging_map_4mb_dir(arch_mmu_kernel_directory, ALIGN_DOWN(arch_mmu_physical_base_ptr), ALIGN_UP(arch_mmu_physical_top_ptr),
    ALIGN_DOWN(arch_mmu_virtual_base_ptr), ALIGN_UP(arch_mmu_virtual_top_ptr));
 #endif
@@ -204,6 +221,7 @@ void arch_mmu_init_paging(size_t arch_usable_memory, uintptr_t arch_mmu_virtual_
 
   arch_set_page_directory((page_directory_t *) (uintptr_t) VIRTUAL_TO_PHYSICAL((uintptr_t) arch_mmu_kernel_directory));
 
+#ifdef FOUR_MB_PAGE_SIZE
   num_frames = (ALIGN_UP(arch_usable_memory)/* Align Up the total memory segment */) / PAGE_SIZE;
 
   printk("num_frames: %d, usable_memory: %d\n", num_frames, arch_usable_memory);
@@ -220,6 +238,5 @@ void arch_mmu_init_paging(size_t arch_usable_memory, uintptr_t arch_mmu_virtual_
     paging_set_frames(ALIGN_DOWN(arch_mmu_physical_base_ptr), ALIGN_UP(arch_mmu_physical_top_ptr));
         
   }
-
-  register_interrupt_handler(14, page_fault);
+#endif
 }
