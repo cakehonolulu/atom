@@ -447,4 +447,10 @@ irq15:
         push $47
         jmp irq_common_stub
 
+.global tss_flush
+.type tss_flush, @function
 
+tss_flush:
+    mov $0x2B, %ax
+    ltr %ax
+    ret

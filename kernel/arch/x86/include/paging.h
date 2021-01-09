@@ -22,6 +22,7 @@
 
 #define PAGE_SIZE_4MB 0x400000
 #define PAGE_SIZE_4KB 0x1000
+
 #define PAGE_SIZE PAGE_SIZE_4KB
 
 #define ALIGN_DOWN(addr) ((addr) - ((addr) % PAGE_SIZE))
@@ -59,52 +60,6 @@
 
 
 typedef uint32_t physaddr_t;
-
-#ifdef FOUR_MB_PAGE_SIZE
-
-typedef struct page
-{
-   uint32_t present    : 1;   // Page present in memory
-   uint32_t rw         : 1;   // Read-only if clear, readwrite if set
-   uint32_t user       : 1;   // Supervisor level only if clear
-   uint32_t accessed   : 1;   // Has the page been accessed since last refresh?
-   uint32_t dirty      : 1;   // Has the page been written to since last refresh?
-   uint32_t unused     : 7;   // Amalgamation of unused and reserved bits
-   uint32_t frame      : 20;  // Frame address (shifted right 12 bits)
-} page_t;
-
-typedef struct page_table
-{
-  page_t pages[AMOUNT_OF_PAGES_PER_TABLE];
-} page_table_t;
-
-typedef struct {
-    uint8_t present : 1;
-    uint8_t writable : 1;
-    uint8_t user_level : 1;
-    uint8_t write_through : 1;
-    uint8_t caching_disabled : 1;
-    uint8_t accessed : 1;
-    uint8_t zero : 1;
-    uint8_t four_megabyte_pages : 1;
-    uint8_t ignored : 1;
-    // Free for use by kernel
-    uint8_t available : 3;
-    uint16_t reserved : 10;
-    // Free for use by kernel when present == 0. Could use to store address in swap space
-    uint32_t page_physical_addr : 10;
-} __attribute__((packed)) page_dir_entry_t;
-
-typedef struct {
-    page_dir_entry_t entries[PAGE_TABLE_ENTRIES_PER_DIRECTORY];
-    // At the end of struct so should be ignored by MMU
-    page_table_t *tables[PAGE_TABLE_ENTRIES_PER_DIRECTORY];
-    uint32_t      physicalAddress;
-} __attribute__((packed)) page_directory_t;
-
-#endif
-
-#ifdef FOUR_KB_PAGE_SIZE
 
 // A page is a 4KB physical memory division
 typedef struct page_frame {
@@ -154,4 +109,3 @@ typedef struct page_directory
 
 } __attribute__ ((packed)) page_directory_t;
 
-#endif

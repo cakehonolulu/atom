@@ -9,23 +9,6 @@ struct i386_gdt_descriptor arch_gdt_pointer;
 /* Function to craft a descriptor for the Global Descriptor Table */
 void arch_gdt_add_entry(unsigned int arch_gdt_entry_num, unsigned long arch_gdt_entry_base, unsigned long arch_gdt_entry_limit, unsigned char arch_gdt_access, unsigned char arch_gdt_flags)
 {
-	if ((arch_gdt_entry_limit > sizeof(unsigned char)) && (arch_gdt_entry_limit & 0xFFF) != 0xFFF)
-	{
-		// TODO: Inform the user that it has exceeded maximum
-		// number of GDT entries or that the GDT size equals to 0
-		printk("Can't encode a GDT entry with a that size!\nHalting...\n");
-		__asm__ __volatile__ ("cli");
-		__asm__ __volatile__ ("hlt");
-	}
-
-	if (arch_gdt_entry_limit > sizeof(unsigned char))
-	{
-		arch_gdt[arch_gdt_entry_num].limitandflags = arch_gdt[arch_gdt_entry_num].limitandflags >> 12;
-		arch_gdt[arch_gdt_entry_num].limitandflags = 0xC0;
-	} else {
-		arch_gdt[arch_gdt_entry_num].limitandflags = 0x40;
-	}
-
 	// 1 byte = 8 bits [!]
 	// 1 byte to hex = 0xFF
 	arch_gdt[arch_gdt_entry_num].base0_15 = low_16(arch_gdt_entry_base);				// If arch_gdt_entry_base = 0x41424344, & 0xFFFF ('AND') will result in 0x4344 (2 bytes)
@@ -91,11 +74,12 @@ int arch_gdt_install()
     arch_gdt_add_entry(4, 0, 0xFFFFFFFF, I386_GDT_DATA_RING3_ACCESS, I386_GDT_FLAGS);
 
     /* TODO: Write TSS Info on the GDT Table */
-
+    write_tss(5, 0x10, 0x0);
     /* Replace old GDT with the new one by 
        flushing all the changes */
     arch_gdt_update((unsigned int)&arch_gdt_pointer, ARCH_GDT_KERNEL_CODE_SEGMENT_SELECTOR, ARCH_GDT_KERNEL_DATA_SEGMENT_SELECTOR);
 
     /* TODO: Update Task State Segment */
+    tss_flush();
     return 1;
 }

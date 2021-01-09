@@ -11,9 +11,7 @@
 
 // The kernel's page directory
 page_directory_t *arch_mmu_kernel_directory;
-
-size_t num_frames = 0, num_frames_aligned = 0;
-FRAME_BITMAP_TYPE* frame_bitmaps = NULL;
+page_directory_t *current_page_directory;
 
 void page_fault(struct regs * regs)
 {
@@ -27,159 +25,6 @@ void page_fault(struct regs * regs)
             protection_err ? "protection" : "non-present", write_err ? "write" : "read", user_err ? "user" : "supervisor");
     asm volatile("cli; hlt");
 }
-
-#ifdef FOUR_MB_PAGE_SIZE
-uint32_t log2_floor(uint32_t n) {
-    #define S(k) if (n >= (UINT32_C(1) << k)) { i += k; n >>= k; }
-    int i = -(n == 0); S(16); S(8); S(4); S(2); S(1); return i;
-    #undef S
-}
-#endif
-
-void paging_set_frame(uint32_t frame) {
-#ifdef FOUR_MB_PAGE_SIZE
-    if(frame < num_frames) SET_FRAME(BITMAP_FOR_FRAME(frame), BIT_OFFSET(frame));
-#endif
-}
-
-// Mark continuous frames as allocated, from phys_start up to phys_end
-void paging_set_frames(uint32_t phys_start, uint32_t phys_end) {
-#ifdef FOUR_MB_PAGE_SIZE
-    phys_start = ALIGN_DOWN(phys_start);
-    for (uint32_t frame = FRAME_FOR(phys_start); frame < FRAME_FOR(phys_end); ++frame) paging_set_frame(frame);
-#endif
-}
-
-// Mark a frame as free
-void paging_clear_frame(uint32_t frame) {
-#ifdef FOUR_MB_PAGE_SIZE
-    if(frame < num_frames) CLEAR_FRAME(BITMAP_FOR_FRAME(frame), BIT_OFFSET(frame));
-#endif
-}
-
-// Mark contiguous frames as free, from phys_start up to phys_end
-void paging_clear_frames(uint32_t phys_start, uint32_t phys_end) {
-#ifdef FOUR_MB_PAGE_SIZE
-    phys_start = ALIGN_DOWN(phys_start);
-    for (uint32_t frame = FRAME_FOR(phys_start); frame < FRAME_FOR(phys_end); ++frame) paging_clear_frame(frame);
-#endif
-}
-
-int paging_get_free_frame() {
-#ifdef FOUR_MB_PAGE_SIZE
-    for (uint32_t i = 0; i < NUM_BITMAPS; ++i) {
-        FRAME_BITMAP_TYPE bitmap = frame_bitmaps[i];
-        // If at least one bit in the bitmap is clear
-        if(bitmap != FRAME_FULL) {
-            uint32_t frame = 0;
-            // If it's zero then bit 1 is the first one free
-            if(bitmap == 0) frame = 0;
-            else {
-                // The bit corresponding to the free page
-                FRAME_BITMAP_TYPE mask = 0;
-                mask = ~bitmap & (bitmap + 1);
-                // Log in order to get the bit's position in the bitmap
-                frame = log2_floor(mask);
-            }
-            return frame + i * FRAMES_PER_BITMAP;
-        }
-    }
-    return -1;
-#endif
-}
-
-physaddr_t paging_alloc_frame() {
-#ifdef FOUR_MB_PAGE_SIZE
-    // Search for a free frame
-    int free_frame = paging_get_free_frame();
-    if(free_frame >= 0) {
-        paging_set_frame((uint32_t) free_frame);
-        return (physaddr_t) (free_frame * PAGE_SIZE);
-    }
-    return 0;
-#endif
-}
-
-void paging_free_frame(physaddr_t addr) {
-#ifdef FOUR_MB_PAGE_SIZE
-    uint32_t frame = FRAME_FOR(addr);
-    if(!FRAME_IS_SET(frame))
-    {
-      printk("Attempting to free unallocated frame %d (0x%x)\n", frame, addr);
-      asm volatile ("cli; hlt");
-    } else {
-      paging_clear_frame(frame);
-    }
-#endif
-}
-
-
-#ifdef FOUR_MB_PAGE_SIZE
-void paging_map_4mb_page(page_directory_t* dir, uint32_t page, uint32_t phys_addr) {
-    page_dir_entry_t* dir_entry = &dir->entries[page];
-    dir_entry->accessed = 0;
-    dir_entry->caching_disabled = 0;
-    dir_entry->four_megabyte_pages = 1;
-    dir_entry->available = 0;
-    dir_entry->present = 1;
-    dir_entry->user_level = 0;
-    dir_entry->writable = 1;
-    dir_entry->write_through = 1;
-    //ASSERT_PAGE_ALIGNED("table physical alignment", phys_addr);
-    // Shift to isolate the top 10 bits (the 4MiB aligned physical address)
-    dir_entry->page_physical_addr = phys_addr >> 22;
-}
-
-void paging_map_4mb_dir(page_directory_t* dir, uint32_t phys_start, uint32_t phys_end, uint32_t virtual_start, uint32_t virtual_end) {
-    if (phys_start > phys_end)
-    {
-      //PANIC("Improper start and end physical addresses");
-      printk("Improper start and end physical addresses");
-      asm volatile("cli; hlt");
-    }
-
-    if(!IS_PAGE_ALIGNED(phys_start) || !IS_PAGE_ALIGNED(phys_end))
-    {
-      //PANIC("Physical addresses are not page aligned");
-      printk("Physical addresses are not page aligned");
-      asm volatile("cli; hlt");
-    }
-
-    if (virtual_start > virtual_end)
-    {
-      //PANIC("Improper start and end virtual addresses");
-      printk("Improper start and end virtual addresses");
-      asm volatile("cli; hlt");
-    }
-
-    if(!IS_PAGE_ALIGNED(virtual_start) || !IS_PAGE_ALIGNED(virtual_end))
-    {
-      //PANIC("Virtual addresses are not page aligned");
-      printk("Virtual addresses are not page aligned");
-      asm volatile("cli; hlt");
-    }
-
-    if(virtual_end - virtual_start != phys_end - phys_start)
-    {
-      //PANIC("Virtual space is not equal to physical space");
-      printk("Virtual space is not equal to physical space");
-      asm volatile("cli; hlt");
-    }
-
-    if (dir) {
-      memset(arch_mmu_kernel_directory, 0, sizeof(page_directory_t));
-        uint32_t virtual_addr = virtual_start, phys_addr = phys_start;
-        uint32_t page = virtual_addr / PAGE_SIZE;
-
-        while (page < PAGE_TABLE_ENTRIES_PER_DIRECTORY && virtual_addr <= virtual_end) {
-            paging_map_4mb_page(dir, page, phys_addr);
-            phys_addr += PAGE_SIZE;
-            virtual_addr += PAGE_SIZE;
-            page++;
-        }
-    }
-}
-#endif
 
 void arch_set_page_directory(page_directory_t* page_dir)
 {
@@ -244,6 +89,42 @@ page_frame_t *get_page(uint32_t address, int make, page_directory_t *dir){
   return NULL;
 }
 
+page_frame_t *get_page_default(uint32_t address, int make){
+  return get_page(address, make, arch_mmu_kernel_directory);
+}
+
+void refresh_page(uint32_t address){
+  asm volatile (
+    "movl %0,%%eax\n"
+    "invlpg (%%eax)\n"
+    :: "r"((uintptr_t)(address & 0xFFFFF000)) : "%eax");
+}
+
+uintptr_t to_physical_addr(uint32_t virtual, page_directory_t *dir){
+  uintptr_t remaining = virtual % 0x1000;
+  uintptr_t frame = virtual / 0x1000;
+  uintptr_t table = frame / 1024;
+  uintptr_t subframe = frame % 1024;
+  if (dir->tables[table] != NULL) {
+    page_frame_t *p = &dir->tables[table]->pages[subframe];
+    if (p != NULL){
+      return (p->frame << 12) + remaining;
+    }
+  }
+  return NULL;
+}
+
+void switch_page_directory(page_directory_t *dir){
+  page_directory_t *work = arch_mmu_kernel_directory;
+  current_page_directory = dir;
+  if(work != dir){
+    printk("\nDir = %x old %x ker %x", (uint32_t)dir, (uint32_t)work, (uint32_t)arch_mmu_kernel_directory);
+    printk("\n PTY %x k %x", to_physical_addr((uint32_t)dir, work), to_physical_addr((uint32_t)dir, arch_mmu_kernel_directory));
+    //STOP()
+  }
+  asm volatile("mov %0, %%cr3":: "r"(to_physical_addr((uint32_t)dir, work)): "%eax");
+}
+
 /*
  TODO: arch_usable_memory is only the available memory from the portion passed to the function by the mmap routines (Which, FOR NOW
  only support one memory region that is available and is larger than 1MB, in future, make a list of available regions and concatenate them for
@@ -263,11 +144,9 @@ void arch_mmu_init_paging(size_t arch_usable_memory, uintptr_t arch_mmu_virtual_
   register_interrupt_handler(14, page_fault);
 
 #ifdef DEBUG
-    //printk("Available memory size: %d B, %d KB, %d MB\n", arch_usable_memory, arch_usable_memory/1024, arch_usable_memory/1024/1024);
+  //printk("Available memory size: %d B, %d KB, %d MB\n", arch_usable_memory, arch_usable_memory/1024, arch_usable_memory/1024/1024);
 #endif
 
-#ifdef FOUR_KB_PAGE_SIZE
-    uintptr_t phys;
     uint32_t *new_pagedir = kmalloc_ap(sizeof(page_directory_t));
     memset(new_pagedir, 0, sizeof(page_directory_t));
     arch_mmu_kernel_directory = (page_directory_t *) new_pagedir;
@@ -280,60 +159,13 @@ void arch_mmu_init_paging(size_t arch_usable_memory, uintptr_t arch_mmu_virtual_
       alloc_frame_int(pg, true, true, true, true, true, i - KERNEL_VIRTUAL_BASE);
     }
 
-    arch_set_page_directory((page_directory_t *) (uintptr_t) VIRTUAL_TO_PHYSICAL((uintptr_t) arch_mmu_kernel_directory));
-#endif
-
-#ifdef FOUR_MB_PAGE_SIZE
-  // We can allocate the structure needed for paging since we now have the MMU in a well-known state
-  arch_mmu_kernel_directory = kmalloc_a(sizeof(page_directory_t));
-
-  paging_map_4mb_dir(arch_mmu_kernel_directory, ALIGN_DOWN(arch_mmu_physical_base_ptr), ALIGN_UP(arch_mmu_physical_top_ptr),
-   ALIGN_DOWN(arch_mmu_virtual_base_ptr), ALIGN_UP(arch_mmu_virtual_top_ptr));
-#endif
+    current_page_directory = arch_mmu_kernel_directory;
+    arch_set_page_directory((page_directory_t *) (uintptr_t) VIRTUAL_TO_PHYSICAL((uintptr_t) current_page_directory));
 
 #ifdef DEBUG
   printk("arch_mmu_pd_phys_addr: 0x%x, kern_dir: 0x%x\n", VIRTUAL_TO_PHYSICAL((uintptr_t) arch_mmu_kernel_directory), (uintptr_t) arch_mmu_kernel_directory);
 #endif
 
-#ifdef FOUR_MB_PAGE_SIZE
-  num_frames = (ALIGN_UP(arch_usable_memory)/* Align Up the total memory segment */) / PAGE_SIZE;
-
-#ifdef DEBUG
-  printk("num_frames: %d, usable_memory: %d\n", num_frames, arch_usable_memory);
-#endif
-
-  // Align so as not to lose frames that fall between bitmap boundaries
-  num_frames_aligned = num_frames % FRAMES_PER_BITMAP != 0 ? num_frames - (num_frames % FRAMES_PER_BITMAP) + FRAMES_PER_BITMAP : num_frames;
-
-  size_t bitmap_size = (size_t) (num_frames_aligned / FRAMES_PER_BITMAP) * sizeof(FRAME_BITMAP_TYPE);
-
-  frame_bitmaps = kmalloc(bitmap_size);
-
-  if(frame_bitmaps)
-  {
-    memset(frame_bitmaps, 0, bitmap_size);
-    paging_set_frames(ALIGN_DOWN(arch_mmu_physical_base_ptr), ALIGN_UP(arch_mmu_physical_top_ptr));
-        
-  }
-
-  arch_set_page_directory((page_directory_t *) (uintptr_t) VIRTUAL_TO_PHYSICAL((uintptr_t) arch_mmu_kernel_directory));
-
-#endif
-}
-
-#ifdef FOUR_KB_PAGE_SIZE
-uintptr_t to_physical_addr(uint32_t virtual, page_directory_t *dir){
-  uintptr_t remaining = virtual % 0x1000;
-  uintptr_t frame = virtual / 0x1000;
-  uintptr_t table = frame / 1024;
-  uintptr_t subframe = frame % 1024;
-  if (dir->tables[table] != NULL) {
-    page_frame_t *p = &dir->tables[table]->pages[subframe];
-    if (p != NULL){
-      return (p->frame << 12) + remaining;
-    }
-  }
-  return NULL;
 }
 
 page_table_t *copyTable(page_table_t *src, uint32_t *phy){
@@ -369,5 +201,3 @@ page_directory_t * copy_page_directory(page_directory_t *src){
   }
   return newPD;
 }
-
-#endif

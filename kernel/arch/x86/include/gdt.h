@@ -24,7 +24,7 @@ struct i386_gdt_descriptor
 } __attribute__ ((packed));
 
 // TODO: Find a way to dynamically set this value
-#define ARCH_MAX_GDT_ENTRIES 5
+#define ARCH_MAX_GDT_ENTRIES 6
 
 // TODO: Fix next 2 line's math!
 #define ARCH_GDT_KERNEL_CODE_SEGMENT_SELECTOR ((sizeof(struct i386_gdt_entry) * ARCH_MAX_GDT_ENTRIES)/ARCH_MAX_GDT_ENTRIES)
