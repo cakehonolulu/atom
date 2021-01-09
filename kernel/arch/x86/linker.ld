@@ -59,5 +59,5 @@ SECTIONS {
 
     KERNEL_PHYSADDR_END = . - KERNEL_ADDR_OFFSET;
     KERNEL_VADDR_END = .;
-    kernel_end = .; _kernel_end = .; __kernel_end = .;
+    kernel_end = .; _kernel_end = .; __KERNEL_END = .;
 }

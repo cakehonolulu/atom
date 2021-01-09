@@ -10,7 +10,7 @@
 #define PAGE_FAULT_EXEC (1 << 4)
 
 // The kernel's page directory
-page_directory_t* arch_mmu_kernel_directory = NULL;
+page_directory_t *arch_mmu_kernel_directory;
 
 size_t num_frames = 0, num_frames_aligned = 0;
 FRAME_BITMAP_TYPE* frame_bitmaps = NULL;
@@ -113,6 +113,7 @@ void paging_free_frame(physaddr_t addr) {
 #endif
 }
 
+
 #ifdef FOUR_MB_PAGE_SIZE
 void paging_map_4mb_page(page_directory_t* dir, uint32_t page, uint32_t phys_addr) {
     page_dir_entry_t* dir_entry = &dir->entries[page];
@@ -185,6 +186,53 @@ void arch_set_page_directory(page_directory_t* page_dir)
   asm volatile("mov %0, %%cr3":: "r"((physaddr_t) page_dir));
 }
 
+page_frame_t *get_page(uint32_t address, int make, page_directory_t *dir){
+  // Turn the address into an index.
+  uint32_t table_idx = PAGE_DIRECTORY_INDEX(address);
+  uint32_t page_idx = PAGE_TABLE_INDEX(address);
+  printk("\nget_page: t: %d, p: %d %x, %x, %x", table_idx, page_idx,  address, make, dir->tables[table_idx]);
+
+  uint32_t *table = (uint32_t *) &(dir->tables[table_idx]);
+
+  bool table_exist = false;
+
+  if(table != NULL && dir->physical[table_idx].present != 0){// If this table is already assigned *(uint32_t *)(&dir->tables[table_idx])!=0
+    table_exist = true;
+    page_frame_t* page = &(dir->tables[table_idx]->pages[page_idx]);
+    printk("\nTable exist: %x : %x ", dir->physical[table_idx], page);
+    if (page != NULL && page->present != 0) {
+      printk("\nAddress %x Already: 0x%x ", address, *page);
+      return page;
+    }
+  }
+
+  if(make){
+    page_table_t * page_table;
+    if (!table_exist) {
+      // Obtenemos un bloque (4kb) para alojar una nueva tabla de páginas
+      uint32_t pt_phy;
+      page_table = (page_table_t *) kmalloc_ap(sizeof(page_table_t), &pt_phy); // Reemplazar con una gestion real
+      // Limpiamos el area que nos han dado
+      memset((uint32_t *) page_table, 0, sizeof(page_table_t));
+      dir->physical[table_idx].frame = pt_phy >> 12;
+      dir->physical[table_idx].present = 1;
+      dir->physical[table_idx].rw = 1;
+      dir->physical[table_idx].user = 1;
+      dir->tables[table_idx] = page_table;
+      printk("\nNew Table: %x : %x", dir->physical[table_idx], dir->tables[table_idx]);
+    } else {
+      page_table = dir->tables[table_idx];
+    }
+    // Ahora creamos la pagina en si
+    page_frame_t * page = &page_table->pages[page_idx];
+    alloc_frame_int(page, true, true, true, true, false, NULL);
+    printk("\nReturn %x : %x : %x", page_table, page, (page->frame << 12));
+    return page;
+  }
+
+  return NULL;
+}
+
 /*
  TODO: arch_usable_memory is only the available memory from the portion passed to the function by the mmap routines (Which, FOR NOW
  only support one memory region that is available and is larger than 1MB, in future, make a list of available regions and concatenate them for
@@ -207,6 +255,23 @@ void arch_mmu_init_paging(size_t arch_usable_memory, uintptr_t arch_mmu_virtual_
     printk("Available memory size: %d B, %d KB, %d MB\n", arch_usable_memory, arch_usable_memory/1024, arch_usable_memory/1024/1024);
 #endif
 
+#ifdef FOUR_KB_PAGE_SIZE
+    uintptr_t phys;
+    uint32_t *new_pagedir = kmalloc_ap(sizeof(page_directory_t));
+    memset(new_pagedir, 0, sizeof(page_directory_t));
+    arch_mmu_kernel_directory = (page_directory_t *) new_pagedir;
+    uint32_t kernel_space_end = ((uint32_t) new_pagedir) + sizeof(page_directory_t);
+
+    for(uint32_t i = KERNEL_VIRTUAL_BASE; i <= kernel_space_end; i += PAGE_SIZE)
+    {
+      page_frame_t *pg = get_page(i, 1, arch_mmu_kernel_directory);
+      free_frame(pg);
+      alloc_frame_int(pg, true, true, true, true, true, i - KERNEL_VIRTUAL_BASE);
+    }
+
+    arch_set_page_directory((page_directory_t *) (uintptr_t) VIRTUAL_TO_PHYSICAL((uintptr_t) arch_mmu_kernel_directory));
+#endif
+
 #ifdef FOUR_MB_PAGE_SIZE
   // We can allocate the structure needed for paging since we now have the MMU in a well-known state
   arch_mmu_kernel_directory = kmalloc_a(sizeof(page_directory_t));
@@ -219,12 +284,13 @@ void arch_mmu_init_paging(size_t arch_usable_memory, uintptr_t arch_mmu_virtual_
   printk("arch_mmu_pd_phys_addr: 0x%x, kern_dir: 0x%x\n", VIRTUAL_TO_PHYSICAL((uintptr_t) arch_mmu_kernel_directory), (uintptr_t) arch_mmu_kernel_directory);
 #endif
 
-  arch_set_page_directory((page_directory_t *) (uintptr_t) VIRTUAL_TO_PHYSICAL((uintptr_t) arch_mmu_kernel_directory));
-
 #ifdef FOUR_MB_PAGE_SIZE
   num_frames = (ALIGN_UP(arch_usable_memory)/* Align Up the total memory segment */) / PAGE_SIZE;
 
+#ifdef DEBUG
   printk("num_frames: %d, usable_memory: %d\n", num_frames, arch_usable_memory);
+#endif
+  
   // Align so as not to lose frames that fall between bitmap boundaries
   num_frames_aligned = num_frames % FRAMES_PER_BITMAP != 0 ? num_frames - (num_frames % FRAMES_PER_BITMAP) + FRAMES_PER_BITMAP : num_frames;
 
@@ -238,5 +304,8 @@ void arch_mmu_init_paging(size_t arch_usable_memory, uintptr_t arch_mmu_virtual_
     paging_set_frames(ALIGN_DOWN(arch_mmu_physical_base_ptr), ALIGN_UP(arch_mmu_physical_top_ptr));
         
   }
+
+  arch_set_page_directory((page_directory_t *) (uintptr_t) VIRTUAL_TO_PHYSICAL((uintptr_t) arch_mmu_kernel_directory));
+
 #endif
 }
