@@ -127,7 +127,7 @@ void _kmain(unsigned int initium_signature)
     uint32_t *ptr2 = (uintptr_t*)0xA0000000;
     uint32_t do_page_fault2 = *ptr2;
 
-    printk("Memory pointer: 0x%x\n", do_page_fault2);
+    printk("2nd Memory pointer: 0x%x\n", do_page_fault2);
     
 #endif
 

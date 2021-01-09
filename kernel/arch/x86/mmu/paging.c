@@ -252,7 +252,7 @@ void arch_mmu_init_paging(size_t arch_usable_memory, uintptr_t arch_mmu_virtual_
   register_interrupt_handler(14, page_fault);
 
 #ifdef DEBUG
-    printk("Available memory size: %d B, %d KB, %d MB\n", arch_usable_memory, arch_usable_memory/1024, arch_usable_memory/1024/1024);
+    //printk("Available memory size: %d B, %d KB, %d MB\n", arch_usable_memory, arch_usable_memory/1024, arch_usable_memory/1024/1024);
 #endif
 
 #ifdef FOUR_KB_PAGE_SIZE
@@ -290,7 +290,7 @@ void arch_mmu_init_paging(size_t arch_usable_memory, uintptr_t arch_mmu_virtual_
 #ifdef DEBUG
   printk("num_frames: %d, usable_memory: %d\n", num_frames, arch_usable_memory);
 #endif
-  
+
   // Align so as not to lose frames that fall between bitmap boundaries
   num_frames_aligned = num_frames % FRAMES_PER_BITMAP != 0 ? num_frames - (num_frames % FRAMES_PER_BITMAP) + FRAMES_PER_BITMAP : num_frames;
 
