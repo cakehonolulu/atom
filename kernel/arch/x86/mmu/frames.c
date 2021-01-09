@@ -145,9 +145,9 @@ void arch_mmu_init(uintptr_t arch_mmu_kernel_base_ptr, uintptr_t arch_mmu_kernel
 
   // Le pedimos una direccion, esta garantizado que reserva el espacio del array
   uint32_t array_reserved = (uint32_t *) kmalloc (sizeof(uint32_t) * array_tam);
-  printk("\nFrames Array: 0x%x : 0x%x\n", frames_Array, array_reserved);
+  printk("Frames Array: 0x%x : 0x%x\n", frames_Array, array_reserved);
 
-  printk("\nMax num frames: %d; TAM: %d bytes\n", max_frames, mem_tam);
+  printk("Max num frames: %d; TAM: %d bytes\n", max_frames, mem_tam);
   if(max_frames <= 4){
     //PANIC("INSTALLED MEMORY BELOW 16MB");
     printk("INSTALLED MEMORY BELOW 16MB");

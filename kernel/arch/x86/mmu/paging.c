@@ -190,7 +190,10 @@ page_frame_t *get_page(uint32_t address, int make, page_directory_t *dir){
   // Turn the address into an index.
   uint32_t table_idx = PAGE_DIRECTORY_INDEX(address);
   uint32_t page_idx = PAGE_TABLE_INDEX(address);
-  printk("\nget_page: t: %d, p: %d %x, %x, %x", table_idx, page_idx,  address, make, dir->tables[table_idx]);
+
+#ifdef DEBUG
+  printk("get_page: t: %d, p: %d 0x%x, 0x%x, 0x%x", table_idx, page_idx,  address, make, dir->tables[table_idx]);
+#endif
 
   uint32_t *table = (uint32_t *) &(dir->tables[table_idx]);
 
@@ -199,9 +202,13 @@ page_frame_t *get_page(uint32_t address, int make, page_directory_t *dir){
   if(table != NULL && dir->physical[table_idx].present != 0){// If this table is already assigned *(uint32_t *)(&dir->tables[table_idx])!=0
     table_exist = true;
     page_frame_t* page = &(dir->tables[table_idx]->pages[page_idx]);
-    printk("\nTable exist: %x : %x ", dir->physical[table_idx], page);
+#ifdef DEBUG
+    printk("\nTable exist: 0x%x : 0x%x ", dir->physical[table_idx], page);
+#endif
     if (page != NULL && page->present != 0) {
+#ifdef DEBUG
       printk("\nAddress %x Already: 0x%x ", address, *page);
+#endif
       return page;
     }
   }
@@ -219,14 +226,18 @@ page_frame_t *get_page(uint32_t address, int make, page_directory_t *dir){
       dir->physical[table_idx].rw = 1;
       dir->physical[table_idx].user = 1;
       dir->tables[table_idx] = page_table;
-      printk("\nNew Table: %x : %x", dir->physical[table_idx], dir->tables[table_idx]);
+#ifdef DEBUG
+      printk("\nNew Table: 0x%x : 0x%x", dir->physical[table_idx], dir->tables[table_idx]);
+#endif
     } else {
       page_table = dir->tables[table_idx];
     }
     // Ahora creamos la pagina en si
     page_frame_t * page = &page_table->pages[page_idx];
     alloc_frame_int(page, true, true, true, true, false, NULL);
-    printk("\nReturn %x : %x : %x", page_table, page, (page->frame << 12));
+#ifdef DEBUG
+    printk("\nReturn 0x%x : 0x%x : 0x%x\n", page_table, page, (page->frame << 12));
+#endif
     return page;
   }
 
@@ -309,3 +320,54 @@ void arch_mmu_init_paging(size_t arch_usable_memory, uintptr_t arch_mmu_virtual_
 
 #endif
 }
+
+#ifdef FOUR_KB_PAGE_SIZE
+uintptr_t to_physical_addr(uint32_t virtual, page_directory_t *dir){
+  uintptr_t remaining = virtual % 0x1000;
+  uintptr_t frame = virtual / 0x1000;
+  uintptr_t table = frame / 1024;
+  uintptr_t subframe = frame % 1024;
+  if (dir->tables[table] != NULL) {
+    page_frame_t *p = &dir->tables[table]->pages[subframe];
+    if (p != NULL){
+      return (p->frame << 12) + remaining;
+    }
+  }
+  return NULL;
+}
+
+page_table_t *copyTable(page_table_t *src, uint32_t *phy){
+  page_table_t *newPD = (page_directory_t *)kmalloc(sizeof(page_directory_t));
+  *phy = ((uint32_t) to_physical_addr((uint32_t) &newPD, arch_mmu_kernel_directory));
+  for(int i= 0; i < 1024; i++){
+    memcpy(&(newPD->pages[i]), &(src->pages[i]), sizeof(page_frame_t));
+  }
+  return newPD;
+} 
+page_directory_t * create_page_directory(){
+  page_directory_t *newPD = (page_directory_t *)kmalloc(sizeof(page_directory_t));
+  memset(newPD, 0, sizeof(page_directory_t));
+  for(int i = KERNEL_PAGE; i < 1024; i++){
+    newPD->tables[i] = arch_mmu_kernel_directory->tables[i];
+    //newPD->physical_tables[i] = kernel_directory->physical_tables[i];
+  }
+  return newPD;
+}
+
+page_directory_t * copy_page_directory(page_directory_t *src){
+  page_directory_t *newPD = (page_directory_t *)kmalloc(sizeof(page_directory_t));
+  memset(newPD, 0, sizeof(page_directory_t));
+  for(int i = 0; i < 1024; i++){
+    if(i >= KERNEL_PAGE){
+      newPD->tables[i] = src->tables[i];
+      //newPD->physical_tables[i] = src->physical_tables[i];
+    } else if (src->tables[i] != NULL){
+      uint32_t phy = 0;
+      newPD->tables[i] = copyTable(src->tables[i], &phy);
+      //newPD->physical_tables[i] = (uintptr_t)phy;
+    }
+  }
+  return newPD;
+}
+
+#endif
