@@ -4,7 +4,7 @@
 #include <paging.h>
 #include <kernel.h>
 
-uintptr_t arch_mmu_tmp_base_address = 0;
+uintptr_t tmp_base_address = 0;
 
 extern uint32_t *__KERNEL_END;
 // A bitset of frames - used or free.
@@ -105,9 +105,9 @@ uint32_t first_frame() {
 }
 
 
-void arch_mmu_init(uintptr_t arch_mmu_kernel_base_ptr, uintptr_t arch_mmu_kernel_top_ptr)
+void init_mmu(uintptr_t kernel_base_ptr, uintptr_t kernel_top_ptr)
 {
-  // HACK: Memory region provided by arch_mmap_init is
+  // HACK: Memory region provided by mmap_init is
   // ensured to be AT LEAST, 1MB in size, which is probably more
   // than enough for now, but this is hacky and should probably be avoided.
 
@@ -122,9 +122,9 @@ void arch_mmu_init(uintptr_t arch_mmu_kernel_base_ptr, uintptr_t arch_mmu_kernel
   // have a bug where we overwrite kernel parts!
   // Kernel Pos after PADDR -> VADDR 0xC0100000;
   
-  printk("arch_mmu_kernel_base_ptr: 0x%x, arch_mmu_kernel_top_ptr: 0x%x\n", arch_mmu_kernel_base_ptr, arch_mmu_kernel_top_ptr);
+  printk("kernel_base_ptr: 0x%x, kernel_top_ptr: 0x%x\n", kernel_base_ptr, kernel_top_ptr);
   
-  arch_mmu_tmp_base_address = (arch_mmap_init(arch_mmu_kernel_base_ptr, arch_mmu_kernel_top_ptr) + 0xC0000000);
+  tmp_base_address = (mmap_init(kernel_base_ptr, kernel_top_ptr) + 0xC0000000);
 
   uint32_t mem_tam = (memory_management_region_end - memory_management_region_start);
   printk("end: 0x%x; start: 0x%x; mem_tam = %d\n", memory_management_region_end, memory_management_region_start, mem_tam);
@@ -154,9 +154,9 @@ void arch_mmu_init(uintptr_t arch_mmu_kernel_base_ptr, uintptr_t arch_mmu_kernel
     asm("cli;hlt");
   }
 
-  printk("Placeholder base address: 0x%x\n", arch_mmu_tmp_base_address);
+  printk("Placeholder base address: 0x%x\n", tmp_base_address);
 
-  if (!arch_mmu_tmp_base_address)
+  if (!tmp_base_address)
   {
     printk("No placement address! Halting...");
     asm volatile ("cli;hlt");

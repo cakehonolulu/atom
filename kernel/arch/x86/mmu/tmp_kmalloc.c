@@ -88,7 +88,7 @@ uint32_t kmalloc_ap(uint32_t sz, uint32_t *phy){
 	return kdmalloc_int(sz, 1, phy);
 }
 
-size_t arch_mmu_get_max_phys_mem(bool inKiloBytes)
+size_t get_max_phys_mem(bool inKiloBytes)
 {
 	if (inKiloBytes == true)
 	{
