@@ -166,9 +166,15 @@ void init_paging(size_t usable_memory, uintptr_t virtual_base_ptr, uintptr_t vir
   set_page_directory((page_directory_t *) (uintptr_t) VIRTUAL_TO_PHYSICAL((uintptr_t) current_directory));
 
 #ifdef DEBUG
-  printk("arch_mmu_pd_phys_addr: 0x%x, kern_dir: 0x%x\n", VIRTUAL_TO_PHYSICAL((uintptr_t) kernel_directory), (uintptr_t) kernel_directory);
+  printk("pd_phys_addr: 0x%x, kern_dir: 0x%x\n", VIRTUAL_TO_PHYSICAL((uintptr_t) kernel_directory), (uintptr_t) kernel_directory);
 #endif
 
+}
+
+void switch_page_directory(uintptr_t *pd)
+{
+  asm volatile("mov %0, %%cr3" ::"r" (to_physical_addr(pd)));
+  current_directory = pd;
 }
 
 page_table_t *copyTable(page_table_t *src, physaddr_t *phy)
