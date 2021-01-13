@@ -3,12 +3,6 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#define PAGE_FAULT_PROTECTION (1 << 0)
-#define PAGE_FAULT_WRITE (1 << 1)
-#define PAGE_FAULT_USER (1 << 2)
-#define PAGE_FAULT_RESERVED (1 << 3)
-#define PAGE_FAULT_EXEC (1 << 4)
-
 // Kernel's Page Directory
 page_directory_t *kernel_directory;
 

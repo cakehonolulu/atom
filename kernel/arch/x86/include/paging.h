@@ -56,6 +56,13 @@
 #define FRAME_IS_SET(frame) ((BITMAP_FOR_FRAME(frame) & (1 << BIT_OFFSET(frame))) != 0 ? true : false)
 
 
+#define PAGE_FAULT_PROTECTION (1 << 0)
+#define PAGE_FAULT_WRITE (1 << 1)
+#define PAGE_FAULT_USER (1 << 2)
+#define PAGE_FAULT_RESERVED (1 << 3)
+#define PAGE_FAULT_EXEC (1 << 4)
+
+
 typedef uint32_t physaddr_t;
 
 // A page is a 4KB physical memory division
