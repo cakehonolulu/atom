@@ -4,8 +4,6 @@
 #include <paging.h>
 #include <kernel.h>
 
-uintptr_t tmp_base_address = 0;
-
 extern uint32_t *__KERNEL_END;
 // A bitset of frames - used or free.
 static uint32_t max_frames = NULL; //Max number of frames for installed memory
@@ -124,7 +122,7 @@ void init_mmu(uintptr_t kernel_base_ptr, uintptr_t kernel_top_ptr)
   
   printk("kernel_base_ptr: 0x%x, kernel_top_ptr: 0x%x\n", kernel_base_ptr, kernel_top_ptr);
   
-  tmp_base_address = (mmap_init(kernel_base_ptr, kernel_top_ptr) + 0xC0000000);
+  mmap_init(kernel_base_ptr, kernel_top_ptr);
 
   uint32_t mem_tam = (memory_management_region_end - memory_management_region_start);
   printk("end: 0x%x; start: 0x%x; mem_tam = %d\n", memory_management_region_end, memory_management_region_start, mem_tam);
@@ -132,6 +130,7 @@ void init_mmu(uintptr_t kernel_base_ptr, uintptr_t kernel_top_ptr)
   
   //Direccion para el bitmap despues del kernel
   uint32_t next_v_addr = (uint32_t)(((uint32_t) &__KERNEL_END) + 4);
+  printk("next_v_addr 0x%x\n", next_v_addr);
   frames_Array = next_v_addr;
   //Obtenemos el tamaño del array
   uint32_t array_tam = INDEX_FROM_BIT(max_frames);
@@ -152,13 +151,5 @@ void init_mmu(uintptr_t kernel_base_ptr, uintptr_t kernel_top_ptr)
     //PANIC("INSTALLED MEMORY BELOW 16MB");
     printk("INSTALLED MEMORY BELOW 16MB");
     asm("cli;hlt");
-  }
-
-  printk("Placeholder base address: 0x%x\n", tmp_base_address);
-
-  if (!tmp_base_address)
-  {
-    printk("No placement address! Halting...");
-    asm volatile ("cli;hlt");
   }
 }
