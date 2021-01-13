@@ -1,5 +1,8 @@
 # This just acts kind of a wrapper between the boot1 second stage bootloader
 
+# Make the Stack Size
+#define STACK_SIZE 8192
+
 .set KERNEL_VIRTUAL_BASE, 0xC0000000
 .set KERNEL_PAGE_NUMBER, (KERNEL_VIRTUAL_BASE >> 22)
 
@@ -110,5 +113,5 @@ _bootstrap:
 # Stack is 16 byte aligned to ensure proper SystemV ABI compliance
 .align 16
 stack_bottom:
-.skip 16384 # 16 KiB // TODO: Let the user change bootstrap stack (Maybe it's trying to run Atom on a machine with more limited resources where 16KB makes a world of a difference)
+.skip STACK_SIZE # 16 KiB // TODO: Let the user change bootstrap stack (Maybe it's trying to run Atom on a machine with more limited resources where 16KB makes a world of a difference)
 stack_top:
