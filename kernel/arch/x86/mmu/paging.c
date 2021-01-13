@@ -141,10 +141,10 @@ void init_paging(size_t usable_memory, uintptr_t virtual_base_ptr, uintptr_t vir
   register_interrupt_handler(14, page_fault);
 
 #ifdef DEBUG
-  //printk("Available memory size: %d B, %d KB, %d MB\n", usable_memory, usable_memory/1024, usable_memory/1024/1024);
+  printk("Available memory size: %d B, %d KB, %d MB\n", usable_memory, usable_memory/1024, usable_memory/1024/1024);
 #endif
 
-  uint32_t *new_pagedir = kmalloc_ap(sizeof(page_directory_t));
+  uint32_t *new_pagedir = kmalloc_ap(sizeof(page_directory_t), new_pagedir + 0xC0000000);
   memset(new_pagedir, 0, sizeof(page_directory_t));
   kernel_directory = (page_directory_t *) new_pagedir;
   uint32_t kernel_space_end = ((uint32_t) new_pagedir) + sizeof(page_directory_t);
