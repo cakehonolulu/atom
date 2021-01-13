@@ -171,7 +171,7 @@ void init_paging(size_t usable_memory, uintptr_t virtual_base_ptr, uintptr_t vir
 
 }
 
-void switch_page_directory(uintptr_t *pd)
+/*void switch_page_directory(uintptr_t *pd)
 {
   asm volatile("mov %0, %%cr3" ::"r" (to_physical_addr(pd)));
   current_directory = pd;
@@ -221,4 +221,4 @@ page_directory_t * copy_page_directory(page_directory_t *src)
   }
   
   return newPD;
-}
+}*/
