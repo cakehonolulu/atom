@@ -15,7 +15,7 @@ OBJCOPY = i786-elf-objcopy
 CFLAGS =  -ffreestanding -Wall -Wextra -g
 CFLAGS += -Iinclude
 
-ASFLAGS = --32
+ASFLAGS = -m32
 LDSCRIPT = linker.ld
 
 ifeq ($(DEBUG), 1)
@@ -64,7 +64,7 @@ $(KERNEL_IMAGE): $(ARCH_OBJECT_FILES)
 	@echo " \033[0;35mAS\033[0m $<"
 
 %.o: %.S
-	$(AS) $(ASFLAGS) -c $< -o $@
+	$(CC) $(ASFLAGS) -c $< -o $@
 	@echo " \033[0;33mAS\033[0m $<"
 
 clean:
