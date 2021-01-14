@@ -11,7 +11,7 @@ size_t e820_usable_memory_regions = 0;
 // HACK: Returns ONLY the usable memory region base address if it has a MB or more
 // TODO: Clean up the code, optimize it and return more information!
 // TODO: Maybe reconfigure the memory map location as a argument so that it can be changed?
-uintptr_t mmap_init(uintptr_t kernel_base_ptr, uintptr_t kernel_top_ptr)
+uintptr_t init_mmap(uintptr_t kernel_base_ptr, uintptr_t kernel_top_ptr)
 {
     size_t e820_mmap_total_entries_for_counting = *(uintptr_t*)MEMORY_MAP_LOCATION;
     const struct bios_memmap_entry* entry = (const struct bios_memmap_entry*)(MEMORY_MAP_LOCATION + 8);
@@ -116,8 +116,8 @@ uintptr_t mmap_init(uintptr_t kernel_base_ptr, uintptr_t kernel_top_ptr)
                 printk("HEY!, we got start: 0x%x, end: 0x%x\n", memory_map[i].base_address, memory_map[i].end_address);
 #endif
 
-                memory_management_region_start = memory_map[i].base_address;
-                memory_management_region_end = memory_map[i].end_address;
+                memory_management_region_start = memory_map[i].base_address + 0xC0000000;
+                memory_management_region_end = memory_map[i].end_address + 0xC0000000;
             }
         }
     }

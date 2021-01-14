@@ -2,7 +2,7 @@
 
 extern void* KERNEL_VADDR_END, * KERNEL_VADDR_START, * KERNEL_PHYSADDR_END, * KERNEL_PHYSADDR_START;
 
-void _kmain(unsigned int initium_signature)
+void _kmain(unsigned int initium_signature, uint32_t *initial_ebp, uint32_t *initial_esp)
 {
 	x86_setup_vga_text_mode();
 
@@ -45,6 +45,8 @@ void _kmain(unsigned int initium_signature)
     printk("\n");
     
     printkok("Booted to kernel mode!");
+
+    printk("initial_esp: 0x%x, initial_ebp: 0x%x\n", initial_esp, initial_ebp);
 
 #ifdef DEBUG // TODO: Differentiate / divide debug into subgroups
     printk("Kernel Start: 0x%x, Kernel End: 0x%x, Kernel Size: %d bytes (%d KB)\n", KERNEL_START, KERNEL_END, KERNEL_SIZE, ((KERNEL_END - KERNEL_START) / 1024));
@@ -118,17 +120,23 @@ void _kmain(unsigned int initium_signature)
 #endif
 
 #ifdef DEBUG
-    // This code should work!
-    uint32_t *ptr = (uintptr_t*)0xC0000000;
+   // This code should work!
+    uint32_t *ptr = (uintptr_t*)0xC0100000;
     uint32_t do_page_fault = *ptr;
 
-    printk("Memory pointer: 0x%x\n", do_page_fault);
+    printk("2nd Memory pointer accessed is 0xC0100000, mmu returns 0x%x\n", do_page_fault);
 
-    // This code should page fault
-    uint32_t *ptr2 = (uintptr_t*)0xA0000000;
+    // This code should page fault because we're accessing a physical memory address that isn't paged (It doesn't point to an MMU aware section)
+    uint32_t *ptr2 = (uintptr_t*)0x00100000;
     uint32_t do_page_fault2 = *ptr2;
 
-    printk("2nd Memory pointer: 0x%x\n", do_page_fault2);
+    printk("Memory pointer accessed is 0x00100000, mmu returns 0x%x\n", do_page_fault2);
+
+    // This code should page fault because we don't have 0xA0000000 paged anywhere
+    uint32_t *ptr3 = (uintptr_t*)0xA0000000;
+    uint32_t do_page_fault3 = *ptr3;
+
+    printk("3rd Memory pointer accessed is 0xA0000000, mmu returns 0x%x\n", do_page_fault3);
     
 #endif
 

@@ -122,7 +122,7 @@ void init_mmu(uintptr_t kernel_base_ptr, uintptr_t kernel_top_ptr)
   
   printk("kernel_base_ptr: 0x%x, kernel_top_ptr: 0x%x\n", kernel_base_ptr, kernel_top_ptr);
   
-  mmap_init(kernel_base_ptr, kernel_top_ptr);
+  init_mmap(kernel_base_ptr, kernel_top_ptr);
 
   uint32_t mem_tam = (memory_management_region_end - memory_management_region_start);
   printk("end: 0x%x; start: 0x%x; mem_tam = %d\n", memory_management_region_end, memory_management_region_start, mem_tam);

@@ -33,7 +33,7 @@ page_frame_t *get_page(physaddr_t address, int make, page_directory_t *dir)
   uintptr_t table_idx = PAGE_DIRECTORY_INDEX(address);
   uintptr_t page_idx = PAGE_TABLE_INDEX(address);
 
-#ifdef DEBUG
+#ifdef DEBUG_PAGING
   printk("get_page: t: %d, p: %d 0x%x, 0x%x, 0x%x", table_idx, page_idx,  address, make, dir->tables[table_idx]);
 #endif
 
@@ -46,12 +46,12 @@ page_frame_t *get_page(physaddr_t address, int make, page_directory_t *dir)
   {
     table_exist = true;
     page_frame_t* page = &(dir->tables[table_idx]->pages[page_idx]);
-#ifdef DEBUG
+#ifdef DEBUG_PAGING
     printk("\nTable exist: 0x%x : 0x%x ", dir->physical[table_idx], page);
 #endif
     if (page != NULL && page->present != 0)
     {
-#ifdef DEBUG
+#ifdef DEBUG_PAGING
       printk("\nAddress %x Already: 0x%x ", address, *page);
 #endif
       return page;
@@ -74,7 +74,7 @@ page_frame_t *get_page(physaddr_t address, int make, page_directory_t *dir)
       dir->physical[table_idx].rw = 1;
       dir->physical[table_idx].user = 1;
       dir->tables[table_idx] = page_table;
-#ifdef DEBUG
+#ifdef DEBUG_PAGING
       printk("\nNew Table: 0x%x : 0x%x", dir->physical[table_idx], dir->tables[table_idx]);
 #endif
     } else {
@@ -83,7 +83,7 @@ page_frame_t *get_page(physaddr_t address, int make, page_directory_t *dir)
     // Create the page
     page_frame_t * page = &page_table->pages[page_idx];
     alloc_frame_int(page, true, true, true, true, false, NULL);
-#ifdef DEBUG
+#ifdef DEBUG_PAGING
     printk("\nReturn 0x%x : 0x%x : 0x%x\n", page_table, page, (page->frame << 12));
 #endif
     return page;
@@ -122,6 +122,8 @@ uintptr_t to_physical_addr(uintptr_t virtual, page_directory_t *dir)
   return NULL;
 }
 
+extern uint32_t memory_management_region_start, memory_management_region_end;
+
 /*
  TODO: usable_memory is only the available memory from the portion passed to the function by the mmap routines (Which, FOR NOW
  only support one memory region that is available and is larger than 1MB, in future, make a list of available regions and concatenate them for
@@ -144,19 +146,43 @@ void init_paging(size_t usable_memory, uintptr_t virtual_base_ptr, uintptr_t vir
   printk("Available memory size: %d B, %d KB, %d MB\n", usable_memory, usable_memory/1024, usable_memory/1024/1024);
 #endif
 
-  uint32_t *new_pagedir = kmalloc_ap(sizeof(page_directory_t), new_pagedir + 0xC0000000);
-  memset(new_pagedir, 0, sizeof(page_directory_t));
-  kernel_directory = (page_directory_t *) new_pagedir;
-  uint32_t kernel_space_end = ((uint32_t) new_pagedir) + sizeof(page_directory_t);
+#ifdef DEBUG_PAGING
+asm volatile("xchg %bx, %bx");
+#endif
 
+  // We sized down the algorithm so that it doesn't need to use the stack as often
+  kernel_directory = kmalloc_ap(sizeof(page_directory_t), kernel_directory);
+  memset(kernel_directory, 0, sizeof(page_directory_t));
+
+  uint32_t kernel_space_end = ((uint32_t) kernel_directory) + sizeof(page_directory_t);
+
+#ifdef DEBUG_PAGING
+  printk("kernel_space_end: 0x%x, kernel_directory: 0x%x\n", kernel_space_end, ((uint32_t) kernel_directory));
+
+asm volatile("xchg %bx, %bx");
+  bool fisrtime = true;
+#endif
+
+  // Pages containing the kernel
   for(uint32_t i = KERNEL_VIRTUAL_BASE; i <= kernel_space_end; i += PAGE_SIZE)
   {
+#ifdef DEBUG_PAGING
+    if (fisrtime == true)
+    {
+      printk("i: 0x%x\n", i);
+      fisrtime = false;
+    }
+    if (i == kernel_space_end)
+    {
+      printk("i_end: 0x%x\n", i);
+    }
+#endif
     page_frame_t *pg = get_page(i, 1, kernel_directory);
     free_frame(pg);
     alloc_frame_int(pg, true, true, true, true, true, i - KERNEL_VIRTUAL_BASE);
   }
 
-  current_directory = kernel_directory;
+  current_directory = kernel_directory;;
   set_page_directory((page_directory_t *) (uintptr_t) VIRTUAL_TO_PHYSICAL((uintptr_t) current_directory));
 
 #ifdef DEBUG
