@@ -182,7 +182,7 @@ asm volatile("xchg %bx, %bx");
     alloc_frame_int(pg, true, true, true, true, true, i - KERNEL_VIRTUAL_BASE);
   }
 
-  current_directory = kernel_directory;;
+  current_directory = kernel_directory;
   set_page_directory((page_directory_t *) (uintptr_t) VIRTUAL_TO_PHYSICAL((uintptr_t) current_directory));
 
 #ifdef DEBUG
