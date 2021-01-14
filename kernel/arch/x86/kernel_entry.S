@@ -110,6 +110,7 @@ _bootstrap:
 # use the nobits typing to declare the section as non-data containing
 # so that it knows it only occupies space
 .global stack_bottom
+.global stack_top
 .section .bss, "aw", @nobits
 # Stack is 16 byte aligned to ensure proper SystemV ABI compliance
 .align 16
