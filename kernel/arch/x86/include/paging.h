@@ -62,8 +62,10 @@
 #define PAGE_FAULT_RESERVED (1 << 3)
 #define PAGE_FAULT_EXEC (1 << 4)
 
-
 typedef uint32_t physaddr_t;
+typedef uintptr_t virtaddr_t;
+
+extern void tlb_flush();
 
 // A page is a 4KB physical memory division
 typedef struct page_frame {

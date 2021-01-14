@@ -454,3 +454,10 @@ tss_flush:
     mov $0x2B, %ax
     ltr %ax
     ret
+
+.global tlb_flush
+.type tlb_flush, @function
+tlb_flush:
+    movl %cr3, %ecx
+    movl %ecx, %cr3
+    ret
