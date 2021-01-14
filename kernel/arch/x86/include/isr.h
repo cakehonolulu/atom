@@ -86,6 +86,8 @@ struct regs {
     unsigned int eip, cs, eflags, useresp, ss;
 };
 
+typedef struct regs arch_cpu_state_t;
+
 typedef void (*isr_handler_t) (struct regs *);
 
 unsigned int isr_install();
