@@ -175,3 +175,44 @@ void multitasking_init() {
 void multitasking_schedule(process_t *process) {
     queue_enqueue(process_queue, process);
 }
+
+extern void* stack_bottom;
+
+arch_cpu_state_t task_one;
+arch_cpu_state_t task_two;
+
+void do_task_one() {
+    while(true) {
+        printk("A");
+        arch_switch_task(&task_one, &task_two);
+    }
+}
+
+void startsched()
+{
+    uint32_t* task_one_stack = kmalloc(1024);
+    task_one.ebp = (uint32_t)task_one_stack;
+    task_one.esp = (uint32_t)task_one_stack + 1024 - 4*4;
+    task_one.edi = 0;
+    task_one.ebx = 0;
+    task_one.esi = 0;
+    task_two.ebp = (uint32_t)stack_bottom;
+    task_two.esp = arch_get_stack_pointer();
+    task_two.edi = 0;
+    task_two.ebx = 0;
+    task_two.esi = 0;
+
+    // These values are popped off by arch_switch_task before returning
+    task_one_stack[1024/4 - 4] = task_one.ebp;
+    task_one_stack[1024/4 - 3] = task_one.edi;
+    task_one_stack[1024/4 - 2] = task_one.esi;
+    task_one_stack[1024/4 - 1] = task_one.ebx;
+    // The address for arch_switch_task to return to
+    task_one_stack[1024/4] = (uint32_t)do_task_one;
+    arch_switch_task(&task_two, &task_one);
+
+    while(true) {
+        printk("B");
+        arch_switch_task(&task_two, &task_one);
+    }
+}
