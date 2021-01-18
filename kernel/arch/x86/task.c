@@ -167,9 +167,10 @@ void on_tick(arch_cpu_state_t* regs) {
     set_page_directory(next_process->page_directory);
 }
 
-void multitasking_init() {
+void init_multitasking() {
     process_queue = queue_create();
     register_interrupt_handler(32, on_tick);
+    init_scheduling();
 }
 
 void multitasking_schedule(process_t *process) {
@@ -178,24 +179,36 @@ void multitasking_schedule(process_t *process) {
 
 extern void* stack_bottom;
 
-arch_cpu_state_t task_one;
+arch_cpu_state_t kernel_task;
 arch_cpu_state_t task_two;
 
-void do_task_one() {
-    while(true) {
-        printk("A");
-        arch_switch_task(&task_one, &task_two);
+void do_task_one()
+{
+    while(true)
+    {
+        unsigned char* vga = (unsigned char*) 0xC00B8000;
+        vga[150] = 0x54;
+        vga[151] = 0x1F;
+        vga[152] = 0x61;
+        vga[153] = 0x1F;
+        vga[154] = 0x73;
+        vga[155] = 0x1F;
+        vga[156] = 0x6b;
+        vga[157] = 0x1F;
+        vga[158] = 0x32;
+        vga[159] = 0x1F;
+        arch_switch_task(&kernel_task, &task_two);
     }
 }
 
-void startsched()
+void init_scheduling()
 {
-    uint32_t* task_one_stack = kmalloc(1024);
-    task_one.ebp = (uint32_t)task_one_stack;
-    task_one.esp = (uint32_t)task_one_stack + 1024 - 4*4;
-    task_one.edi = 0;
-    task_one.ebx = 0;
-    task_one.esi = 0;
+    uint32_t* kernel_stack = kmalloc(1024);
+    kernel_task.ebp = (uint32_t)kernel_stack;
+    kernel_task.esp = (uint32_t)kernel_stack + 1024 - 4*4;
+    kernel_task.edi = 0;
+    kernel_task.ebx = 0;
+    kernel_task.esi = 0;
     task_two.ebp = (uint32_t)stack_bottom;
     task_two.esp = arch_get_stack_pointer();
     task_two.edi = 0;
@@ -203,16 +216,26 @@ void startsched()
     task_two.esi = 0;
 
     // These values are popped off by arch_switch_task before returning
-    task_one_stack[1024/4 - 4] = task_one.ebp;
-    task_one_stack[1024/4 - 3] = task_one.edi;
-    task_one_stack[1024/4 - 2] = task_one.esi;
-    task_one_stack[1024/4 - 1] = task_one.ebx;
+    kernel_stack[1024/4 - 4] = kernel_task.ebp;
+    kernel_stack[1024/4 - 3] = kernel_task.edi;
+    kernel_stack[1024/4 - 2] = kernel_task.esi;
+    kernel_stack[1024/4 - 1] = kernel_task.ebx;
     // The address for arch_switch_task to return to
-    task_one_stack[1024/4] = (uint32_t)do_task_one;
-    arch_switch_task(&task_two, &task_one);
+    kernel_stack[1024/4] = (uint32_t)do_task_one;
+    arch_switch_task(&task_two, &kernel_task);
 
     while(true) {
-        printk("B");
-        arch_switch_task(&task_two, &task_one);
+        unsigned char* vga = (unsigned char*) 0xC00B8000;
+        vga[150] = 0x54;
+        vga[151] = 0x2F;
+        vga[152] = 0x61;
+        vga[153] = 0x2F;
+        vga[154] = 0x73;
+        vga[155] = 0x2F;
+        vga[156] = 0x6b;
+        vga[157] = 0x2F;
+        vga[158] = 0x31;
+        vga[159] = 0x2F;
+        arch_switch_task(&task_two, &kernel_task);
     }
 }
