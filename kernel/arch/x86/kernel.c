@@ -152,9 +152,7 @@ void _kmain(unsigned int initium_signature, uint32_t *initial_ebp, uint32_t *ini
 
     printk("Initialising multitasking\n");
     
-    multitasking_init();
-    
-    startsched();
+    init_multitasking();
 
     /* IRQ1: keyboard */
     init_keyboard();
