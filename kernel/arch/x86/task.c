@@ -170,6 +170,9 @@ void on_tick(arch_cpu_state_t* regs) {
 void init_multitasking() {
     process_queue = queue_create();
     register_interrupt_handler(32, on_tick);
+    printkok("Initialized Tasking");
+    printk("Initializing Scheduling\n");
+    printk("> ");
     init_scheduling();
 }
 

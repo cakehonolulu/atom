@@ -150,14 +150,10 @@ void _kmain(unsigned int initium_signature, uint32_t *initial_ebp, uint32_t *ini
     /* IRQ0: timer */
     init_timer(50);
 
-    printk("Initialising multitasking\n");
-    
-    init_multitasking();
-
     /* IRQ1: keyboard */
     init_keyboard();
 
-    printk("\n> ");
+    init_multitasking();
 
 	for(;;);
 }
