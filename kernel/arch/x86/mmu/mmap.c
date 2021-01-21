@@ -116,8 +116,8 @@ uintptr_t init_mmap(uintptr_t kernel_base_ptr, uintptr_t kernel_top_ptr)
                 printk("HEY!, we got start: 0x%x, end: 0x%x\n", memory_map[i].base_address, memory_map[i].end_address);
 #endif
 
-                memory_management_region_start = memory_map[i].base_address + 0xC0000000;
-                memory_management_region_end = memory_map[i].end_address + 0xC0000000;
+                memory_management_region_start = memory_map[i].base_address;
+                memory_management_region_end = memory_map[i].end_address;
             }
         }
     }
