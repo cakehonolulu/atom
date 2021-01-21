@@ -126,6 +126,12 @@ extern uint32_t memory_management_region_start, memory_management_region_end;
 
 void map_region(virtaddr_t *from, virtaddr_t *to)
 {
+  // TODO-HACK: Before we manage to reimplement a mapping solution that takes into account the temp kmalloc_ap of the kernel dir, we need to manually
+  // add a size to the virt_addr to in order to have a bit more memory mapping available
+  to = to + 0x0001FFFF;
+#ifdef DEBUG_PAGING
+  printk("to: 0x%x\n", to);
+#endif
   for(uint32_t i = from; i <= to; i += PAGE_SIZE)
   {
 #ifdef DEBUG_PAGING
@@ -142,6 +148,33 @@ void map_region(virtaddr_t *from, virtaddr_t *to)
     page_frame_t *pg = get_page(i, 1, kernel_directory);
     free_frame(pg);
     alloc_frame_int(pg, true, true, true, true, true, i - KERNEL_VIRTUAL_BASE);
+  }
+}
+
+void map_vregion(virtaddr_t *from, virtaddr_t *to)
+{
+  // TODO-HACK: Before we manage to reimplement a mapping solution that takes into account the temp kmalloc_ap of the kernel dir, we need to manually
+  // add a size to the virt_addr to in order to have a bit more memory mapping available
+  to = to + 0x0001FFFF;
+#ifdef DEBUG_PAGING
+  printk("to: 0x%x\n", to);
+#endif
+  for(uint32_t i = from; i <= to; i += PAGE_SIZE)
+  {
+#ifdef DEBUG_PAGING
+    if (fisrtime == true)
+    {
+      printk("i: 0x%x\n", i);
+      fisrtime = false;
+    }
+    if (i == to)
+    {
+      printk("i_end: 0x%x\n", i);
+    }
+#endif
+    page_frame_t *pg = get_page(i, 1, kernel_directory);
+    free_frame(pg);
+    alloc_frame_int(pg, true, true, true, true, true, i);
   }
 }
 
@@ -178,15 +211,19 @@ asm volatile("xchg %bx, %bx");
 
 #ifdef DEBUG_PAGING
   printk("kernel_space_end: 0x%x, kernel_directory: 0x%x\n", kernel_space_end, ((uint32_t) kernel_directory));
-
 asm volatile("xchg %bx, %bx");
   bool fisrtime = true;
 #endif
 
   // Map the region containing the kernel
   // 0x00100000 -> 0xC0100000
+  // TODO: kernel_space_end is not a good way of mapping the kernel-containing memory region!
+#ifdef DEBUG_PAGING
+  printk("sizeof: 0x%x, kern_dir: 0x%x\n", sizeof(page_directory_t), (uint32_t) kernel_directory);
+#endif
   map_region(KERNEL_VIRTUAL_BASE, kernel_space_end);
-
+  //map_vregion(0x0000000, 0x00100000);
+  // Map
   current_directory = kernel_directory;
   set_page_directory((page_directory_t *) (uintptr_t) VIRTUAL_TO_PHYSICAL((uintptr_t) current_directory));
 
