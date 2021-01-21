@@ -60,6 +60,7 @@ uint32_t kdmalloc_int(uint32_t sz, bool align, uint32_t *phy){
 
 uint32_t kmalloc_init(uint32_t start, uint32_t base) {
 	next_v_address = start;
+	printk("placement address: 0x%x\n", next_v_address);
 	if ((next_v_address & PAGE_MASK_L) != 0) {
 		next_v_address &= PAGE_MASK_H;
 		next_v_address += PAGE_TAM;

@@ -1,4 +1,6 @@
 #include <kernel.h>
+#include <stdbool.h>
+#include <isr.h>
 
 extern void* KERNEL_VADDR_END, * KERNEL_VADDR_START, * KERNEL_PHYSADDR_END, * KERNEL_PHYSADDR_START;
 
@@ -124,29 +126,34 @@ void _kmain(unsigned int initium_signature, uint32_t *initial_ebp, uint32_t *ini
     uint32_t *ptr = (uintptr_t*)0xC0100000;
     uint32_t do_page_fault = *ptr;
 
-    printk("2nd Memory pointer accessed is 0xC0100000, mmu returns 0x%x\n", do_page_fault);
+    printk("1st Memory pointer accessed is 0xC0100000, mmu returns 0x%x\n", do_page_fault);
 
-    // This code should page fault because we're accessing a physical memory address that isn't paged (It doesn't point to an MMU aware section)
-    uint32_t *ptr2 = (uintptr_t*)0x00100000;
+    uint32_t *ptr2 = (uintptr_t*)0xC0000000;
     uint32_t do_page_fault2 = *ptr2;
 
-    printk("Memory pointer accessed is 0x00100000, mmu returns 0x%x\n", do_page_fault2);
+    printk("2nd Memory pointer accessed is 0xC0000000, mmu returns 0x%x\n", do_page_fault2);
 
-    // This code should page fault because we don't have 0xA0000000 paged anywhere
-    uint32_t *ptr3 = (uintptr_t*)0xA0000000;
+    // This code should page fault because we're accessing a physical memory address that isn't paged (It doesn't point to an MMU aware section)
+    uint32_t *ptr3 = (uintptr_t*)0x00100000;
     uint32_t do_page_fault3 = *ptr3;
 
-    printk("3rd Memory pointer accessed is 0xA0000000, mmu returns 0x%x\n", do_page_fault3);
+    printk("3rd Memory pointer accessed is 0x00100000, mmu returns 0x%x\n", do_page_fault3);
+
+    // This code should page fault because we don't have 0xA0000000 paged anywhere
+    uint32_t *ptr4 = (uintptr_t*)0xA0000000;
+    uint32_t do_page_fault4 = *ptr4;
+
+    printk("4th Memory pointer accessed is 0xA0000000, mmu returns 0x%x\n", do_page_fault4);
     
 #endif
 
     /* IRQ0: timer */
     init_timer(50);
-    
+
     /* IRQ1: keyboard */
     init_keyboard();
 
-    printk("\n> ");
+    init_multitasking();
 
 	for(;;);
 }
