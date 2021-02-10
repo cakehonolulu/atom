@@ -14,7 +14,6 @@ bootloader:
 	$(OBJCOPY) --only-keep-debug boot1.elf boot1.sym
 	$(OBJCOPY) --strip-debug boot1.elf
 	$(OBJCOPY) -O binary boot1.elf boot1.bin
-	cp boot1.bin boot0
 	$(AS) boot0.S -o boot0.o --32 -Iinitium
 	$(NASM) -f elf boot0helper.asm -o boot0helper.o 
 	$(LD) -T linkboot0.ld -o boot0.elf boot0.o boot0helper.o
