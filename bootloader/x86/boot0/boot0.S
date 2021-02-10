@@ -52,9 +52,13 @@ boot0:												# boot0 function
 	mov $0x3, %ax									# Use VGA Text Mode
 	int $0x10										# Call BIOS interrupt 13.
 
-	mov $boot0LoadedMessage, %bx
-	call boot0print
-	call boot0printnl
+	mov $0xB800, %ax								# Don't bother printing text, an "L" at the leftmost column at the top will suffice
+	mov %ax, %ds 									# TODO: Add why we do this in the bootloader's documentation (Document each error code),
+	movb $'L', 0 									# L stands for Loaded for example, D for error... etc
+	movb $0x0F, 1
+
+	xor %ax, %ax
+	mov %ax, %ds
 
 	mov %dl, boot0bootdrive							# Store BIOS dl value containing the boot drive number.
 
@@ -88,40 +92,14 @@ boot0ResetDrive:									# Function to reset floppy drive in order to ensure it'
 	hlt
 	jmp .hlt
 
-boot0print:
-	pusha
-.boot0printchar:
-	mov (%bx), %al
-	cmp $0x0, %al
-	je .boot0printdone
-	mov $0x0E, %ah
-	int $0x10
-	add $0x1, %bx
-	jmp .boot0printchar
-.boot0printdone:
-	popa
-	ret
-
-boot0printnl:
-    pusha
-    mov $0x0E, %ah
-    mov $0x0A, %al
-    int $0x10
-    mov $0x0D, %al
-    int $0x10
-    popa
-    ret
-
 boot0diskerror:
-	mov $boot0DiskErrorMessage, %bx
-	call boot0print
-	call boot0printnl
-	mov %ah, %dh 									# TODO: Print in hex what kind of error we've got.
+	mov $0xB800, %ax
+	mov %ax, %ds
+	movb $'D', 0
+	movb $0x4F, 1
 	jmp .hlt
 
 boot0bootdrive: .byte 0
-boot0LoadedMessage: .asciz "Entered 1st Stage"
-boot0DiskErrorMessage: .asciz "Disk Read Error!"
 
 .fill 510-(.-init0), 1, 0							# Preprocessor directive from GNU as that fills 'x'
 													# count of bytes, with a 'y' size that has 'z' value.
