@@ -60,17 +60,17 @@ boot0:												# boot0 function
 	xor %ax, %ax
 	mov %ax, %ds
 
-	mov %dl, boot0bootdrive							# Store BIOS dl value containing the boot drive number.
+	mov %dl, diskDrive								# Store BIOS dl value containing the boot drive number.
 
 
-boot0ResetDrive:									# Function to reset floppy drive in order to ensure it's working correctly.
+diskReset:											# Function to reset floppy drive in order to ensure it's working correctly.
 	mov	$0x00, %ah									# Set ah to 0 (AH=0x00 -> Reset Disk Function).
-	mov boot0bootdrive, %dl							# Move boot0bootdrive value back into dl.
+	mov diskDrive, %dl								# Move diskDrive value back into dl.
 	int	$0x13										# Call BIOS interrupt 13.
-	jc boot0ResetDrive								# If Carry Flag is set (CF=1) an error has ocurred, run the function again.
+	jc diskReset									# If Carry Flag is set (CF=1) an error has ocurred, run the function again.
 
 													# On this part we'll load our stage 2 bootloader onto 0x7E00 and jump to it.
-	mov boot0bootdrive, %dl							# Move boot0bootdrive value back into dl in case INT13 messes with it.
+	mov diskDrive, %dl								# Move diskDrive value back into dl in case INT13 messes with it.
 	mov $0x2, %ah									# Set ah to 2 (AH=0x02 -> Disk Read Function).
 	mov $I386_BOOT1_SIZE, %al						# Set al to I386_BOOT1_SIZE (AL=$I386_BOOT1_SIZE) -> Sectors to be readed.
 													# Where I386_BOOT1_SIZE equals to the number of sectors occupied by the boot1 binary rounded 1 sector up.
@@ -82,9 +82,9 @@ boot0ResetDrive:									# Function to reset floppy drive in order to ensure it'
 	mov %bx, %es									# Move bx onto our extra segment register to prepare the jump.
 	mov $0x7E00, %bx								# Set our bx register with the adress we'll jump to.
 	int $0x13										# Call BIOS interrupt 13.
-	jc boot0diskerror
+	jc diskError
 
-	mov boot0bootdrive, %bx
+	mov diskDrive, %bx
 	push %bx
 	ljmp $0x0, $0x7E00								# Long jump into our stage 2 bootloader. [0x7E00:0x0] -> CS=0x7E00; IP=0x0
 	cli
@@ -92,14 +92,14 @@ boot0ResetDrive:									# Function to reset floppy drive in order to ensure it'
 	hlt
 	jmp .hlt
 
-boot0diskerror:
+diskError:
 	mov $0xB800, %ax
 	mov %ax, %ds
 	movb $'D', 0
 	movb $0x4F, 1
 	jmp .hlt
 
-boot0bootdrive: .byte 0
+diskDrive: .byte 0
 
 .fill 510-(.-init0), 1, 0							# Preprocessor directive from GNU as that fills 'x'
 													# count of bytes, with a 'y' size that has 'z' value.
