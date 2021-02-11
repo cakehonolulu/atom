@@ -20,9 +20,8 @@
 #ifdef I_FS_FAT16
 # init0_fat16 function
 init0_fat16:	
-.intel_syntax noprefix											
-	jmp short init0_fat16_start
-.att_syntax prefix
+# TODO/HACK: Do we really need: .intel_syntax noprefix and .att_syntax prefix in jmp short init0_fat16_start ?
+	jmp init0_fat16_start
 	nop
 
 # Boot Parameter Block (BPB)
