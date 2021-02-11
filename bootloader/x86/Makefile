@@ -1,25 +1,49 @@
 AR = i786-elf-ar
 AS = i786-elf-as
 CC = i786-elf-gcc
+CPP = i786-elf-cpp
 LD = i786-elf-ld
 NASM = nasm
 OBJCOPY = i786-elf-objcopy
 
 .PHONY: bootloader
 
+ifeq ($(I_FS_FAT16), 1)
 bootloader:
 	$(NASM) -f elf boot1helper.asm -o boot1helper.o 
-	$(AS) boot1.S -o boot1.o --32 -Iinitium
-	$(LD) -T linkboot1.ld -o boot1.elf boot1.o boot1helper.o
+	$(CPP) boot1.S -o boot1p.S -DI_FS_FAT16 -m32 -Iinitium
+	$(AS) boot1p.S -o boot1.o -DI_FS_FAT16 --32 -Iinitium
+	$(LD) -T linker/linkboot1.ld -o boot1.elf boot1.o boot1helper.o
 	$(OBJCOPY) --only-keep-debug boot1.elf boot1.sym
 	$(OBJCOPY) --strip-debug boot1.elf
 	$(OBJCOPY) -O binary boot1.elf boot1.bin
-	$(AS) boot0.S -o boot0.o --32 -Iinitium
-	$(NASM) -f elf boot0helper.asm -o boot0helper.o 
-	$(LD) -T linkboot0.ld -o boot0.elf boot0.o boot0helper.o
+	$(CPP) boot0.S -o boot0p.S -DI_FS_FAT16 -m32 -Iinitium
+	$(AS) boot0p.S -o boot0.o -DI_FS_FAT16 --32 -Iinitium
+	$(NASM) -f elf boot0helper.asm -o boot0helper.o
+	$(LD) -T linker/linkboot0_fat16.ld -o boot0.elf boot0.o boot0helper.o
 	$(OBJCOPY) --only-keep-debug boot0.elf boot0.sym
 	$(OBJCOPY) --strip-debug boot0.elf
 	$(OBJCOPY) -O binary boot0.elf boot0.bin
+endif
+
+ifeq ($(I_FS_NONE), 1)
+bootloader:
+	echo LOL
+	$(NASM) -f elf boot1helper.asm -o boot1helper.o 
+	$(CPP) boot1.S -o boot1p.S -DI_FS_NONE -m32 -Iinitium
+	$(AS) boot1p.S -o boot1.o -DI_FS_NONE --32 -Iinitium
+	$(LD) -T linker/linkboot1.ld -o boot1.elf boot1.o boot1helper.o
+	$(OBJCOPY) --only-keep-debug boot1.elf boot1.sym
+	$(OBJCOPY) --strip-debug boot1.elf
+	$(OBJCOPY) -O binary boot1.elf boot1.bin
+	$(CPP) boot0.S -o boot0p.S -DI_FS_NONE -m32 -Iinitium
+	$(AS) boot0p.S -o boot0.o -DI_FS_NONE --32 -Iinitium
+	$(NASM) -f elf boot0helper.asm -o boot0helper.o
+	$(LD) -T linker/linkboot0.ld -o boot0.elf boot0.o boot0helper.o
+	$(OBJCOPY) --only-keep-debug boot0.elf boot0.sym
+	$(OBJCOPY) --strip-debug boot0.elf
+	$(OBJCOPY) -O binary boot0.elf boot0.bin
+endif
 
 clean:
 	rm -f *.o
@@ -27,3 +51,5 @@ clean:
 	rm -f *.sym
 	rm -f *.bin
 	rm -f *.elf
+	-rm boot0p.S
+	-rm boot1p.S

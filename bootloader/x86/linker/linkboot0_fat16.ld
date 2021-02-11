@@ -1,4 +1,4 @@
-ENTRY(init0)
+ENTRY(init0_fat16)
 
 OUTPUT_FORMAT(elf32-i386)
 
@@ -32,5 +32,4 @@ SECTIONS {
     {
       *(.stage2_discard)
     }
-    
 }

@@ -2,13 +2,23 @@
 
 .extern I386_BOOT1_SIZE
 
-.section .text										# Text section.
-
 .set BOOT1_STARTING_SECTOR, 0x2						# This is a constant! It will always be the same!
 
-.global init0										# Make our function globally available.
-.global boot0										# Make our function globally available.
-init0:												# init0 function
+.global boot0										# Make our functions globally available.
+
+#ifdef I_FS_FAT16
+.global init0_fat16
+#endif
+
+#ifdef I_FS_NONE
+.global init0
+#endif
+
+.section .text										# Text section.
+
+#ifdef I_FS_FAT16
+# init0_fat16 function
+init0_fat16:												
 	ljmp $0, $boot0									# [CS : IP] We long jump to CS=0x0 and IP=boot0,
 													# where our bootloader starts. That way, we don't assume
 													# segments which, on some computers can result in strange errors,
@@ -22,6 +32,26 @@ init0:												# init0 function
 													# All of this, effectively sets Code Segment and Instruction Pointer
 													# to the expected values by this bootloader that way it doesn't error out
 													# on strange BIOS configurations that our code assumptions don't have in mind.
+
+#endif
+
+#ifdef I_FS_NONE
+# init0 function
+init0:												
+	ljmp $0, $boot0									# [CS : IP] We long jump to CS=0x0 and IP=boot0,
+													# where our bootloader starts. That way, we don't assume
+													# segments which, on some computers can result in strange errors,
+													# as BIOSes might set CS=0x7C00 and IP=0x0000 [ 0x7C00 = 0x0000 ]
+													# and cause undefined behaviours on our code.
+													# Starting our code with a jump instruction, also
+													# makes it compatible with very old Compaq computers
+													# that instead of searching for 0x55AA MBR signature
+													# at the end of the first sector of the bootable media,
+													# looks for a jump instruction on the first bytes of it.
+													# All of this, effectively sets Code Segment and Instruction Pointer
+													# to the expected values by this bootloader that way it doesn't error out
+													# on strange BIOS configurations that our code assumptions don't have in mind.
+#endif
 
 boot0:												# boot0 function
 													# Note: We'll be avoiding FS and GS registers in order to
@@ -52,10 +82,12 @@ boot0:												# boot0 function
 	mov $0x3, %ax									# Use VGA Text Mode
 	int $0x10										# Call BIOS interrupt 13.
 
+#ifdef I_FS_FAT16
 	mov $0xB800, %ax								# Don't bother printing text, an "L" at the leftmost column at the top will suffice
 	mov %ax, %ds 									# TODO: Add why we do this in the bootloader's documentation (Document each error code),
 	movb $'L', 0 									# L stands for Loaded for example, D for error... etc
 	movb $0x0F, 1
+#endif
 
 	xor %ax, %ax
 	mov %ax, %ds
@@ -101,9 +133,20 @@ diskError:
 
 diskDrive: .byte 0
 
+#ifdef I_FS_FAT16
+.fill 510-(.-init0_fat16), 1, 0						# Preprocessor directive from GNU as that fills 'x'
+													# count of bytes, with a 'y' size that has 'z' value.
+													# args: count, size, value
+
+.word 0xAA55										# BIOS 2-byte magic number that enables the proper
+													# booting of this bootloader
+#endif
+
+#ifdef I_FS_NONE
 .fill 510-(.-init0), 1, 0							# Preprocessor directive from GNU as that fills 'x'
 													# count of bytes, with a 'y' size that has 'z' value.
 													# args: count, size, value
 
 .word 0xAA55										# BIOS 2-byte magic number that enables the proper
 													# booting of this bootloader
+#endif

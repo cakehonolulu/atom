@@ -41,7 +41,14 @@ HDD_SECOND_STAGE_SECTOR = 1
 HDD_KERNEL_STARTING_SECTOR = 4
 
 LDSCRIPT = kernel/arch/$(ARCH)/linker.ld
-LDFLAGS =
+
+ifdef I_FS_FAT16
+LDFLAGS = -Wl,-DI_FS_FAT16=1
+endif
+
+ifdef I_FS_NONE
+LDFLAGS = -Wl,-DI_FS_NONE=1
+endif
 
 .PHONY: clean bochs qemu qemu-debug
 
