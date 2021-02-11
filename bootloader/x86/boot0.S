@@ -8,6 +8,7 @@
 
 #ifdef I_FS_FAT16
 .global init0_fat16
+.global init0_fat16_start
 #endif
 
 #ifdef I_FS_NONE
@@ -18,7 +19,39 @@
 
 #ifdef I_FS_FAT16
 # init0_fat16 function
-init0_fat16:												
+init0_fat16:	
+.intel_syntax noprefix											
+	jmp short init0_fat16_start
+.att_syntax prefix
+	nop
+
+# Boot Parameter Block (BPB)
+bootsector:
+  iOEM:          .ascii "INITIUM1"    # OEM String
+  iSectSize:     .word  0x200         # bytes per sector
+  iClustSize:    .byte  1             # sectors per cluster
+  iResSect:      .word  1             # #of reserved sectors
+  iFatCnt:       .byte  2             # #of FAT copies
+  iRootSize:     .word  224           # size of root directory
+  iTotalSect:    .word  2880          # total # of sectors if over 32 MB
+  iMedia:        .byte  0xF0          # media Descriptor
+  iFatSize:      .word  9             # size of each FAT
+  iTrackSect:    .word  9             # sectors per track
+  iHeadCnt:      .word  2             # number of read-write heads
+  iHiddenSect:   .int   0             # number of hidden sectors
+  iSect32:       .int   0             # # sectors for over 32 MB
+  iBootDrive:    .byte  0             # holds drive that the boot sector came from
+  iReserved:     .byte  0             # reserved, empty
+  iBootSign:     .byte  0x29          # extended boot sector signature
+  iVolID:        .ascii "seri"        # disk serial
+  acVolumeLabel: .ascii "BOOTLOAD   " # volume label
+  acFSType:      .ascii "FAT16   "    # file system type
+
+#endif
+
+#ifdef I_FS_NONE
+# init0 function
+init0:												
 	ljmp $0, $boot0									# [CS : IP] We long jump to CS=0x0 and IP=boot0,
 													# where our bootloader starts. That way, we don't assume
 													# segments which, on some computers can result in strange errors,
@@ -32,12 +65,10 @@ init0_fat16:
 													# All of this, effectively sets Code Segment and Instruction Pointer
 													# to the expected values by this bootloader that way it doesn't error out
 													# on strange BIOS configurations that our code assumptions don't have in mind.
-
 #endif
 
-#ifdef I_FS_NONE
-# init0 function
-init0:												
+#ifdef I_FS_FAT16
+init0_fat16_start:
 	ljmp $0, $boot0									# [CS : IP] We long jump to CS=0x0 and IP=boot0,
 													# where our bootloader starts. That way, we don't assume
 													# segments which, on some computers can result in strange errors,
