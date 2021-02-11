@@ -28,7 +28,6 @@ endif
 
 ifeq ($(I_FS_NONE), 1)
 bootloader:
-	echo LOL
 	$(NASM) -f elf boot1helper.asm -o boot1helper.o 
 	$(CPP) boot1.S -o boot1p.S -DI_FS_NONE -m32 -Iinitium
 	$(AS) boot1p.S -o boot1.o -DI_FS_NONE --32 -Iinitium

@@ -60,11 +60,21 @@ floppy.img: arch bloader
 	-@dd conv=notrunc if=bootloader/$(ARCH)/boot1.bin of=floppy.img bs=512 seek=$(FLOPPY_SECTOR2) status=none
 	-@dd conv=notrunc if=kernel/arch/$(ARCH)/kernel.bin of=floppy.img bs=512 seek=$(FLOPPY_KERNEL_STARTING_SECTOR) status=none
 
+ifdef I_FS_FAT16
+hdd.img: arch bloader
+	-@bximage -mode=create -hd=10M -q hdd.img >/dev/null # 10485760 Bytes = 10 Mega Bytes
+	-@dd conv=notrunc if=bootloader/$(ARCH)/boot0.bin of=hdd.img bs=512 seek=$(HDD_MBR_SECTOR) status=none
+	-@dd conv=notrunc if=bootloader/$(ARCH)/boot1.bin of=hdd.img bs=512 seek=$(HDD_SECOND_STAGE_SECTOR) status=none
+	-@dd conv=notrunc if=kernel/arch/$(ARCH)/kernel.bin of=hdd.img bs=512 seek=$(HDD_KERNEL_STARTING_SECTOR) status=none
+endif
+
+ifdef I_FS_NONE
 hdd.img: arch bloader
 	-@bximage -mode=create -hd=16M -q hdd.img >/dev/null # 16777216 Bytes = 16 Mega Bytes
 	-@dd conv=notrunc if=bootloader/$(ARCH)/boot0.bin of=hdd.img bs=512 seek=$(HDD_MBR_SECTOR) status=none
 	-@dd conv=notrunc if=bootloader/$(ARCH)/boot1.bin of=hdd.img bs=512 seek=$(HDD_SECOND_STAGE_SECTOR) status=none
 	-@dd conv=notrunc if=kernel/arch/$(ARCH)/kernel.bin of=hdd.img bs=512 seek=$(HDD_KERNEL_STARTING_SECTOR) status=none
+endif
 
 arch:
 	make -C kernel/arch/$(ARCH)
@@ -77,8 +87,15 @@ clean:
 	make -C bootloader/$(ARCH) clean
 	-@rm hdd.img
 
+ifdef I_FS_FAT16
+bochs:
+	$(BOCHS) -q -f bochsrc.bxrc 'ata0-master: type=disk, path=hdd.img, mode=flat, cylinders=20, heads=16, spt=63, sect_size=512, model="Generic 1234", biosdetect=auto, translation=auto'
+endif
+
+ifdef I_FS_NONE
 bochs:
 	$(BOCHS) -q -f bochsrc.bxrc 'ata0-master: type=disk, path=hdd.img, mode=flat, cylinders=32, heads=16, spt=63, sect_size=512, model="Generic 1234", biosdetect=auto, translation=auto'
+endif
 
 qemu: $(FLOPPY_DISK)
 	$(QEMU) -fda $^ $(QEMU_ARGUMENTS)
