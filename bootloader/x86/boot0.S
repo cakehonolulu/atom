@@ -68,19 +68,23 @@ init0:
 
 #ifdef I_FS_FAT16
 init0_fat16_start:
-	ljmp $0, $boot0									# [CS : IP] We long jump to CS=0x0 and IP=boot0,
-													# where our bootloader starts. That way, we don't assume
-													# segments which, on some computers can result in strange errors,
-													# as BIOSes might set CS=0x7C00 and IP=0x0000 [ 0x7C00 = 0x0000 ]
-													# and cause undefined behaviours on our code.
-													# Starting our code with a jump instruction, also
-													# makes it compatible with very old Compaq computers
-													# that instead of searching for 0x55AA MBR signature
-													# at the end of the first sector of the bootable media,
-													# looks for a jump instruction on the first bytes of it.
-													# All of this, effectively sets Code Segment and Instruction Pointer
-													# to the expected values by this bootloader that way it doesn't error out
-													# on strange BIOS configurations that our code assumptions don't have in mind.
+	cld												# Clear direction flag, we're going to mess with string operations so we want to
+													# be sure that we're on a good environment to start with (Sanitize)
+	
+	xor %ax, %ax									# Fix %ax register (Set to 0)
+	
+	mov $0x7C00, %si								# Input the source memory location
+	mov $0x500, %di									# Input the destination memory location
+	movw $256, %cx									# 256 Words = 512 Bytes (Exact MBR size)
+	rep	movsb										# Relocation!
+
+	movb $512, %cl									# After relocating, we're going to zero-out the MBR at the original location (0x7C00)
+	rep	stosb										# This is handled by rep stosb pointing the buffer at 0x7C00:0 and setting the size to 512 bytes
+	
+	jmp ((init0_fat16_sanitize-0x7C00)+0x500)		# This computes the value for IP after the relocation (Subtracting 0x7C00 and then adding the
+													# the corresponding destination's memory location)	
+init0_fat16_sanitize:
+	ljmp $0, $boot0									# Make sure we also compute the new IP value
 #endif
 
 boot0:												# boot0 function
@@ -142,13 +146,13 @@ diskReset:											# Function to reset floppy drive in order to ensure it's wo
 	mov $0x00, %dh									# Set dh to 0 (DH=0x00) -> Head 0 of the drive.
 	xor %bx, %bx									# Set bx to 0.
 	mov %bx, %es									# Move bx onto our extra segment register to prepare the jump.
-	mov $0x7E00, %bx								# Set our bx register with the adress we'll jump to.
+	mov $0x7C00, %bx								# Set our bx register with the adress we'll jump to.
 	int $0x13										# Call BIOS interrupt 13.
 	jc diskError
 
 	mov diskDrive, %bx
 	push %bx
-	ljmp $0x0, $0x7E00								# Long jump into our stage 2 bootloader. [0x7E00:0x0] -> CS=0x7E00; IP=0x0
+	ljmp $0x0, $0x7C00								# Long jump into our stage 2 bootloader. [0x7E00:0x0] -> CS=0x7E00; IP=0x0
 	cli
 .hlt:
 	hlt
