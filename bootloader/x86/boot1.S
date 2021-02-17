@@ -240,7 +240,6 @@ boot1UnrealModeReadKernel:
 	call boot1printnl
 	
 	mov $0x08, %ah
-	xchg %bx, %bx
 	mov BOOT_DRIVE_NUMBER, %dl
 	int $0x13
 	

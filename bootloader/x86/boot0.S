@@ -43,7 +43,7 @@ bootsector:
   bios_boot_drive:			.byte	0				# BIOS-provided boot drive
   reserved:					.byte	0				# Reserved, set to 0
   extended_bpb_signature:	.byte	0x29			# Extended BPB signature
-  volumeid_name				.ascii	"seri"			# Disk serial
+  volumeid_name:			.ascii	"seri"			# Disk serial
   volume_label:				.ascii	"BOOTLOAD   "	# Volume label
   fs_type:					.ascii	"FAT16   "		# File system type
 #endif
@@ -55,15 +55,12 @@ init0_nofs:
 													# be sure that we're on a good environment to start with (Sanitize)
 	
 	xor %ax, %ax									# Fix %ax register (Set to 0)
-	
+
 	mov $0x7C00, %si								# Input the source memory location
 	mov $0x500, %di									# Input the destination memory location
 	movw $256, %cx									# 256 Words = 512 Bytes (Exact MBR size)
 	rep	movsb										# Relocation!
 
-	movw $256, %cx									# After relocating, we're going to zero-out the MBR at the original location (0x7C00)
-	rep	stosb										# This is handled by rep stosb pointing the buffer at 0x7C00:0 and setting the size to 512 bytes
-	
 	jmp ((init0_nofs_sanitize-0x7C00)+0x500)		# This computes the value for IP after the relocation (Subtracting 0x7C00 and then adding the
 													# the corresponding destination's memory location)	
 init0_nofs_sanitize:
@@ -88,15 +85,14 @@ init0_fat16_start:
 													# be sure that we're on a good environment to start with (Sanitize)
 	
 	xor %ax, %ax									# Fix %ax register (Set to 0)
+
+	mov %dl, bios_boot_drive 						# Move the boot drive to the bpb struct
 	
 	mov $0x7C00, %si								# Input the source memory location
 	mov $0x500, %di									# Input the destination memory location
 	movw $256, %cx									# 256 Words = 512 Bytes (Exact MBR size)
 	rep	movsb										# Relocation!
 
-	movb $512, %cl									# After relocating, we're going to zero-out the MBR at the original location (0x7C00)
-	rep	stosb										# This is handled by rep stosb pointing the buffer at 0x7C00:0 and setting the size to 512 bytes
-	
 	jmp ((init0_fat16_sanitize-0x7C00)+0x500)		# This computes the value for IP after the relocation (Subtracting 0x7C00 and then adding the
 													# the corresponding destination's memory location)	
 init0_fat16_sanitize:
@@ -134,6 +130,7 @@ boot0:												# boot0 function
 													# operations increment the segment registers (Such as SI & DI).
 													# Invoking a CLD instruction, also makes us aware of the DF's flag
 													# contents, in order to make 0 assumptions on how the BIOS leaves this value.
+
 	mov $0x3, %ax									# Use VGA Text Mode
 	int $0x10										# Call BIOS interrupt 13.
 
@@ -144,6 +141,11 @@ boot0:												# boot0 function
 	movb $0x0F, 1
 #endif
 
+#ifdef I_FS_FAT16
+
+#endif
+
+#ifdef I_FS_NONE
 	xor %ax, %ax
 	mov %ax, %ds
 
@@ -187,6 +189,7 @@ diskError:
 	jmp .hlt
 
 diskDrive: .byte 0
+#endif
 
 #ifdef I_FS_FAT16
 .fill 510-(.-init0_fat16), 1, 0						# Preprocessor directive from GNU as that fills 'x'
