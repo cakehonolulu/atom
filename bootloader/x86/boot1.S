@@ -23,7 +23,7 @@ init1:
 
 .code16
 
-.set MEMORY_MAP, 0x0700
+.set MEMORY_MAP, 0x0900
 
 /* Basic GDT. set-up for Unreal Mode, change descriptor 1 & 2 alongside 16->32 bit segment mode later on */
 gdt_start:
@@ -84,7 +84,7 @@ LoadedKernelMessage: .asciz "Loaded Kernel!"
 .code32
 
 /* Static Bootloader Values */
-.set BOOT1_PROTECTED_MODE_STACK_ADDRESS, 0x9C000
+.set BOOT1_PROTECTED_MODE_STACK_ADDRESS, 0x4000
 .set VGA_MEMORY_LOCATION, 0xB8000
 .set VGA_MEMORY_ATTRIBUTES, 0x0F
 
@@ -107,7 +107,7 @@ init1:
 	xor %ax, %ax												# Set ax to 0.
 	mov %ax, %ds												# Set ds to 0.
 	mov %ax, %ss												# Set up stack segment.
-	mov $0xFFFF, %bx											# Set the stack pointer register with 0x7C00.
+	mov $0x0700, %bx											# Set the stack pointer register with 0x7C00.
 																# Stack Dissasembly:
 																# Top stack address:	-> 0x7C00
 	mov %bx, %ss 												# Base stack address:	-> 0x7FFF (1023 bytes of Stack)
@@ -161,7 +161,7 @@ boot1HugeUnrealMode:
 	xor %ax, %ax
 	mov %ax, %es
 	mov %ax, %ds
-	mov $0x9000, %sp											# Set the stack pointer register with 0x9000.
+	mov $0x3000, %sp											# Set the stack pointer register with 0x9000.
 																# Stack Dissasembly:
 																# Top stack adress:		-> 0x9000
 	mov %ax, %ss												# Set up stack segment

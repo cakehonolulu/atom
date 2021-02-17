@@ -8,15 +8,38 @@
 |
 | 0x00000500 ---------------
 |
-|		Free Memory -> Stack grows downwards from 0x00007C00
+|		Initium: Stage 1 Bootloader (512 bytes) (Relocated from 0x7C00)
 |
-| 0x00007C00 ---------------
+| 0x00000700 ---------------
 |
-|		Initium: Stage 1 Bootloader (512 bytes)
+|		Initium: Stage 1 Stack
 |
-| 0x00007E00 ---------------
+| 0x00000900 ---------------
+|
+|		Initium: Memory Map and free space
+|
+| 0x00001000 ---------------
 |
 |		Initium: Stage 2 Bootloader (Variable Size)
+|		
+| 0x00002000 ---------------
+|	
+|		Initium: Stage 2 (Unreal Mode) Stack
+|		
+| 0x00003000 ---------------
+|			
+|		Initium: Stage 2 (Protected Mode) Stack
+|	
+| 0x00004000 ---------------
+|			
+| 		Free space (Roughly 500 KiB)
+|	
+| 0x0007FFFF ---------------
+|
+|		BIOS-related stuff
+|	
+| 0x000FFFFF ---------------
+|
 |
 | 0x00100000 ---------------
 |

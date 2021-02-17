@@ -1,4 +1,4 @@
-ENTRY(init0)
+ENTRY(init0_nofs)
 
 OUTPUT_FORMAT(elf32-i386)
 

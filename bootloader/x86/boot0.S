@@ -1,10 +1,11 @@
-.code16												# Produce 16-Bit Code (For Real Mode).
+.code16												# Compile 16-Bit Code (Targetting Real Mode)
 
-.extern I386_BOOT1_SIZE
+.extern I386_BOOT1_SIZE								# This constant is calculated at compile-time, the size
+													# is measured in sectors (Each, 512 byte wide)
 
 .set BOOT1_STARTING_SECTOR, 0x2						# This is a constant! It will always be the same!
 
-.global boot0										# Make our functions globally available.
+.global boot0										# Make our functions globally available
 
 #ifdef I_FS_FAT16
 .global init0_fat16
@@ -12,10 +13,10 @@
 #endif
 
 #ifdef I_FS_NONE
-.global init0
+.global init0_nofs
 #endif
 
-.section .text										# Text section.
+.section .text										# Text section
 
 #ifdef I_FS_FAT16
 # init0_fat16 function
@@ -26,31 +27,30 @@ init0_fat16:
 
 # Boot Parameter Block (BPB)
 bootsector:
-  iOEM:          .ascii "INITIUM1"    # OEM String
-  iSectSize:     .word  0x200         # bytes per sector
-  iClustSize:    .byte  1             # sectors per cluster
-  iResSect:      .word  1             # #of reserved sectors
-  iFatCnt:       .byte  2             # #of FAT copies
-  iRootSize:     .word  224           # size of root directory
-  iTotalSect:    .word  2880          # total # of sectors if over 32 MB
-  iMedia:        .byte  0xF0          # media Descriptor
-  iFatSize:      .word  9             # size of each FAT
-  iTrackSect:    .word  9             # sectors per track
-  iHeadCnt:      .word  2             # number of read-write heads
-  iHiddenSect:   .int   0             # number of hidden sectors
-  iSect32:       .int   0             # # sectors for over 32 MB
-  iBootDrive:    .byte  0             # holds drive that the boot sector came from
-  iReserved:     .byte  0             # reserved, empty
-  iBootSign:     .byte  0x29          # extended boot sector signature
-  iVolID:        .ascii "seri"        # disk serial
-  acVolumeLabel: .ascii "BOOTLOAD   " # volume label
-  acFSType:      .ascii "FAT16   "    # file system type
-
+  oem_string:				.ascii	"INITIUM1"		# OEM String, 8 char wide, INITIUM for the bootloader name, number 1 for the version
+  sector_size:				.word	0x200			# How many bytes per sector (512 is the default)
+  cluster_size:				.byte	1				# How many sectors per cluster
+  reserved_sectors:			.word	1				# How many reserved sectors
+  fat_count:				.byte	2				# How many F(ile) A(llocation) T(ables) we need
+  fat_rootdir_size:			.word	224				# Size of FAT's Root Directory
+  total_sectors:			.word	2880			# Total number of sectors
+  media_descriptor:			.byte	0xF0			# Media Descriptor Value
+  fat_size:					.word	9				# Size of each FAT
+  spt:						.word	9				# Sectors per track
+  heads_count:				.word	2				# Number of heads
+  hidden_sector_count:		.int	0				# Number of hidden sectors
+  high_sector_count:		.int	0				# Sectors over 32MB mark
+  bios_boot_drive:			.byte	0				# BIOS-provided boot drive
+  reserved:					.byte	0				# Reserved, set to 0
+  extended_bpb_signature:	.byte	0x29			# Extended BPB signature
+  volumeid_name				.ascii	"seri"			# Disk serial
+  volume_label:				.ascii	"BOOTLOAD   "	# Volume label
+  fs_type:					.ascii	"FAT16   "		# File system type
 #endif
 
 #ifdef I_FS_NONE
-# init0 function
-init0:
+# init0_nofs function
+init0_nofs:
 	cld												# Clear direction flag, we're going to mess with string operations so we want to
 													# be sure that we're on a good environment to start with (Sanitize)
 	
@@ -104,26 +104,31 @@ init0_fat16_sanitize:
 #endif
 
 boot0:												# boot0 function
-													# Note: We'll be avoiding FS and GS registers in order to
-													# make our bootloader as compatible as we can until we
-													# reach 32-bits, where they are used and that, makes them uncompatible
-													# with pre-80386+ processors.
+													# Note: We'll try avoiding FS and GS registers in order to
+													# make our bootloader as compatible with every machine possible until we
+													# reach 32-bits, where they will be used, but this bootloader might be used on non-x86_32 PC's
+													# so using them would make it instantaneously uncompatible with pre-80386+ processors.
 													# Thoose 2 registers were added to 80386+ CPU's.
+													# TODO: Make device-tree like structures to enable specific compile options
+													# that target specific CPUs so that we can divide the bootloader better.
 	xor %ax, %ax									# Xor'ing ax to ax, results in a 0, as xor'ing two registers with
 													# the same value always results in 0.
 	mov %ax, %ds									# Move 0x0 to the data segment register.
 													# We null the data segment, because if we don't, it can overlap
 													# with the code segment.
 	mov %ax, %es									# Null extra segment too.
-	mov $0x7C00, %bx								# Move 0x5C00 to bx.
+	mov $0x0900, %bx								# Move 0x0900 to bx.
 	cli												# Disable interrupts to circumvent a bug present on
 													# early 8088 CPU's.
+													# Even though that was the main concern primarly, disabling interrupts when messing with
+													# the stack is a good thing as of now, to avoid stack corruption if an interrupt is caught in
+													# the middle of the stack change!
 	mov %bx, %ss									# Move ax (Which now is 0) to the stack segment register.
 													# registers that contain the same, will always result in 0.
 	mov %ax, %sp									# Set the stack pointer register with 0x7C00.
 													# Stack Dissasembly:
-													# Top stack adress:		-> 0x7C00
-	mov %sp, %bp									# Move sp (Which now is 0x7C00) to the base pointer register.
+													# Top stack adress:		-> 0x0900
+	mov %sp, %bp									# Move sp (Which now is 0x0900) to the base pointer register.
 	sti												# Re-enable interrupts
 	cld												# CLD sets EFLAG's register DF flag to 0, this way, string
 													# operations increment the segment registers (Such as SI & DI).
@@ -162,13 +167,13 @@ diskReset:											# Function to reset floppy drive in order to ensure it's wo
 	mov $0x00, %dh									# Set dh to 0 (DH=0x00) -> Head 0 of the drive.
 	xor %bx, %bx									# Set bx to 0.
 	mov %bx, %es									# Move bx onto our extra segment register to prepare the jump.
-	mov $0x7E00, %bx								# Set our bx register with the adress we'll jump to.
+	mov $0x1000, %bx								# Set our bx register with the adress we'll jump to.
 	int $0x13										# Call BIOS interrupt 13.
 	jc diskError
 
 	mov diskDrive, %bx
 	push %bx 
-	ljmp $0x0, $0x7E00								# Long jump into our stage 2 bootloader. [0x7E00:0x0] -> CS=0x7E00; IP=0x0
+	ljmp $0x0, $0x1000								# Long jump into our stage 2 bootloader. [0x7E00:0x0] -> CS=0x7E00; IP=0x0
 	cli
 .hlt:
 	hlt
@@ -193,7 +198,7 @@ diskDrive: .byte 0
 #endif
 
 #ifdef I_FS_NONE
-.fill 510-(.-init0), 1, 0							# Preprocessor directive from GNU as that fills 'x'
+.fill 510-(.-init0_nofs), 1, 0						# Preprocessor directive from GNU as that fills 'x'
 													# count of bytes, with a 'y' size that has 'z' value.
 													# args: count, size, value
 
