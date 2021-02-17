@@ -31,8 +31,12 @@
 |		Initium: Stage 2 (Protected Mode) Stack
 |	
 | 0x00004000 ---------------
-|			
-| 		Free space (Roughly 500 KiB)
+|
+|		Buffer for loading the kernel before relocation
+|				
+| 0x00010000 ---------------
+|		
+| 		Free space (Roughly 400-500 KiB depending on the kernel size)
 |	
 | 0x0007FFFF ---------------
 |
@@ -43,7 +47,7 @@
 |
 | 0x00100000 ---------------
 |
-|		Kernel Binary
+|		Relocated Kernel Binary
 |
 | 0xffffffff
 ```

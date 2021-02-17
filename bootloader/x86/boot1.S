@@ -262,7 +262,7 @@ boot1UnrealModeReadKernel:
 	mov $0x0, %dh									# Set dh to 0 (DH=0x00) -> Head 0 of the drive.
 	xor %bx, %bx									# Set bx to 0.
 	mov %bx, %es									# Move bx onto our extra segment register to prepare the jump.
-	mov $0x9000, %bx								# Set our bx register with the adress we'll jump to.
+	mov $0x4000, %bx								# Set our bx register with the adress we'll jump to.
 	int $0x13										# Call BIOS interrupt 13.
     jc boot1UnrealModeReadKernelFail
 
@@ -275,7 +275,7 @@ boot1UnrealModeReadKernel:
 	call boot1print
 	call boot1printnl
 
-	mov $0x9000, %esi
+	mov $0x4000, %esi
 	mov $0x100000, %edi
 	mov $0x200, %cx
 	mov $I386_KERNEL_SIZE, %bx // Relocate more sectors
