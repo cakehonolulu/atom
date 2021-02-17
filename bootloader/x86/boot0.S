@@ -50,7 +50,23 @@ bootsector:
 
 #ifdef I_FS_NONE
 # init0 function
-init0:												
+init0:
+	cld												# Clear direction flag, we're going to mess with string operations so we want to
+													# be sure that we're on a good environment to start with (Sanitize)
+	
+	xor %ax, %ax									# Fix %ax register (Set to 0)
+	
+	mov $0x7C00, %si								# Input the source memory location
+	mov $0x500, %di									# Input the destination memory location
+	movw $256, %cx									# 256 Words = 512 Bytes (Exact MBR size)
+	rep	movsb										# Relocation!
+
+	movw $256, %cx									# After relocating, we're going to zero-out the MBR at the original location (0x7C00)
+	rep	stosb										# This is handled by rep stosb pointing the buffer at 0x7C00:0 and setting the size to 512 bytes
+	
+	jmp ((init0_nofs_sanitize-0x7C00)+0x500)		# This computes the value for IP after the relocation (Subtracting 0x7C00 and then adding the
+													# the corresponding destination's memory location)	
+init0_nofs_sanitize:
 	ljmp $0, $boot0									# [CS : IP] We long jump to CS=0x0 and IP=boot0,
 													# where our bootloader starts. That way, we don't assume
 													# segments which, on some computers can result in strange errors,
@@ -99,7 +115,7 @@ boot0:												# boot0 function
 													# We null the data segment, because if we don't, it can overlap
 													# with the code segment.
 	mov %ax, %es									# Null extra segment too.
-	mov $0x5C00, %bx								# Move 0x5C00 to bx.
+	mov $0x7C00, %bx								# Move 0x5C00 to bx.
 	cli												# Disable interrupts to circumvent a bug present on
 													# early 8088 CPU's.
 	mov %bx, %ss									# Move ax (Which now is 0) to the stack segment register.
@@ -146,13 +162,13 @@ diskReset:											# Function to reset floppy drive in order to ensure it's wo
 	mov $0x00, %dh									# Set dh to 0 (DH=0x00) -> Head 0 of the drive.
 	xor %bx, %bx									# Set bx to 0.
 	mov %bx, %es									# Move bx onto our extra segment register to prepare the jump.
-	mov $0x7C00, %bx								# Set our bx register with the adress we'll jump to.
+	mov $0x7E00, %bx								# Set our bx register with the adress we'll jump to.
 	int $0x13										# Call BIOS interrupt 13.
 	jc diskError
 
 	mov diskDrive, %bx
-	push %bx
-	ljmp $0x0, $0x7C00								# Long jump into our stage 2 bootloader. [0x7E00:0x0] -> CS=0x7E00; IP=0x0
+	push %bx 
+	ljmp $0x0, $0x7E00								# Long jump into our stage 2 bootloader. [0x7E00:0x0] -> CS=0x7E00; IP=0x0
 	cli
 .hlt:
 	hlt

@@ -23,7 +23,7 @@ init1:
 
 .code16
 
-.set MEMORY_MAP, 0x0500
+.set MEMORY_MAP, 0x0700
 
 /* Basic GDT. set-up for Unreal Mode, change descriptor 1 & 2 alongside 16->32 bit segment mode later on */
 gdt_start:
@@ -107,7 +107,7 @@ init1:
 	xor %ax, %ax												# Set ax to 0.
 	mov %ax, %ds												# Set ds to 0.
 	mov %ax, %ss												# Set up stack segment.
-	mov $0x7C00, %bx											# Set the stack pointer register with 0x7C00.
+	mov $0xFFFF, %bx											# Set the stack pointer register with 0x7C00.
 																# Stack Dissasembly:
 																# Top stack address:	-> 0x7C00
 	mov %bx, %ss 												# Base stack address:	-> 0x7FFF (1023 bytes of Stack)
@@ -240,6 +240,7 @@ boot1UnrealModeReadKernel:
 	call boot1printnl
 	
 	mov $0x08, %ah
+	xchg %bx, %bx
 	mov BOOT_DRIVE_NUMBER, %dl
 	int $0x13
 	
