@@ -2,7 +2,7 @@
 #include <stdint.h>
 
 #define KERNEL_VIRT_BASE 0xC0000000
-#define MEMORY_MAP_LOCATION (KERNEL_VIRT_BASE + 0x00000500)
+#define MEMORY_MAP_LOCATION (KERNEL_VIRT_BASE + 0x00000700)
 
 enum bios_memmap_type
 {

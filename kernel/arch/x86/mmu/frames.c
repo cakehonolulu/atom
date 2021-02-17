@@ -130,7 +130,7 @@ void init_mmu(uintptr_t kernel_base_ptr, uintptr_t kernel_top_ptr)
   
   //Direccion para el bitmap despues del kernel
   uint32_t next_v_addr = (uint32_t)(((uint32_t) &__KERNEL_END) + 4);
-  printk("kernel_end: 0x%x, next_v_addr 0x%x, real_addr: 0x%x\n\n", (uint32_t) &__KERNEL_END, next_v_addr, (uint32_t)(((uint32_t) &__KERNEL_END) + 4));
+  printk("kernel_end: 0x%x, next_v_addr 0x%x, real_addr: 0x%x\n", (uint32_t) &__KERNEL_END, next_v_addr, (uint32_t)(((uint32_t) &__KERNEL_END) + 4));
   frames_Array = next_v_addr;
   //Obtenemos el tamaño del array
   uint32_t array_tam = INDEX_FROM_BIT(max_frames);
