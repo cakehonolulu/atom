@@ -3,12 +3,12 @@ FOUR_MB_PAGE_SIZE ?= 0
 FOUR_KB_PAGE_SIZE ?= 0
 
 # Tools
-AR = i786-elf-ar
-AS = i786-elf-as
-CC = i786-elf-gcc
-LD = i786-elf-ld
+AR = i686-elf-ar
+AS = i686-elf-as
+CC = i686-elf-gcc
+LD = i686-elf-ld
 NASM = nasm
-OBJCOPY = i786-elf-objcopy
+OBJCOPY = i686-elf-objcopy
 
 # Tool flags
 # We should switch to -nostdlib --freestanding -fno-builtin

@@ -3,9 +3,9 @@ ARCH ?= x86
 QEMU = qemu-system-i386
 
 # Tools.
-CC = i786-elf-gcc
-LD = i786-elf-gcc
-AS = i786-elf-gcc
+CC = i686-elf-gcc
+LD = i686-elf-gcc
+AS = i686-elf-gcc
 
 # Check that we have the required software.
 ifeq (, $(shell which $(CC)))
