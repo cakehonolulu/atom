@@ -63,9 +63,14 @@ floppy.img: arch bloader
 ifdef I_FS_FAT16
 hdd.img: arch bloader
 	-@bximage -mode=create -hd=10M -q hdd.img >/dev/null # 10485760 Bytes = 10 Mega Bytes
+	-@mkfs.fat -F 16 hdd.img
+	-@mkdir disk/
 	-@dd conv=notrunc if=bootloader/$(ARCH)/boot0.bin of=hdd.img bs=512 seek=$(HDD_MBR_SECTOR) status=none
-	-@dd conv=notrunc if=bootloader/$(ARCH)/boot1.bin of=hdd.img bs=512 seek=$(HDD_SECOND_STAGE_SECTOR) status=none
-	-@dd conv=notrunc if=kernel/arch/$(ARCH)/kernel.bin of=hdd.img bs=512 seek=$(HDD_KERNEL_STARTING_SECTOR) status=none
+	-@sudo mount -t msdos -o loop hdd.img disk/
+	-@sudo cp bootloader/$(ARCH)/boot1.bin disk/
+	-@sudo cp kernel/arch/$(ARCH)/kernel.bin disk/
+	-@sudo umount disk/
+	-@rm -r disk/
 endif
 
 ifdef I_FS_NONE
