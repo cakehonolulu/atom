@@ -22,7 +22,9 @@
 # init0_fat16 function
 init0_fat16:	
 # TODO/HACK: Do we really need: .intel_syntax noprefix and .att_syntax prefix in jmp short init0_fat16_start ?
-	jmp init0_fat16_start
+.intel_syntax noprefix
+	jmp short init0_fat16_start
+.att_syntax prefix
 	nop
 
 # Boot Parameter Block (BPB)
@@ -141,16 +143,11 @@ boot0:												# boot0 function
 	movb $0x0F, 1
 #endif
 
-#ifdef I_FS_FAT16
-
-#endif
-
 #ifdef I_FS_NONE
 	xor %ax, %ax
 	mov %ax, %ds
 
 	mov %dl, diskDrive								# Store BIOS dl value containing the boot drive number.
-
 
 diskReset:											# Function to reset floppy drive in order to ensure it's working correctly.
 	mov	$0x00, %ah									# Set ah to 0 (AH=0x00 -> Reset Disk Function).
