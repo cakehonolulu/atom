@@ -31,15 +31,15 @@ init0_fat16:
 bootsector:
   oem_string:				.ascii	"INITIUM1"		# OEM String, 8 char wide, INITIUM for the bootloader name, number 1 for the version
   sector_size:				.word	0x200			# How many bytes per sector (512 is the default)
-  cluster_size:				.byte	1				# How many sectors per cluster
-  reserved_sectors:			.word	1				# How many reserved sectors
-  fat_count:				.byte	2				# How many F(ile) A(llocation) T(ables) we need
-  fat_rootdir_size:			.word	224				# Size of FAT's Root Directory
-  total_sectors:			.word	2880			# Total number of sectors
-  media_descriptor:			.byte	0xF0			# Media Descriptor Value
-  fat_size:					.word	9				# Size of each FAT
-  spt:						.word	9				# Sectors per track
-  heads_count:				.word	2				# Number of heads
+  cluster_size:				.byte	4				# How many sectors per cluster
+  reserved_sectors:			.word	4				# How many reserved sectors
+  fat_count:				.byte	1				# How many F(ile) A(llocation) T(ables) we need
+  fat_rootdir_size:			.word	512				# Size of FAT's Root Directory
+  total_sectors:			.word	20160			# Total number of sectors
+  media_descriptor:			.byte	0xF8			# Media Descriptor Value
+  fat_size:					.word	20				# Size of each FAT
+  spt:						.word	32				# Sectors per track
+  heads_count:				.word	16				# Number of heads
   hidden_sector_count:		.int	0				# Number of hidden sectors
   high_sector_count:		.int	0				# Sectors over 32MB mark
   bios_boot_drive:			.byte	0				# BIOS-provided boot drive
