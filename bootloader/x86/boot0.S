@@ -45,7 +45,7 @@ bootsector:
   bios_boot_drive:			.byte	0				# BIOS-provided boot drive
   reserved:					.byte	0				# Reserved, set to 0
   extended_bpb_signature:	.byte	0x29			# Extended BPB signature
-  volumeid_name:			.ascii	"seri"			# Disk serial
+  volumeid_name:			.int	0xd7450e5		# Disk serial
   volume_label:				.ascii	"BOOTLOAD   "	# Volume label
   fs_type:					.ascii	"FAT16   "		# File system type
 #endif
