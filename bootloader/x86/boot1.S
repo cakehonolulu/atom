@@ -10,6 +10,21 @@
 .code16
 
 init1:
+	mov $0x0e, %ah
+	mov $0x53, %al # Stands for Setup
+	int $0x10
+		mov $0x0e, %ah
+	mov $0x53, %al # Stands for Setup
+	int $0x10
+		mov $0x0e, %ah
+	mov $0x53, %al # Stands for Setup
+	int $0x10
+		mov $0x0e, %ah
+	mov $0x53, %al # Stands for Setup
+	int $0x10
+		mov $0x0e, %ah
+	mov $0x53, %al # Stands for Setup
+	int $0x10
 	cli
 	hlt
 
