@@ -184,16 +184,17 @@ boot0:												# boot0 function
    mov $0x0600, %bx
    mov $0x01, %cx
    push %dx
-   xchg %bx, %bx
+   # xchg %bx, %bx
    call read_sectors
-   xchg %bx, %bx
+   # xchg %bx, %bx
 
-   mov $0x200, %bx
+   mov $0x0600, %bx
    mov %bx, %ax
    add sector_size, %ax
 
 .loop_dir_entries:
-   mov stage2_name, %di
+	xchg %bx, %bx
+   mov $stage2_name, %di
    mov $0x06, %cx
    mov %bx, %si
    rep cmpsb
@@ -216,7 +217,7 @@ boot0:												# boot0 function
 	mulb sectors_per_cluster
 	add data_cluster_offset, %ax
 	mov $1, %cx # STAGE 2 Size
-	mov $0x0600, %bx
+	mov $0x1000, %bx
 	call read_sectors
 	xchg %bx, %bx
 	jmp $0x0, $0x1000
