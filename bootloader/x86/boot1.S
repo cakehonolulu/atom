@@ -10,21 +10,13 @@
 .code16
 
 init1:
-	mov $0x0e, %ah
-	mov $0x53, %al # Stands for Setup
-	int $0x10
-		mov $0x0e, %ah
-	mov $0x53, %al # Stands for Setup
-	int $0x10
-		mov $0x0e, %ah
-	mov $0x53, %al # Stands for Setup
-	int $0x10
-		mov $0x0e, %ah
-	mov $0x53, %al # Stands for Setup
-	int $0x10
-		mov $0x0e, %ah
-	mov $0x53, %al # Stands for Setup
-	int $0x10
+	mov $StageTwoLoaded, %bx								# Print a message that tells we're currently on second stage bootloader.
+
+	call boot1print
+	call boot1printnl
+
+	call boot1EnableA20
+
 	cli
 	hlt
 
@@ -75,11 +67,22 @@ BOOT_DRIVE_NUMBER: .byte 0
 SPT: .byte 0
 NOH: .byte 0
 
+#endif
 /* Bootloader Strings */
 A20AlreadyEnabledMessage: .asciz "A20 Line is already enabled, skipping..." // Bochs for example, enables it regardless the OS
 A20EnabledMessage: .asciz "A20 Line enabled Successfully!"
-Stage2LoadedMessage: .asciz "Entered 2nd Stage"
 
+#ifdef I_FS_NONE
+.section .data
+StageTwoLoaded: .asciz "[IBIN] Entered Stage 2"
+#endif
+
+#ifdef I_FS_FAT16
+.section .data
+StageTwoLoaded: .asciz "[IF16] Entered Stage 2"
+#endif
+
+#ifdef I_FS_NONE
 UnrealModeGDTLoadedMessage: .asciz "Unreal Mode GDT Loaded"
 EnteredUnrealModeMessage: .asciz "Entered Unreal Mode"
 
@@ -128,7 +131,7 @@ init1:
 	mov %bx, %ss 												# Base stack address:	-> 0x7FFF (1023 bytes of Stack)
 																# Stack runs from 0x7C00:0x0000 to 0x7C00:0xFFFF
 	mov %ax, %sp												# Move 0 to the stack pointer
-	mov $Stage2LoadedMessage, %bx								# Print a message that tells we're currently on second stage bootloader.
+	mov $StageTwoLoaded, %bx								# Print a message that tells we're currently on second stage bootloader.
 
 	call boot1print
 	call boot1printnl
@@ -321,6 +324,7 @@ boot1UnrealModeRelocateKernelFail:
 	call boot1printnl
 	cli
 	jmp boot1Halt
+#endif
 
 boot1EnableA20:
 	call boot1CheckA20LineState								# Check if A20 Line is enabled.
@@ -384,10 +388,6 @@ boot1CheckA20LineState:
 	popw %ds
 	ret
 
-boot1UnrealModeLoadKernelFail:
-	cli
-	hlt
-
 boot1A20HasBeenEnabled:
 	mov $A20EnabledMessage, %bx
 	call boot1print
@@ -427,6 +427,11 @@ boot1printnl:
 boot1Halt:
 	hlt
 	jmp boot1Halt
+
+#ifdef I_FS_NONE
+boot1UnrealModeLoadKernelFail:
+	cli
+	hlt
 
 .code32
 
