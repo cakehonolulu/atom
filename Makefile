@@ -1,8 +1,16 @@
+# Atom currently holds only x86 (And baremetal x86-64) architectures, but we can use this switch to change arch at compile-time
 ARCH ?= x86
 
+# QEMU emulator will default to x86-32
 QEMU = qemu-system-i386
 
-# Tools.
+QEMUARGS =
+QEMU_DEBUGARGS = -s -S & gdb --eval-command="target remote localhost:1234"
+
+# BOCHS emulator
+BOCHS = bochs
+
+# Tools/Compiler.
 
 # If we need Floating Point instructions, build Atom with i486+
 ifdef TRUEX86
@@ -27,12 +35,7 @@ ifeq (, $(shell which $(AS)))
     $(error "$(AS) not found. Is the toolchain compiler enabled?")
 endif
 
-QEMUARGS =
-QEMU_DEBUGARGS = -s -S & gdb --eval-command="target remote localhost:1234"
-
-BOCHS = bochs
-
-ifdef USE_FLOPPY
+ifdef I_FLOPPY_FS_NONE
 # 1.44 MB Floppy for now
 MEDIA = floppy.img
 # Looks like DD considers floppy's physical Sector 1 as 0, use this variable to avoid confusion.
@@ -45,29 +48,35 @@ FLOPPY_SECTOR2 = 1
 FLOPPY_KERNEL_STARTING_SECTOR = 6
 endif
 
-HDD_MBR_SECTOR = 0
-HDD_SECOND_STAGE_SECTOR = 1
-HDD_KERNEL_STARTING_SECTOR = 4
-
+# Kernel Linker Script
 LDSCRIPT = kernel/arch/$(ARCH)/linker.ld
 
+# Tell Initium which filesystem we'll use to load Atom
 ifdef I_FS_FAT16
 LDFLAGS = -Wl,-DI_FS_FAT16=1
+# Constants
+HDD_MBR_SECTOR = 0
 endif
 
 ifdef I_FS_NONE
 LDFLAGS = -Wl,-DI_FS_NONE=1
+# Constants
+HDD_MBR_SECTOR = 0
+HDD_SECOND_STAGE_SECTOR = 1
+HDD_KERNEL_STARTING_SECTOR = 4
 endif
 
 .PHONY: clean bochs qemu qemu-debug
 
 all: clean hdd.img
 
+ifdef I_FLOPPY_FS_NONE
 floppy.img: arch bloader
 	-@mkfs.msdos -C floppy.img 1440 >/dev/null
 	-@dd conv=notrunc if=bootloader/$(ARCH)/boot0.bin of=floppy.img bs=512 seek=$(FLOPPY_SECTOR1) status=none
 	-@dd conv=notrunc if=bootloader/$(ARCH)/boot1.bin of=floppy.img bs=512 seek=$(FLOPPY_SECTOR2) status=none
 	-@dd conv=notrunc if=kernel/arch/$(ARCH)/kernel.bin of=floppy.img bs=512 seek=$(FLOPPY_KERNEL_STARTING_SECTOR) status=none
+endif
 
 ifdef I_FS_FAT16
 hdd.img: arch bloader

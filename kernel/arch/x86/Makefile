@@ -3,12 +3,22 @@ FOUR_MB_PAGE_SIZE ?= 0
 FOUR_KB_PAGE_SIZE ?= 0
 
 # Tools
+# If we need Floating Point instructions, build Atom with i486+
+ifdef TRUEX86
 AR = i686-elf-ar
 AS = i686-elf-as
 CC = i686-elf-gcc
 LD = i686-elf-ld
-NASM = nasm
 OBJCOPY = i686-elf-objcopy
+endif
+
+AR = i386-elf-ar
+AS = i386-elf-as
+CC = i386-elf-gcc
+LD = i386-elf-ld
+OBJCOPY = i386-elf-objcopy
+
+NASM = nasm
 
 # Tool flags
 # We should switch to -nostdlib --freestanding -fno-builtin
