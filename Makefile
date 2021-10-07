@@ -3,9 +3,18 @@ ARCH ?= x86
 QEMU = qemu-system-i386
 
 # Tools.
+
+# If we need Floating Point instructions, build Atom with i486+
+ifdef TRUEX86
 CC = i686-elf-gcc
 LD = i686-elf-gcc
 AS = i686-elf-gcc
+endif
+
+# Else, stick with the first bare-metal x86-32 iteration (i386, protected mode and paging)
+CC = i386-elf-gcc
+LD = i386-elf-gcc
+AS = i386-elf-as
 
 # Check that we have the required software.
 ifeq (, $(shell which $(CC)))
