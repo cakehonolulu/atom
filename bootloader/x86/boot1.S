@@ -1,34 +1,9 @@
 # Thanks to Octocontrabass, Combuster and MichaelPetch for the help @ forum.osdev.org
-
-#ifdef I_FS_FAT16
 .global init1
 
 .code16
-
-.section .text
-
-.code16
-
-init1:
-	mov $StageTwoLoaded, %bx								# Print a message that tells we're currently on second stage bootloader.
-
-	call boot1print
-	call boot1printnl
-
-	call boot1EnableA20
-
-	cli
-	hlt
-
-#endif
-
-#ifdef I_FS_NONE
-.global init1
-
 
 .section .data
-
-.code16
 
 .set MEMORY_MAP, 0x0900
 
@@ -67,22 +42,12 @@ BOOT_DRIVE_NUMBER: .byte 0
 SPT: .byte 0
 NOH: .byte 0
 
-#endif
 /* Bootloader Strings */
 A20AlreadyEnabledMessage: .asciz "A20 Line is already enabled, skipping..." // Bochs for example, enables it regardless the OS
 A20EnabledMessage: .asciz "A20 Line enabled Successfully!"
 
-#ifdef I_FS_NONE
-.section .data
 StageTwoLoaded: .asciz "[IBIN] Entered Stage 2"
-#endif
 
-#ifdef I_FS_FAT16
-.section .data
-StageTwoLoaded: .asciz "[IF16] Entered Stage 2"
-#endif
-
-#ifdef I_FS_NONE
 UnrealModeGDTLoadedMessage: .asciz "Unreal Mode GDT Loaded"
 EnteredUnrealModeMessage: .asciz "Entered Unreal Mode"
 
@@ -324,7 +289,6 @@ boot1UnrealModeRelocateKernelFail:
 	call boot1printnl
 	cli
 	jmp boot1Halt
-#endif
 
 boot1EnableA20:
 	call boot1CheckA20LineState								# Check if A20 Line is enabled.
@@ -427,8 +391,6 @@ boot1printnl:
 boot1Halt:
 	hlt
 	jmp boot1Halt
-
-#ifdef I_FS_NONE
 boot1UnrealModeLoadKernelFail:
 	cli
 	hlt
@@ -455,7 +417,6 @@ boot1Start32:
 .boot1pmendloop:
 	hlt
 	jmp .boot1pmendloop
-
 
 
 boot1pmgetbioscurpos:
@@ -526,4 +487,3 @@ boot1pmprintstring:
 	call boot1pmsetcursor
 	popa
 	ret
-#endif
