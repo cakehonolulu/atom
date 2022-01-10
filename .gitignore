@@ -2,4 +2,5 @@
 *.bin
 *.elf
 *.sym
-*.hdd
+*.img
+
