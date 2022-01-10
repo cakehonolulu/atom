@@ -23,6 +23,25 @@ void memset(unsigned char *dest, unsigned char val, unsigned int len) {
     for ( ; len != 0; len--) *temp++ = val;
 }
 
+/* K&R */
+int strlen(char s[]) {
+    int i = 0;
+    while (s[i] != '\0') ++i;
+    return i;
+}
+
+
+/* K&R */
+void reverse(char s[]) {
+    int c, i, j;
+    for (i = 0, j = strlen(s)-1; i < j; i++, j--) {
+        c = s[i];
+        s[i] = s[j];
+        s[j] = c;
+    }
+}
+
+
 void itoa(int n, char str[]) {
     int i, sign;
     if ((sign = n) < 0) n = -n;
@@ -37,22 +56,6 @@ void itoa(int n, char str[]) {
     reverse(str);
 }
 
-/* K&R */
-void reverse(char s[]) {
-    int c, i, j;
-    for (i = 0, j = strlen(s)-1; i < j; i++, j--) {
-        c = s[i];
-        s[i] = s[j];
-        s[j] = c;
-    }
-}
-
-/* K&R */
-int strlen(char s[]) {
-    int i = 0;
-    while (s[i] != '\0') ++i;
-    return i;
-}
 
 void append(char s[], char n) {
     int len = strlen(s);

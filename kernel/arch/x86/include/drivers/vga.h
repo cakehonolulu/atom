@@ -88,3 +88,6 @@ enum vga_color {
     VGA_COLOR_LIGHT_BROWN = 14,
     VGA_COLOR_WHITE = 15,
 };
+
+void putch(char c);
+void settextcolor(unsigned char forecolor, unsigned char backcolor);

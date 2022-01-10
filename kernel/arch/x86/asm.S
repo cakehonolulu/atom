@@ -11,6 +11,15 @@ arch_idt_update:
     lidt (%eax)             # Update the IDT with IDT record pointer passed as 1st argument.
     ret
 
+.global set_page_directory
+set_page_directory:
+    push %ebp
+    mov %esp, %ebp
+    mov 8(%ebp), %eax
+    mov %eax, %cr3
+    pop %ebp
+    ret
+
 .global arch_gdt_update
 arch_gdt_update:
 	/* Load GDT */

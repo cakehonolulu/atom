@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <paging.h>
 #include <kernel.h>
+#include <frames.h>
 
 extern uint32_t *__KERNEL_END;
 // A bitset of frames - used or free.

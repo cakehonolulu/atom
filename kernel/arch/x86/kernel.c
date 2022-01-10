@@ -100,7 +100,7 @@ void _kmain(unsigned int initium_signature, uint32_t *initial_ebp, uint32_t *ini
     init_mmu((uintptr_t) &KERNEL_PHYSADDR_START, (uintptr_t) &KERNEL_PHYSADDR_END);
 
     printkok("Initialized MMU");
-
+/*
     // We need the memory size in bits so that we can provide a good reference to the paging mechanism
     bool inKiloBytes = false;
 
@@ -109,19 +109,18 @@ void _kmain(unsigned int initium_signature, uint32_t *initial_ebp, uint32_t *ini
 
     printkok("Initialized Paging");
 
-#ifdef DEBUG
+
     uintptr_t *p = (size_t*)kmalloc(sizeof(p));
     printk("p allocated at 0x%x\n", p);
 
     uintptr_t *p2 = (size_t*)kmalloc(sizeof(p2));
     printk("allocated 2 blocks for p2 at 0x%x\n", p2);
 
-    /*kfree (p); TEST whenever we implement kfree
+    kfree (p); TEST whenever we implement kfree
     p = (size_t*)kmalloc(sizeof(p));
-    printk("Unallocated p to free block 1. p is reallocated to 0x%x", p);*/
-#endif
+    printk("Unallocated p to free block 1. p is reallocated to 0x%x", p);
 
-#ifdef DEBUG
+
    // This code should work!
     uint32_t *ptr = (uintptr_t*)0xC0100000;
     uint32_t do_page_fault = *ptr;
@@ -144,16 +143,14 @@ void _kmain(unsigned int initium_signature, uint32_t *initial_ebp, uint32_t *ini
     uint32_t do_page_fault4 = *ptr4;
 
     printk("4th Memory pointer accessed is 0xA0000000, mmu returns 0x%x\n", do_page_fault4);
-    
-#endif
-
+ */
     /* IRQ0: timer */
     init_timer(50);
 
     /* IRQ1: keyboard */
     init_keyboard();
 
-    init_multitasking();
+    //init_multitasking();
 
 	for(;;);
 }

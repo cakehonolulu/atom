@@ -14,16 +14,16 @@ endif
 
 AR = i386-elf-ar
 AS = i386-elf-as
-CC = i386-elf-gcc
+CC = clang
 LD = i386-elf-ld
-OBJCOPY = i386-elf-objcopy
+OBJCOPY = objcopy
 
 NASM = nasm
 
 # Tool flags
 # We should switch to -nostdlib --freestanding -fno-builtin
-CFLAGS =  -ffreestanding -Wall -Wextra -g
-CFLAGS += -Iinclude
+CFLAGS :=  -ffreestanding -fno-builtin -nostdlib -Iinitium
+CFLAGS += -Iinclude --target=i686-pc-none-elf -march=i686
 
 ASFLAGS = -m32
 LDSCRIPT = linker.ld
@@ -63,10 +63,10 @@ x86: $(KERNEL_IMAGE)
 # We should probably switch to nostdlib soon
 $(KERNEL_IMAGE): $(ARCH_OBJECT_FILES)
 	@echo " \033[0;36mLD \033[0mnucleus.elf"
-	$(LD) $(LDFLAGS) -T $(LDSCRIPT) -o $@ $(ARCH_OBJECT_FILES)
+	clang $(CFLAGS) -T $(LDSCRIPT) -o $@ $(ARCH_OBJECT_FILES)
 	
 %.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	clang $(CFLAGS) -c $< -o $@
 	@echo " \033[0;35mCC\033[0m $<"
 
 %.o: %.asm
@@ -74,7 +74,7 @@ $(KERNEL_IMAGE): $(ARCH_OBJECT_FILES)
 	@echo " \033[0;35mAS\033[0m $<"
 
 %.o: %.S
-	$(CC) $(ASFLAGS) -c $< -o $@
+	clang $(ASFLAGS) -c $< -o $@
 	@echo " \033[0;33mAS\033[0m $<"
 
 clean:

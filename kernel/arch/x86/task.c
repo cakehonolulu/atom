@@ -167,18 +167,6 @@ void on_tick(arch_cpu_state_t* regs) {
     set_page_directory(next_process->page_directory);
 }
 
-void init_multitasking() {
-    process_queue = queue_create();
-    register_interrupt_handler(32, on_tick);
-    printkok("Initialized Tasking");
-    printk("Initializing Scheduling\n");
-    printk("> ");
-    init_scheduling();
-}
-
-void multitasking_schedule(process_t *process) {
-    queue_enqueue(process_queue, process);
-}
 
 extern void* stack_bottom;
 
@@ -203,6 +191,7 @@ void do_task_one()
         arch_switch_task(&kernel_task, &task_two);
     }
 }
+
 
 void init_scheduling()
 {
@@ -241,4 +230,17 @@ void init_scheduling()
         vga[159] = 0x2F;
         arch_switch_task(&task_two, &kernel_task);
     }
+}
+
+void init_multitasking() {
+    process_queue = queue_create();
+    register_interrupt_handler(32, on_tick);
+    printkok("Initialized Tasking");
+    printk("Initializing Scheduling\n");
+    printk("> ");
+    init_scheduling();
+}
+
+void multitasking_schedule(process_t *process) {
+    queue_enqueue(process_queue, process);
 }

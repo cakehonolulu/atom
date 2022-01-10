@@ -16,15 +16,10 @@ void page_fault(struct regs *regs)
         user_err = (bool)(err_code & PAGE_FAULT_USER), reserved_err = (bool)(err_code & PAGE_FAULT_RESERVED),
         exec_err = (bool)(err_code & PAGE_FAULT_EXEC);
     physaddr_t bad_addr;
-    asm volatile("mov %%cr2, %0": "=r"(bad_addr));
+//    asm volatile("mov %%cr2, %0": "=r"(bad_addr));
     printk("Page fault for address 0x%x: %s%s%s, %s, %s\n", bad_addr, reserved_err ? "reserved, " : "", exec_err ? "execution, " : "",
             protection_err ? "protection" : "non-present", write_err ? "write" : "read", user_err ? "user" : "supervisor");
     asm volatile("cli; hlt");
-}
-
-void set_page_directory(page_directory_t* page_dir)
-{
-  asm volatile("mov %0, %%cr3":: "r"((physaddr_t) page_dir));
 }
 
 page_frame_t *get_page(physaddr_t address, int make, page_directory_t *dir)
@@ -95,14 +90,6 @@ page_frame_t *get_page(physaddr_t address, int make, page_directory_t *dir)
 page_frame_t *get_page_default(physaddr_t address, int make)
 {
   return get_page(address, make, kernel_directory);
-}
-
-void refresh_page(physaddr_t address)
-{
-  asm volatile (
-    "movl %0,%%eax\n"
-    "invlpg (%%eax)\n"
-    :: "r"((uintptr_t)(address & 0xFFFFF000)) : "%eax");
 }
 
 uintptr_t to_physical_addr(uintptr_t virtual, page_directory_t *dir)
