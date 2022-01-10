@@ -82,7 +82,6 @@ init0_nofs_sanitize:
 
 boot0:												# boot0 function
 #ifdef I_FS_NONE
-	cli
 													# Note: We'll try avoiding FS and GS registers in order to
 													# make our bootloader as compatible with every machine possible until we
 													# reach 32-bits, where they will be used, but this bootloader might be used on non-x86_32 PC's
@@ -101,7 +100,7 @@ boot0:												# boot0 function
 													# Even though that was the main concern primarly, disabling interrupts when messing with
 													# the stack is a good thing as of now, to avoid stack corruption if an interrupt is caught in
 													# the middle of the stack change!
-	mov %0x07C0, %ax									# Move ax (Which now is 0) to the stack segment register.
+	mov $0x07C0, %ax									# Move ax (Which now is 0) to the stack segment register.
 													# registers that contain the same, will always result in 0.
 	mov %ax, %ds									# Set the stack pointer register with 0x7C00.
 													# Stack Dissasembly:
@@ -115,6 +114,48 @@ boot0:												# boot0 function
 
 	mov $0x3, %ax									# Use VGA Text Mode
 	int $0x10										# Call BIOS interrupt 13.
+
+	xor %ax, %ax
+	mov %ax, %ds
+
+	mov %dl, diskDrive								# Store BIOS dl value containing the boot drive number.
+diskReset:											# Function to reset floppy drive in order to ensure it's working correctly.
+	mov	$0x00, %ah									# Set ah to 0 (AH=0x00 -> Reset Disk Function).
+	mov diskDrive, %dl								# Move diskDrive value back into dl.
+	int	$0x13										# Call BIOS interrupt 13.
+	jc diskReset									# If Carry Flag is set (CF=1) an error has ocurred, run the function again.
+
+													# On this part we'll load our stage 2 bootloader onto 0x7E00 and jump to it.
+	mov diskDrive, %dl								# Move diskDrive value back into dl in case INT13 messes with it.
+	mov $0x2, %ah									# Set ah to 2 (AH=0x02 -> Disk Read Function).
+	mov $I386_BOOT1_SIZE, %al						# Set al to I386_BOOT1_SIZE (AL=$I386_BOOT1_SIZE) -> Sectors to be readed.
+													# Where I386_BOOT1_SIZE equals to the number of sectors occupied by the boot1 binary rounded 1 sector up.
+	mov $0x0, %ch									# Set ch to 0 (CH=0x00) -> Track 0 of the drive.
+	mov $BOOT1_STARTING_SECTOR, %cl					# Set CL to 2, this is hardcoded, because we're always going to start reading
+													# from the sector next to the one that contains the MBR signature (Sector 1 Physically).
+	mov $0x00, %dh									# Set dh to 0 (DH=0x00) -> Head 0 of the drive.
+	xor %bx, %bx									# Set bx to 0.
+	mov %bx, %es									# Move bx onto our extra segment register to prepare the jump.
+	mov $0x1000, %bx								# Set our bx register with the adress we'll jump to.
+	int $0x13										# Call BIOS interrupt 13.
+	jc diskError
+
+	mov diskDrive, %bx
+	push %bx
+	ljmp $0x0, $0x1000								# Long jump into our stage 2 bootloader. [0x7E00:0x0] -> CS=0x7E00; IP=0x0
+	cli
+.hlt:
+	hlt
+	jmp .hlt
+
+diskError:
+	mov $0xB800, %ax
+	mov %ax, %ds
+	movb $'D', 0
+	movb $0x4F, 1
+	jmp .hlt
+
+diskDrive: .byte 0
 #endif
 
 #ifdef I_FS_FAT16
@@ -267,49 +308,6 @@ read_sectors:
 
 read_sectors_exit:
    ret
-
-#endif
-
-#ifdef I_FS_NONE
-	xor %ax, %ax
-	mov %ax, %ds
-
-	mov %dl, diskDrive								# Store BIOS dl value containing the boot drive number.
-diskReset:											# Function to reset floppy drive in order to ensure it's working correctly.
-	mov	$0x00, %ah									# Set ah to 0 (AH=0x00 -> Reset Disk Function).
-	mov diskDrive, %dl								# Move diskDrive value back into dl.
-	int	$0x13										# Call BIOS interrupt 13.
-	jc diskReset									# If Carry Flag is set (CF=1) an error has ocurred, run the function again.
-
-													# On this part we'll load our stage 2 bootloader onto 0x7E00 and jump to it.
-	mov diskDrive, %dl								# Move diskDrive value back into dl in case INT13 messes with it.
-	mov $0x2, %ah									# Set ah to 2 (AH=0x02 -> Disk Read Function).
-	mov $I386_BOOT1_SIZE, %al						# Set al to I386_BOOT1_SIZE (AL=$I386_BOOT1_SIZE) -> Sectors to be readed.
-													# Where I386_BOOT1_SIZE equals to the number of sectors occupied by the boot1 binary rounded 1 sector up.
-	mov $0x0, %ch									# Set ch to 0 (CH=0x00) -> Track 0 of the drive.
-	mov $BOOT1_STARTING_SECTOR, %cl					# Set CL to 2, this is hardcoded, because we're always going to start reading
-													# from the sector next to the one that contains the MBR signature (Sector 1 Physically).
-	mov $0x00, %dh									# Set dh to 0 (DH=0x00) -> Head 0 of the drive.
-	xor %bx, %bx									# Set bx to 0.
-	mov %bx, %es									# Move bx onto our extra segment register to prepare the jump.
-	mov $0x1000, %bx								# Set our bx register with the adress we'll jump to.
-	int $0x13										# Call BIOS interrupt 13.
-	jc diskError
-
-	mov diskDrive, %bx
-	push %bx 
-	ljmp $0x0, $0x0600								# Long jump into our stage 2 bootloader. [0x7E00:0x0] -> CS=0x7E00; IP=0x0
-	cli
-.hlt:
-	hlt
-	jmp .hlt
-
-diskError:
-	mov $0xB800, %ax
-	mov %ax, %ds
-	movb $'D', 0
-	movb $0x4F, 1
-	jmp .hlt
 
 #endif
 
