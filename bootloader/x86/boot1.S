@@ -3,6 +3,19 @@
 
 .code16
 
+.section .kernel_discard
+
+.global I386_KERNEL_SIZE
+kernel_start:
+    # Insert kernel binary here. It is done this way since we
+    # can determine the size(and number of sectors) to load since
+    #     Size = kernel_end-kernel_start
+    .incbin "../../kernel/arch/x86/kernel.bin"
+
+# End of stage2. Make sure this label is LAST in this file!
+kernel_end:
+.set I386_KERNEL_SIZE, (kernel_end - kernel_start + 511) / 512
+
 .section .data
 
 .set MEMORY_MAP, 0x0900
@@ -35,8 +48,6 @@ gdt_end:
 gdt:
 	.word (gdt_end - gdt_start - 1)
 	.long gdt_start
-
-.extern I386_KERNEL_SIZE
 
 BOOT_DRIVE_NUMBER: .byte 0
 SPT: .byte 0
@@ -262,7 +273,9 @@ boot1UnrealModeReadKernel:
 	mov $0x200, %cx
 	mov $I386_KERNEL_SIZE, %bx // Relocate more sectors
 .loop:
-	addr32 rep movsb
+	# Adding 0x67 operand before calling rep movsb changes prefix mode, effectively the same as gnu-as *addr32*
+	.byte 0x67
+	rep movsb
 	dec %bx
 	jnz .loop
 	mov $0, %ax

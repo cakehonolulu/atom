@@ -3,9 +3,20 @@
 
 .code16
 
-.section .text
+.section .kernel_discard
 
-.code16
+.global I386_KERNEL_SIZE
+kernel_start:
+    # Insert kernel binary here. It is done this way since we
+    # can determine the size(and number of sectors) to load since
+    #     Size = kernel_end-kernel_start
+    .incbin "../../kernel/arch/x86/kernel.bin"
+
+# End of stage2. Make sure this label is LAST in this file!
+kernel_end:
+.set I386_KERNEL_SIZE, (kernel_end - kernel_start + 511) / 512
+
+.section .text
 
 init1:
 	mov $StageTwoLoaded, %bx								# Print a message that tells we're currently on second stage bootloader.
