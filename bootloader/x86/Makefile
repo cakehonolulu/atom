@@ -4,14 +4,14 @@ OBJCOPY = objcopy
 CFLAGS := -ffreestanding -fno-builtin -nostdlib -nostdinc -Iinitium
 
 ifeq ($(ARCH),x86)
-CFLAGS += --target=i686-pc-none-elf -march=i686
+CFLAGS += --target=i686-pc-none-elf -march=i686 -m16
 endif
 
 .PHONY: bootloader
 
 ifeq ($(I_FS_FAT16), 1)
 bootloader:
-	$(CC) -T linker/linkboot1_fat16.ld boot1_fat16.S -o boot1.elf -DI_FS_FAT16 $(CFLAGS)
+	$(CC) -T linker/linkboot1_fat16.ld boot1_fat16.S stage2/stage2.c -o boot1.elf -DI_FS_FAT16 $(CFLAGS)
 	$(OBJCOPY) --only-keep-debug boot1.elf boot1.sym
 	$(OBJCOPY) --strip-debug boot1.elf
 	$(OBJCOPY) -O binary boot1.elf boot1.bin

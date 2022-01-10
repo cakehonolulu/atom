@@ -10,31 +10,6 @@ QEMU_DEBUGARGS = -s -S & gdb --eval-command="target remote localhost:1234"
 # BOCHS emulator
 BOCHS = bochs
 
-# Tools/Compiler.
-
-# If we need Floating Point instructions, build Atom with i486+
-ifdef TRUEX86
-CC = i686-elf-gcc
-LD = i686-elf-gcc
-AS = i686-elf-gcc
-endif
-
-# Else, stick with the first bare-metal x86-32 iteration (i386, protected mode and paging)
-CC = i386-elf-gcc
-LD = i386-elf-gcc
-AS = i386-elf-as
-
-# Check that we have the required software.
-ifeq (, $(shell which $(CC)))
-    $(error "$(CC) not found. Is the toolchain compiler enabled?")
-endif
-ifeq (, $(shell which $(LD)))
-    $(error "$(LD) not found. Is the toolchain compiler enabled?")
-endif
-ifeq (, $(shell which $(AS)))
-    $(error "$(AS) not found. Is the toolchain compiler enabled?")
-endif
-
 ifdef I_FLOPPY_FS_NONE
 # 1.44 MB Floppy for now
 MEDIA = floppy.img
