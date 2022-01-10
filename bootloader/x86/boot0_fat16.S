@@ -58,7 +58,7 @@ init0_nofs:
 	xor %ax, %ax									# Fix %ax register (Set to 0)
 
 	mov $0x7C00, %si								# Input the source memory location
-	mov $0x0500, %di									# Input the destination memory location
+	mov $0x500, %di									# Input the destination memory location
 	movw $256, %cx									# 256 Words = 512 Bytes (Exact MBR size)
 	rep	movsb										# Relocation!
 
@@ -258,10 +258,10 @@ diskDrive: .byte 0
 	mulb sectors_per_cluster
 	add data_cluster_offset, %ax
 	mov $1, %cx # STAGE 2 Size
-	mov $0x0600, %bx
+	mov $0x0500, %bx
 	call read_sectors
 	xchg %bx, %bx
-	jmp $0x0, $0x0600
+	jmp $0x0, $0x0500
 
 error:
 	mov $0x0e, %ah
