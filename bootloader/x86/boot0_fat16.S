@@ -130,7 +130,7 @@ boot0:												# boot0 function
    add sector_size, %ax
 
 .loop_dir_entries:
-	xchg %bx, %bx
+	# xchg %bx, %bx
    mov $stage2_name, %di
    mov $0x06, %cx
    mov %bx, %si
@@ -156,7 +156,7 @@ boot0:												# boot0 function
 	mov $I386_BOOT1_SIZE, %cx # STAGE 2 Size
 	mov $0x0500, %bx
 	call read_sectors
-	xchg %bx, %bx
+	# xchg %bx, %bx
 	jmp $0x0, $0x0500
 
 error:
