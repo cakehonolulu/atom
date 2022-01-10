@@ -1,8 +1,5 @@
 .code16												# Compile 16-Bit Code (Targetting Real Mode)
 
-.extern I386_BOOT1_SIZE								# This constant is calculated at compile-time, the size
-													# is measured in sectors (Each, 512 byte wide)
-
 .set BOOT1_STARTING_SECTOR, 0x2						# This is a constant! It will always be the same!
 
 .global boot0										# Make our functions globally available
@@ -156,7 +153,7 @@ boot0:												# boot0 function
 	sub $0x02, %ax
 	mulb sectors_per_cluster
 	add data_cluster_offset, %ax
-	mov $1, %cx # STAGE 2 Size
+	mov $I386_BOOT1_SIZE, %cx # STAGE 2 Size
 	mov $0x0500, %bx
 	call read_sectors
 	xchg %bx, %bx

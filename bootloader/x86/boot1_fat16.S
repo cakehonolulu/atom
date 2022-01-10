@@ -5,6 +5,6 @@
 
 .section .text
 
-.extern kmain
+.extern stage2
 init1:
-	call kmain
+	call stage2
