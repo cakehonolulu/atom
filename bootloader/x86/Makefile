@@ -1,7 +1,7 @@
 CC = clang
 OBJCOPY = objcopy
 
-CFLAGS := -ffreestanding -fno-builtin -nostdlib -Iinitium
+CFLAGS := -ffreestanding -fno-builtin -nostdlib -Iinitium -Istage2/libstage2/include
 
 ifeq ($(ARCH),x86)
 CFLAGS += --target=i686-pc-none-elf -march=i686
@@ -13,7 +13,7 @@ REALMODE = -m16
 
 ifeq ($(I_FS_FAT16), 1)
 bootloader:
-	$(CC) -T linker/linkboot1_fat16.ld boot1_fat16.S stage2/stage2.c -o boot1.elf -DI_FS_FAT16 $(CFLAGS) -m32
+	$(CC) -T linker/linkboot1_fat16.ld boot1_fat16.S stage2/stage2.c stage2/libstage2/io.c -o boot1.elf -DI_FS_FAT16 $(CFLAGS) -m32
 	$(OBJCOPY) --only-keep-debug boot1.elf boot1.sym
 	$(OBJCOPY) --strip-debug boot1.elf
 	$(OBJCOPY) -O binary boot1.elf boot1.bin

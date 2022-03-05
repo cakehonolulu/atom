@@ -6,7 +6,7 @@ void write_string( int colour, const char *string )
     while( *string != 0 )
     {
         *video++ = *string++;
-        *video++ = colour;
+        *video++ = 0x0F;
     }
 }
 
