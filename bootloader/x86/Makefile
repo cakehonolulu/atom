@@ -1,7 +1,7 @@
 CC = clang
 OBJCOPY = objcopy
 
-CFLAGS := -ffreestanding -fno-builtin -nostdlib -nostdinc -Iinitium
+CFLAGS := -ffreestanding -fno-builtin -nostdlib -Iinitium
 
 ifeq ($(ARCH),x86)
 CFLAGS += --target=i686-pc-none-elf -march=i686
