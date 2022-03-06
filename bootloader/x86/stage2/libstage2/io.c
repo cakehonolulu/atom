@@ -30,6 +30,21 @@ inline uint8_t inb(uint16_t m_address)
 	return m_value;
 }
 
+/*
+	outb
+
+	Function information:
+	Sends a byte to the Port I/O
+
+	Parameters:
+	m_address -> 16-bit immediate address
+	containing the port to write to
+
+	m_data -> 8-bit value to write
+
+	Return:
+	none
+*/
 inline void outb(uint16_t m_address, uint8_t m_data)
 {
 	/*
