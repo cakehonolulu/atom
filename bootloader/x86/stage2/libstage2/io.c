@@ -29,3 +29,14 @@ inline uint8_t inb(uint16_t m_address)
 	// Return the value readed
 	return m_value;
 }
+
+inline void outb(uint16_t m_address, uint8_t m_data)
+{
+	/*
+		a specifies the 'a' register
+		Nd specifies %dx register or 8-bit immediate addr. for outb
+	*/
+	asm volatile ("outb %1, %0"
+				:
+				: "a" (m_data), "Nd" (m_address));
+}
