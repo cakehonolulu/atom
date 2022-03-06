@@ -54,9 +54,9 @@ floppy.img: arch bloader
 endif
 
 ifdef I_FS_FAT16
-hdd.img: arch bloader
+hdd.img: bloader
 	-@bximage -func=create -hd=10M -q hdd.img >/dev/null # 10485760 Bytes = 10 Mega Bytes
-	-@mkfs.fat -F 16 hdd.img -v
+	-@mkfs.fat -F 16 hdd.img >/dev/null
 	-@mv bootloader/$(ARCH)/boot1.bin STAGE2
 	-@mcopy -i hdd.img STAGE2 ::
 	-@dd conv=notrunc if=bootloader/$(ARCH)/boot0.bin of=hdd.img bs=512 seek=$(HDD_MBR_SECTOR) status=none
@@ -81,6 +81,7 @@ clean:
 	make -C kernel/arch/$(ARCH) clean
 	make -C bootloader/$(ARCH) clean
 	-@rm hdd.img
+	clear
 
 ifdef I_FS_FAT16
 bochs:

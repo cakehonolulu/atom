@@ -15,4 +15,6 @@ int stage2()
 	write_string(0x0F, "Hello from Stage 2 - 32 bit C");
 
 	asm volatile("cli; hlt");
+
+    return 0;
 }

@@ -35,6 +35,10 @@ bootloader:
 	$(OBJCOPY) -O binary boot0.elf boot0.bin
 endif
 
+%.o: %.c
+	@$(CC) $(CFLAGS) $(SDLCFLAGS) -c $< -o $@
+	@echo " \033[0;35mCC\033[0m $<"
+
 clean:
 	rm -f *.o
 	rm -f *.bin
