@@ -41,3 +41,30 @@ uint16_t get_cur_pos()
 	// Craft a 16-bit position using both values
 	return (uint16_t) (((uint16_t) m_high << 8) | m_low);
 }
+
+/*
+	disable_cur
+
+	Function information:
+	Disables Text Mode Cursor
+
+	Parameters:
+	None
+
+	Return:
+	None
+*/
+void disable_cur()
+{
+	// Feed CRTC Address Register with 0x0A Subregister
+	outb(CRTC_ADDR_REG, CUR_START_REG);
+
+	/*
+		Cursor Start Register
+		| 7	| 6 | 5 | 4 | 3 | 2 | 1 | 0 |
+				|*CD| C. Scanline Start |
+
+		* CD -> Cursor (Dis)enable Bit (Bit 5)
+	*/
+	outb(CRTC_DATA_REG, (1 << 5));
+}

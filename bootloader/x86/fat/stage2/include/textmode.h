@@ -3,6 +3,7 @@
 
 /* Defines */
 
+#define CUR_START_REG	0x0A
 #define CUR_LOC_HI_REG	0x0E
 #define CUR_LOC_LO_REG	0x0F
 #define CRTC_ADDR_REG	0x3D4
