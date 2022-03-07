@@ -28,7 +28,7 @@ endif
 
 OBJCOPY = objcopy
 
-CFLAGS := -ffreestanding -fno-builtin -nostdlib -m32 -Iinclude -DI_FS_FAT16
+CFLAGS := -Wall -Wextra -pedantic -std=c2x -ffreestanding -fno-builtin -nostdlib -m32 -Iinclude -DI_FS_FAT16
 
 ifeq ($(ARCH), x86)
 CFLAGS += --target=i686-pc-none-elf -march=i686
