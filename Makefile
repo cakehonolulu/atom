@@ -61,6 +61,7 @@ hdd.img: clean bloader
 	-@mcopy -i hdd.img STAGE2 ::
 	-@dd conv=notrunc if=bootloader/$(ARCH)/fat/boot0.bin of=hdd.img bs=512 seek=$(HDD_MBR_SECTOR) status=none
 	-@rm STAGE2
+	-@echo " \033[0;32mOK \033[0mhdd.img"
 endif
 
 ifdef I_FS_NONE
