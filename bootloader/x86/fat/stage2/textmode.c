@@ -1,6 +1,41 @@
 #include <textmode.h>
 
 /*
+	update_cur
+
+	Function information:
+	Updates the cursor position taking x and y params.
+	and returns a 16-bit value containing the current
+	text mode cursor offset.
+
+	Parameters:
+	m_x -> Base of the screen (I Matrix)
+	m_y -> Height of the screen (J Matrix)
+
+	Return:
+	16-bit value containing the calculated offset
+*/
+uint16_t update_cur(uint8_t m_x, uint8_t m_y)
+{
+	uint16_t m_offset = ((m_y * TEXT_MODE_WIDTH) + m_x);
+
+	// Feed CRTC Address Register with 0x0E Subregister
+	outb(CRTC_ADDR_REG, CUR_LOC_HI_REG);
+
+	// Get high byte of m_offset and send it using Port I/O
+	outb(CRTC_DATA_REG, (uint8_t) ((m_offset >> 8) & 0xFF));
+
+	// Feed CRTC Address Register with 0x0F Subregister
+	outb(CRTC_ADDR_REG, CUR_LOC_LO_REG);
+
+	// Get low byte of m_offset and send it using Port I/O
+	outb(CRTC_DATA_REG, (uint8_t) (m_offset & 0xFF));
+
+	// Return the calculated offset
+	return m_offset;
+}
+
+/*
 	get_cur_pos
 
 	Function information:
