@@ -8,6 +8,16 @@ SECTIONS {
 
 	. = 0x0500;
 
+    .text.init :
+    {
+        *(.text.init)
+    }
+
+    .data.init :
+    {
+        *(.data.init)
+    }
+
     .text :
     {
         *(.text)

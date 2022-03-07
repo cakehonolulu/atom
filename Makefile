@@ -41,9 +41,9 @@ HDD_SECOND_STAGE_SECTOR = 1
 HDD_KERNEL_STARTING_SECTOR = 4
 endif
 
-.PHONY: clean bochs qemu qemu-debug
+.PHONY: hdd.img bochs qemu qemu-debug
 
-all: clean hdd.img
+all: hdd.img
 
 ifdef I_FLOPPY_FS_NONE
 floppy.img: arch bloader
@@ -54,12 +54,12 @@ floppy.img: arch bloader
 endif
 
 ifdef I_FS_FAT16
-hdd.img: bloader
+hdd.img: clean bloader
 	-@bximage -func=create -hd=10M -q hdd.img >/dev/null # 10485760 Bytes = 10 Mega Bytes
 	-@mkfs.fat -F 16 hdd.img >/dev/null
-	-@mv bootloader/$(ARCH)/boot1.bin STAGE2
+	-@cp bootloader/$(ARCH)/fat/stage2/stage2.bin STAGE2
 	-@mcopy -i hdd.img STAGE2 ::
-	-@dd conv=notrunc if=bootloader/$(ARCH)/boot0.bin of=hdd.img bs=512 seek=$(HDD_MBR_SECTOR) status=none
+	-@dd conv=notrunc if=bootloader/$(ARCH)/fat/boot0.bin of=hdd.img bs=512 seek=$(HDD_MBR_SECTOR) status=none
 	-@rm STAGE2
 endif
 
@@ -75,13 +75,21 @@ arch:
 	make -C kernel/arch/$(ARCH)
 
 bloader:
-	make -C bootloader/$(ARCH)
+	make -C bootloader/$(ARCH) --no-print-directory
 
+ifdef I_FS_FAT16
+clean:
+	make -C bootloader/$(ARCH) clean --no-print-directory
+	-@rm hdd.img
+endif
+
+ifdef I_FS_NONE
 clean:
 	make -C kernel/arch/$(ARCH) clean
 	make -C bootloader/$(ARCH) clean
 	-@rm hdd.img
 	clear
+endif
 
 ifdef I_FS_FAT16
 bochs:

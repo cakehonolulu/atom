@@ -3,7 +3,7 @@
 
 .code16
 
-.section .data
+.section .data.init
 /* Basic GDT. set-up for Unreal Mode, change descriptor 1 & 2 alongside 16->32 bit segment mode later on */
 gdt_start:
 gdt_null:
@@ -33,7 +33,7 @@ gdt:
 	.word (gdt_end - gdt_start - 1)
 	.long gdt_start
 
-.section .text
+.section .text.init
 
 init1:
 	mov $0x0600, %ax

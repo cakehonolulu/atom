@@ -13,7 +13,7 @@
 	Return:
 	Byte read at m_address
 */
-inline uint8_t inb(uint16_t m_address)
+uint8_t inb(uint16_t m_address)
 {
 	// Value readed
 	uint8_t m_value;
@@ -22,7 +22,7 @@ inline uint8_t inb(uint16_t m_address)
 		=a specifies where it should put the return value
 		Nd specifies %dx register or 8-bit immediate addr. for inb
 	*/
-	asm volatile ("inb %0, %1"
+	asm volatile ("inb %1, %0"
 				: "=a" (m_value)
 				: "Nd" (m_address));
 
@@ -45,7 +45,7 @@ inline uint8_t inb(uint16_t m_address)
 	Return:
 	none
 */
-inline void outb(uint16_t m_address, uint8_t m_data)
+void outb(uint16_t m_address, uint8_t m_data)
 {
 	/*
 		a specifies the 'a' register

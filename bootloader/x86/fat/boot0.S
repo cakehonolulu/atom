@@ -8,13 +8,11 @@
 
 .section .stage2_discard
 
-.global I386_BOOT1_SIZE
-
 stage2_start:
     # Insert stage2 binary here. It is done this way since we
     # can determine the size(and number of sectors) to load since
     #     Size = stage2_end-stage2_start
-    .incbin "boot1.bin"
+    .incbin "stage2/stage2.bin"
 
 # End of stage2. Make sure this label is LAST in this file!
 stage2_end:
