@@ -22,9 +22,9 @@ uint8_t inb(uint16_t m_address)
 		=a specifies where it should put the return value
 		Nd specifies %dx register or 8-bit immediate addr. for inb
 	*/
-	asm volatile ("inb %1, %0"
-				: "=a" (m_value)
-				: "Nd" (m_address));
+	__asm__ __volatile__ ("inb %1, %0"
+						: "=a" (m_value)
+						: "Nd" (m_address));
 
 	// Return the value readed
 	return m_value;
@@ -51,7 +51,7 @@ void outb(uint16_t m_address, uint8_t m_data)
 		a specifies the 'a' register
 		Nd specifies %dx register or 8-bit immediate addr. for outb
 	*/
-	asm volatile ("outb %0, %1"
-				:
-				: "a" (m_data), "Nd" (m_address));
+	__asm__ __volatile__ ("outb %0, %1"
+						:
+						: "a" (m_data), "Nd" (m_address));
 }

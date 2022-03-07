@@ -6,7 +6,7 @@ void write_string( int colour, const char *string )
     while( *string != 0 )
     {
         *video++ = *string++;
-        *video++ = 0x0F;
+        *video++ = colour;
     }
 }
 
@@ -14,7 +14,7 @@ int stage2()
 {
 	write_string(0x0F, "Hello from Stage 2 - 32 bit C");
 
-	asm volatile("cli; hlt");
+	__asm__ __volatile__("cli; hlt");
 
     return 0;
 }
