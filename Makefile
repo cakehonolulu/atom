@@ -55,7 +55,8 @@ endif
 
 ifdef I_FS_FAT16
 hdd.img: clean bloader
-	-@dd if=/dev/zero of=hdd.img bs=1 count=0 seek=10M # 10485760 Bytes = 10 Mega Bytes
+	-@echo " \033[0;34mDD \033[0mimage"
+	-@dd if=/dev/zero of=hdd.img bs=1 count=0 seek=10M status=none # 10485760 Bytes = 10 Mega Bytes
 	-@mkfs.fat -F 16 hdd.img >/dev/null
 	-@cp bootloader/$(ARCH)/fat/stage2/stage2.bin STAGE2
 	-@mcopy -i hdd.img STAGE2 ::
@@ -66,10 +67,12 @@ endif
 
 ifdef I_FS_NONE
 hdd.img: arch bloader
-	-@dd if=/dev/zero of=hdd.img bs=1 count=0 seek=10M # 10485760 Bytes = 10 Mega Bytes
+	-@echo " \033[0;31mDD \033[0mhdd.img"
+	-@dd if=/dev/zero of=hdd.img bs=1 count=0 seek=10M status=none # 10485760 Bytes = 10 Mega Bytes
 	-@dd conv=notrunc if=bootloader/$(ARCH)/boot0.bin of=hdd.img bs=512 seek=$(HDD_MBR_SECTOR) status=none
 	-@dd conv=notrunc if=bootloader/$(ARCH)/boot1.bin of=hdd.img bs=512 seek=$(HDD_SECOND_STAGE_SECTOR) status=none
 	-@dd conv=notrunc if=kernel/arch/$(ARCH)/kernel.bin of=hdd.img bs=512 seek=$(HDD_KERNEL_STARTING_SECTOR) status=none
+	-@echo " \033[0;32mOK \033[0mhdd.img"
 endif
 
 arch:
