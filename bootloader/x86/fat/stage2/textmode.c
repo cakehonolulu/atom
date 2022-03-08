@@ -1,5 +1,11 @@
 #include <textmode.h>
 
+// Current VGA Text Mode Matrix 'x'
+uint8_t m_current_x = 0;
+
+// Current VGA Text Mode Matrix 'y'
+uint8_t m_current_y = 0;
+
 /*
 	update_cur
 
@@ -33,6 +39,58 @@ uint16_t update_cur(uint8_t m_x, uint8_t m_y)
 
 	// Return the calculated offset
 	return m_offset;
+}
+
+/*
+	enable_cur
+
+	Function information:
+	Enables the cursor.
+
+	Parameters:
+	m_cur_start -> Cursor Start Line
+	m_cur_end -> Cursor End Line
+
+	Return:
+	None
+*/
+void enable_cur(uint8_t m_cur_start, uint8_t m_cur_end)
+{
+	outb(CRTC_ADDR_REG, CUR_START_REG);
+	outb(CRTC_DATA_REG, m_cur_start);
+
+	outb(CRTC_ADDR_REG, CUR_END_REG);
+	outb(CRTC_DATA_REG, m_cur_end);
+}
+
+/*
+	init_text_mode
+
+	Function information:
+	Cleanly initializes VGA Mode 3 (Text Mode 80x25)
+
+	Parameters:
+	None
+
+	Return:
+	None
+*/
+void init_text_mode()
+{
+	// Set current X to 0
+	m_current_x = 0;
+
+	// Set current Y to 0
+	m_current_y = 0;
+
+	// Disable cursor
+	disable_cur();
+
+	// Update current cursor position
+	update_cur(0, 0);
+
+	// Enable cursor again
+	enable_cur(14, 15);
 }
 
 /*
@@ -102,4 +160,14 @@ void disable_cur()
 		* CD -> Cursor (Dis)enable Bit (Bit 5)
 	*/
 	outb(CRTC_DATA_REG, (1 << 5));
+}
+
+void print(char *m_string)
+{
+	uint32_t i = 0;
+	while (m_string[i] != '\0')
+	{
+		//printchar(m_string[i]);
+		i++;
+	}
 }
