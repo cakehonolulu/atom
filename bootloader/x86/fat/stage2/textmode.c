@@ -165,7 +165,22 @@ void disable_cur()
 	outb(CRTC_DATA_REG, (1 << 5));
 }
 
-void putchar(char m_char)
+/*
+	putc
+
+	Function information:
+	Puts a character into the current Text Mode Buffer Offset
+
+	Parameters:
+	m_char -> character to display
+
+	Return:
+	None
+
+	Quirk [!]
+	Only accessible from within text mode functions
+*/
+static void putc(char m_char)
 {
 	uint16_t m_offset = ((m_current_y * TEXT_MODE_WIDTH) + m_current_x);
 
@@ -175,18 +190,31 @@ void putchar(char m_char)
 	video[m_offset + 1] = 0x0F;
 
 	x++;
-
-	update_cur(x, y);
 	
 	m_current_x += 2;	
 }
 
-void print(char *m_string)
+/*
+	puts
+
+	Function information:
+	Puts a string into the current Text Mode Buffer Offset
+	Updates cursor position accordingly
+
+	Parameters:
+	m_string -> string to display
+
+	Return:
+	None
+*/
+void puts(const char *m_string)
 {
 	uint32_t i = 0;
 	while (m_string[i] != '\0')
 	{
-		//printchar(m_string[i]);
+		putc(m_string[i]);
 		i++;
 	}
+
+	update_cur(x, y);
 }

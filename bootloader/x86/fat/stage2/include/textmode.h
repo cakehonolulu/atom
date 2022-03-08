@@ -19,3 +19,4 @@ void enable_cur(uint8_t m_cur_start, uint8_t m_cur_end);
 void init_text_mode();
 uint16_t get_cur_pos();
 void disable_cur();
+void puts(const char *m_string);
