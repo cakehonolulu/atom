@@ -240,5 +240,5 @@ void puts(const char *m_string)
 	}
 
 	// Update the cursor accounting for next column and 0->79
-	update_cur(m_x + 2, m_y);
+	update_cur(m_x, m_y);
 }
