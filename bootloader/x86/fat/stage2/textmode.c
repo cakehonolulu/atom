@@ -1,13 +1,10 @@
 #include <textmode.h>
 
 // Current VGA Text Mode Matrix 'x'
-uint8_t m_current_x = 0;
+uint8_t m_x = 0;
 
 // Current VGA Text Mode Matrix 'y'
-uint8_t m_current_y = 0;
-
-uint8_t x = 0;
-uint8_t y = 0;
+uint8_t m_y = 0;
 
 /*
 	update_cur
@@ -81,10 +78,10 @@ void enable_cur(uint8_t m_cur_start, uint8_t m_cur_end)
 void init_text_mode()
 {
 	// Set current X to 0
-	m_current_x = 0;
+	m_x = 0;
 
 	// Set current Y to 0
-	m_current_y = 0;
+	m_y = 0;
 
 	// Disable cursor
 	disable_cur();
@@ -182,16 +179,35 @@ void disable_cur()
 */
 static void putc(char m_char)
 {
-	uint16_t m_offset = ((m_current_y * TEXT_MODE_WIDTH) + m_current_x);
+	// Calculate the offset to write to
+	uint16_t m_offset = ((m_x + (m_y * TEXT_MODE_WIDTH)) * 2);
 
-	volatile char *video = (volatile char*)0xB8000;
+	//
+	volatile char *m_text_mode_buffer = (volatile char*)0xB8000;
 
-	video[m_offset] = m_char;
-	video[m_offset + 1] = 0x0F;
+	m_text_mode_buffer [m_offset] = m_char;
+	m_text_mode_buffer [m_offset + 1] = 0x0F;
 
-	x++;
-	
-	m_current_x += 2;	
+	// Check if we've finished the text mode column (80)
+	if (m_x > 80)
+	{
+		// Set x back to 0 (Leftmost of the screen)
+		m_x = 0;
+
+		// Increase the row
+		m_y++;
+	}
+	else
+	{
+		// Increase x by 1
+		m_x++;	
+	}
+
+	// Check if we've got to the last row (25)
+	if (m_y > 25)
+	{
+		// Move the buffer n-1 to accomodate a new clean row
+	}
 }
 
 /*
@@ -210,11 +226,12 @@ static void putc(char m_char)
 void puts(const char *m_string)
 {
 	uint32_t i = 0;
+
 	while (m_string[i] != '\0')
 	{
 		putc(m_string[i]);
 		i++;
 	}
 
-	update_cur(x, y);
+	update_cur(m_x + 2, m_y);
 }
