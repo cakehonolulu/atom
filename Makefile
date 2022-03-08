@@ -1,60 +1,20 @@
-# Atom currently holds only x86 (And baremetal x86-64) architectures, but we can use this switch to change arch at compile-time
-ARCH ?= x86
+# Target Architecture (Currently supports i386)
+ARCH ?= i386
 
-# QEMU emulator will default to x86-32
-QEMU = qemu-system-i386
+FILESYSTEM ?= FAT16
 
-QEMUARGS =
-QEMU_DEBUGARGS = -s -S & gdb --eval-command="target remote localhost:1234"
-
-# BOCHS emulator
-BOCHS = bochs
-
-ifdef I_FLOPPY_FS_NONE
-# 1.44 MB Floppy for now
-MEDIA = floppy.img
-# Looks like DD considers floppy's physical Sector 1 as 0, use this variable to avoid confusion.
-FLOPPY_SECTOR1 = 0
-# Do the same for Sector 2, then, we will calculate the size of the second stage bootloader (boot1)
-# and dynamically assign the starting (Kernel-containing) sector using that.
-FLOPPY_SECTOR2 = 1
-# Hardcoded to 3 for now! Find a way to find this variable dynamically using Second Stage Bootloader's
-# (boot1) size.
-FLOPPY_KERNEL_STARTING_SECTOR = 6
-endif
-
-# Kernel Linker Script
-LDSCRIPT = kernel/arch/$(ARCH)/linker.ld
-
-# Tell Initium which filesystem we'll use to load Atom
-ifdef I_FS_FAT16
-LDFLAGS = -Wl,-DI_FS_FAT16=1
+# For building a FAT16 Disk Image
+ifeq ($(FILESYSTEM), FAT16)
 # Constants
 HDD_MBR_SECTOR = 0
 endif
 
-ifdef I_FS_NONE
-LDFLAGS = -Wl,-DI_FS_NONE=1
-# Constants
-HDD_MBR_SECTOR = 0
-HDD_SECOND_STAGE_SECTOR = 1
-HDD_KERNEL_STARTING_SECTOR = 4
-endif
+all: disk_image
 
-.PHONY: hdd.img bochs qemu qemu-debug
+.PHONY: bootloader
 
-all: hdd.img
-
-ifdef I_FLOPPY_FS_NONE
-floppy.img: arch bloader
-	-@mkfs.msdos -C floppy.img 1440 >/dev/null
-	-@dd conv=notrunc if=bootloader/$(ARCH)/boot0.bin of=floppy.img bs=512 seek=$(FLOPPY_SECTOR1) status=none
-	-@dd conv=notrunc if=bootloader/$(ARCH)/boot1.bin of=floppy.img bs=512 seek=$(FLOPPY_SECTOR2) status=none
-	-@dd conv=notrunc if=kernel/arch/$(ARCH)/kernel.bin of=floppy.img bs=512 seek=$(FLOPPY_KERNEL_STARTING_SECTOR) status=none
-endif
-
-ifdef I_FS_FAT16
-hdd.img: clean bloader
+ifeq ($(FILESYSTEM), FAT16)
+disk_image: bootloader
 	-@echo " \033[0;34mDD \033[0mimage"
 	-@dd if=/dev/zero of=hdd.img bs=1 count=0 seek=10M status=none # 10485760 Bytes = 10 Mega Bytes
 	-@mkfs.fat -F 16 hdd.img >/dev/null
@@ -63,52 +23,11 @@ hdd.img: clean bloader
 	-@dd conv=notrunc if=bootloader/$(ARCH)/fat/boot0.bin of=hdd.img bs=512 seek=$(HDD_MBR_SECTOR) status=none
 	-@rm STAGE2
 	-@echo " \033[0;32mOK \033[0mhdd.img"
-endif
 
-ifdef I_FS_NONE
-hdd.img: arch bloader
-	-@echo " \033[0;31mDD \033[0mimage"
-	-@dd if=/dev/zero of=hdd.img bs=1 count=0 seek=10M status=none # 10485760 Bytes = 10 Mega Bytes
-	-@dd conv=notrunc if=bootloader/$(ARCH)/boot0.bin of=hdd.img bs=512 seek=$(HDD_MBR_SECTOR) status=none
-	-@dd conv=notrunc if=bootloader/$(ARCH)/boot1.bin of=hdd.img bs=512 seek=$(HDD_SECOND_STAGE_SECTOR) status=none
-	-@dd conv=notrunc if=kernel/arch/$(ARCH)/kernel.bin of=hdd.img bs=512 seek=$(HDD_KERNEL_STARTING_SECTOR) status=none
-	-@echo " \033[0;32mOK \033[0mhdd.img"
-endif
+bootloader:
+	-@make -C bootloader/$(ARCH) FILESYSTEM=FAT16 --no-print-directory
 
-arch:
-	make -C kernel/arch/$(ARCH)
-
-bloader:
-	make -C bootloader/$(ARCH) --no-print-directory
-
-ifdef I_FS_FAT16
 clean:
-	make -C bootloader/$(ARCH) clean --no-print-directory
+	-@make -C bootloader/$(ARCH) FILESYSTEM=FAT16 clean --no-print-directory
 	-@rm hdd.img
 endif
-
-ifdef I_FS_NONE
-clean:
-	make -C kernel/arch/$(ARCH) clean
-	make -C bootloader/$(ARCH) clean
-	-@rm hdd.img
-	clear
-endif
-
-ifdef I_FS_FAT16
-bochs:
-	$(BOCHS) -q -f bochsrc.bxrc 'ata0-master: type=disk, path=hdd.img, mode=flat, cylinders=20, heads=16, spt=63, sect_size=512, model="Generic 1234", biosdetect=auto, translation=auto'
-endif
-
-ifdef I_FS_NONE
-bochs:
-	$(BOCHS) -q -f bochsrc.bxrc 'ata0-master: type=disk, path=hdd.img, mode=flat, cylinders=32, heads=16, spt=63, sect_size=512, model="Generic 1234", biosdetect=auto, translation=auto'
-endif
-
-qemu: $(FLOPPY_DISK)
-	$(QEMU) -fda $^ $(QEMU_ARGUMENTS)
-
-qemu-debug: $(FLOPPY_DISK)
-	$(QEMU) -fda $^ $(QEMU_DEBUG_ARGUMENTS)
-
-$(V).SILENT:

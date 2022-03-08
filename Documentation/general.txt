@@ -1,4 +1,0 @@
-AH (A Higher) -> 1 byte 0xAA
-AL (A Lower) -> 1 byte 0xBB
-AX -> 2 bytes (16 bits) 0xAABB
-EAX -> 4 bytes (32 bits) 0xAABBCCDD

@@ -29,7 +29,7 @@ OBJCOPY = objcopy
 
 CFLAGS := -ffreestanding -fno-builtin -nostdlib -Iinitium -Istage2/libstage2/include
 
-ifeq ($(ARCH), x86)
+ifeq ($(ARCH), i386)
 CFLAGS += --target=i686-pc-none-elf -march=i686
 endif
 
@@ -37,7 +37,7 @@ REALMODE = -m16
 
 BINARY := boot0.elf
 
-.PHONY: all stage2
+.PHONY: stage2
 
 all: stage2 $(BINARY)
 
@@ -46,7 +46,7 @@ stage2:
 
 $(BINARY): $(SOBJECTS)
 	@echo " \033[0;36mLD \033[0mboot0.elf"
-	@$(CC) -T linkboot0.ld -o $@ -DI_FS_FAT16 $(SOBJECTS) $(CFLAGS) $(REALMODE)
+	@$(CC) -T linkboot0.ld -o $@ $(SOBJECTS) $(CFLAGS) $(REALMODE)
 	@echo " \033[0;37mOC\033[0m boot0.bin"
 	@$(OBJCOPY) --only-keep-debug boot0.elf boot0.sym
 	@$(OBJCOPY) --strip-debug boot0.elf
