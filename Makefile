@@ -67,7 +67,7 @@ endif
 
 ifdef I_FS_NONE
 hdd.img: arch bloader
-	-@echo " \033[0;31mDD \033[0mhdd.img"
+	-@echo " \033[0;31mDD \033[0mimage"
 	-@dd if=/dev/zero of=hdd.img bs=1 count=0 seek=10M status=none # 10485760 Bytes = 10 Mega Bytes
 	-@dd conv=notrunc if=bootloader/$(ARCH)/boot0.bin of=hdd.img bs=512 seek=$(HDD_MBR_SECTOR) status=none
 	-@dd conv=notrunc if=bootloader/$(ARCH)/boot1.bin of=hdd.img bs=512 seek=$(HDD_SECOND_STAGE_SECTOR) status=none
