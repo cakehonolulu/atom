@@ -6,6 +6,9 @@ uint8_t m_current_x = 0;
 // Current VGA Text Mode Matrix 'y'
 uint8_t m_current_y = 0;
 
+uint8_t x = 0;
+uint8_t y = 0;
+
 /*
 	update_cur
 
@@ -160,6 +163,22 @@ void disable_cur()
 		* CD -> Cursor (Dis)enable Bit (Bit 5)
 	*/
 	outb(CRTC_DATA_REG, (1 << 5));
+}
+
+void putchar(char m_char)
+{
+	uint16_t m_offset = ((m_current_y * TEXT_MODE_WIDTH) + m_current_x);
+
+	volatile char *video = (volatile char*)0xB8000;
+
+	video[m_offset] = m_char;
+	video[m_offset + 1] = 0x0F;
+
+	x++;
+
+	update_cur(x, y);
+	
+	m_current_x += 2;	
 }
 
 void print(char *m_string)

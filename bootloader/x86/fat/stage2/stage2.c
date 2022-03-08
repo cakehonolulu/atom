@@ -14,6 +14,26 @@ int stage2()
 {
 	init_text_mode();
 
+    putchar('H');
+    putchar('e');
+    putchar('l');
+    putchar('l');
+    putchar('o');
+    putchar(' ');
+    putchar('f');
+    putchar('r');
+    putchar('o');
+    putchar('m');
+    putchar(' ');
+    putchar('S');
+    putchar('t');
+    putchar('a');
+    putchar('g');
+    putchar('e');
+    putchar(' ');
+    putchar('2');
+    putchar('!');
+
 	__asm__ __volatile__("cli; hlt");
 
     return 0;
