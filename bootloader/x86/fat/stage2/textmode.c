@@ -231,11 +231,14 @@ void puts(const char *m_string)
 {
 	uint32_t i = 0;
 
+	// Iterate until null-byte is found
 	while (m_string[i] != '\0')
 	{
+		// Display each character
 		putc(m_string[i]);
 		i++;
 	}
 
+	// Update the cursor accounting for next column and 0->79
 	update_cur(m_x + 2, m_y);
 }
