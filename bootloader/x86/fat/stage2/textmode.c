@@ -182,11 +182,15 @@ static void putc(char m_char)
 	// Calculate the offset to write to
 	uint16_t m_offset = ((m_x + (m_y * TEXT_MODE_WIDTH)) * 2);
 
-	//
+	// VGA Mode 3 Text Mode Buffer Location
+	// volatile because it can be changed anytime by any program
 	volatile char *m_text_mode_buffer = (volatile char*)0xB8000;
 
-	m_text_mode_buffer [m_offset] = m_char;
-	m_text_mode_buffer [m_offset + 1] = 0x0F;
+	// offset + 0 contains the character
+	m_text_mode_buffer[m_offset] = m_char;
+
+	// offset + 1 contains the colour attribute
+	m_text_mode_buffer[m_offset + 1] = 0x0F;
 
 	// Check if we've finished the text mode column (80)
 	if (m_x > 80)
