@@ -6,18 +6,7 @@
 
 .global init0_fat16
 
-.section .stage2_discard
 
-stage2_start:
-    # Insert stage2 binary here. It is done this way since we
-    # can determine the size(and number of sectors) to load since
-    #     Size = stage2_end-stage2_start
-    .incbin "stage2/stage2.bin"
-
-# End of stage2. Make sure this label is LAST in this file!
-stage2_end:
-
-.set I386_BOOT1_SIZE, ((stage2_end - stage2_start + 511) / 512)
                                 # Number of 512 byte sectors stage2 uses.
 
 .section .text										# Text section
@@ -151,7 +140,7 @@ boot0:												# boot0 function
 	sub $0x02, %ax
 	mulb sectors_per_cluster
 	add data_cluster_offset, %ax
-	mov $I386_BOOT1_SIZE, %cx # STAGE 2 Size
+	mov $8, %cx # STAGE 2 Size
 	mov $0x0500, %bx
 	call read_sectors
 	# xchg %bx, %bx

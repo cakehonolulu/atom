@@ -39,10 +39,15 @@ BINARY := boot0.elf
 
 .PHONY: stage2
 
-all: stage2 $(BINARY)
+all: stage2 headers $(BINARY)
 
 stage2:
 	-@make -C stage2/ --no-print-directory
+
+headers:
+	$(eval SIZE = $(shell sh -c "stat --printf="%s" stage2/stage2.bin"))
+	-@echo $$((( $(SIZE) + 511) / 512))
+	-@echo ".global boot1_size\nboot1_size:\n.int $(SIZE)" > boot1.h
 
 $(BINARY): $(SOBJECTS)
 	@echo " \033[0;36mLD \033[0mboot0.elf"
@@ -62,4 +67,5 @@ clean:
 	-@rm -rf *.sym ||:
 	-@rm -rf *.bin ||:
 	-@rm -rf *.o ||:
+	-@rm -f boot1.h
 	-@make -C stage2/ clean --no-print-directory
