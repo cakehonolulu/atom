@@ -186,31 +186,81 @@ static void putc(char m_char)
 	// volatile because it can be changed anytime by any program
 	volatile char *m_text_mode_buffer = (volatile char*)0xB8000;
 
-	// offset + 0 contains the character
-	m_text_mode_buffer[m_offset] = m_char;
-
-	// offset + 1 contains the colour attribute
-	m_text_mode_buffer[m_offset + 1] = 0x0F;
-
-	// Check if we've finished the text mode column (80)
-	if (m_x > 80)
+	switch (m_char)
 	{
-		// Set x back to 0 (Leftmost of the screen)
-		m_x = 0;
+		case '\n':
+			m_x = 0;
+			m_y++;
+			break;
 
-		// Increase the row
-		m_y++;
-	}
-	else
-	{
-		// Increase x by 1
-		m_x++;	
-	}
+		case '\t':
+			if ((m_x + 4) < 80)
+			{
+				for (unsigned int i = 0; i <= 8; i += 2)
+				{
+					m_text_mode_buffer[m_offset + i] = ' ';
+					m_text_mode_buffer[m_offset + i + 1] = 0x0A;
+				}
 
-	// Check if we've got to the last row (25)
-	if (m_y > 25)
-	{
-		// Move the buffer n-1 to accomodate a new clean row
+				m_x += 4;
+			}
+			else if ((m_x + 4) > 80)
+			{
+				unsigned int m_count = 0;
+
+				while (m_x < 80)
+				{
+					m_text_mode_buffer[m_offset + m_count] = ' ';
+					m_text_mode_buffer[m_offset + m_count + 1] = 0x0A;
+					m_count += 2;
+					m_x++;
+				}
+
+				m_y++;
+				m_x = 0;
+
+				if (m_count <= 8)
+				{
+					while (m_count != 8)
+					{
+						m_text_mode_buffer[m_offset + m_count] = ' ';
+						m_text_mode_buffer[m_offset + m_count + 1] = 0x0A;
+						m_count += 2;
+						m_x++;
+					}
+				}
+			}
+			break;
+
+		default:
+			// offset + 0 contains the character
+			m_text_mode_buffer[m_offset] = m_char;
+
+			// offset + 1 contains the colour attribute
+			m_text_mode_buffer[m_offset + 1] = 0x0F;
+
+			// Check if we've finished the text mode column (80)
+			if (m_x > 80)
+			{
+				// Set x back to 0 (Leftmost of the screen)
+				m_x = 0;
+
+				// Increase the row
+				m_y++;
+			}
+			else
+			{
+				// Increase x by 1
+				m_x++;	
+			}
+
+			// Check if we've got to the last row (25)
+			if (m_y > 25)
+			{
+				// Move the buffer n-1 to accomodate a new clean row
+			}
+
+			break;
 	}
 }
 
