@@ -232,6 +232,21 @@ static void putc(char m_char)
 			}
 			break;
 
+		case '\b':
+			m_text_mode_buffer[m_offset - 2] = ' ';
+			m_text_mode_buffer[m_offset - 1] = 0x0F;
+
+			if (m_x < 1)
+			{
+				m_y--;
+				m_x = 79;
+			}
+			else
+			{
+				m_x--;	
+			}
+			break;
+
 		default:
 			// offset + 0 contains the character
 			m_text_mode_buffer[m_offset] = m_char;
@@ -240,7 +255,7 @@ static void putc(char m_char)
 			m_text_mode_buffer[m_offset + 1] = 0x0F;
 
 			// Check if we've finished the text mode column (80)
-			if (m_x > 80)
+			if (m_x > 79)
 			{
 				// Set x back to 0 (Leftmost of the screen)
 				m_x = 0;
@@ -255,7 +270,7 @@ static void putc(char m_char)
 			}
 
 			// Check if we've got to the last row (25)
-			if (m_y > 25)
+			if (m_y > 24)
 			{
 				// Move the buffer n-1 to accomodate a new clean row
 			}
