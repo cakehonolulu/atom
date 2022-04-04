@@ -12,12 +12,11 @@
 .section .text										# Text section
 
 # init0_fat16 function
-init0_fat16:	
-# TODO/HACK: Do we really need: .intel_syntax noprefix and .att_syntax prefix in jmp short boot0 ?
-.intel_syntax noprefix
-	jmp short boot0
-.att_syntax prefix
-	nop
+init0_fat16:
+# Shorthand encoding for a short jmp to init code and nop
+	.byte 0xEB
+	.byte 0x3C
+	.byte 0x00
 
 # Boot Parameter Block (BPB)
 bpb:
