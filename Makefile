@@ -33,4 +33,4 @@ clean:
 endif
 
 debug:
-	-@(qemu-system-i386 -s -S -drive file=hdd.img,format=raw;) & gdb && pkill -9 qemu-system-i38
+	-@(qemu-system-i386 -s -S -drive file=hdd.img,format=raw;) & gdb -x scripts/gdb_debug && pkill -9 qemu-system-i38
