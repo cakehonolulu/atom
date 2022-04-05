@@ -163,3 +163,28 @@ void outl(uint16_t m_address, uint32_t m_data)
     					:
     					: "a" (m_data), "d" (m_address));
 }
+
+/*
+	insw
+
+	Function information:
+	Sends a string to the desired port
+
+	Parameters:
+	m_address -> 16-bit immediate address
+	containing the port to write from
+
+	m_dst -> 32-bit address to start writing to
+
+	m_size -> size of the data to copy
+
+	Return:
+	none
+*/
+void insw(uint16_t m_address, uint32_t *m_dst, uint32_t m_size)
+{
+    __asm__ __volatile__ ("rep insw"
+        				: "+D" (m_dst), "+c" (m_size), "=m" (*m_dst)
+        				: "d" (m_address)
+        				: "memory");
+}
