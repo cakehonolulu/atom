@@ -69,7 +69,7 @@ boot1Start32:
 	mov %ax, %ds
 	mov %ax, %es
 	mov %ax, %ss
-	mov $0x4000, %esp                 		# Set up a new stack pointer. Ferrum places it conveniently
+	mov $0x7C00, %esp                 		# Set up a new stack pointer. Ferrum places it conveniently
 	mov %esp, %ebp
 													# below the EBDA area.
 	call stage2

@@ -140,10 +140,10 @@ boot0:												# boot0 function
 	mulb sectors_per_cluster
 	add data_cluster_offset, %ax
 	mov $8, %cx # STAGE 2 Size
-	mov $0x0500, %bx
+	mov $0x7E00, %bx
 	call read_sectors
 	# xchg %bx, %bx
-	jmp $0x0, $0x0500
+	jmp $0x0, $0x7E00
 
 error:
 	mov $0x0e, %ah

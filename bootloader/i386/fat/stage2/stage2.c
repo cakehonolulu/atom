@@ -1,4 +1,5 @@
 #include <textmode.h>
+#include <ata.h>
 
 int stage2()
 {

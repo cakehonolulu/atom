@@ -6,7 +6,7 @@ OUTPUT_ARCH(i386)
 
 SECTIONS {
 
-	. = 0x0500;
+	. = 0x7E00;
 
     .text.init :
     {
