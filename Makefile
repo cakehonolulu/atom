@@ -31,3 +31,6 @@ clean:
 	-@make -C bootloader/$(ARCH) FILESYSTEM=FAT16 clean --no-print-directory
 	-@rm hdd.img
 endif
+
+debug:
+	-@(qemu-system-i386 -s -S -drive file=hdd.img,format=raw;) & gdb && pkill -9 qemu-system-i38
