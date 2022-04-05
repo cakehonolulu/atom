@@ -45,13 +45,19 @@ init1:
 	int $0x10
 
 	clc
+
+	cli
+
 	mov %cr0, %eax
 	or $1, %eax
 	mov %eax, %cr0
+
 	mov $0b11001111, %al
 	mov %al, (gdt_code + 6)										# We dynamically modify the GDT structure to try optimizing
 	mov %al, (gdt_data + 6)										# the size, change both segment's bitmode to 32-bit.
+	
 	lgdt gdt
+	
 	ljmpl $GDT_CODE_SEGMENT, $boot1Start32
 
 .code32
@@ -59,13 +65,11 @@ init1:
 .extern stage2
 
 boot1Start32:
-	mov $GDT_DATA_SEGMENT, %eax
-	mov %eax, %ds
-	mov %eax, %es
-	mov %eax, %fs
-	mov %eax, %gs
-	mov %eax, %ss
-	xchg %bx, %bx
+	mov $GDT_DATA_SEGMENT, %ax
+	mov %ax, %ds
+	mov %ax, %es
+	mov %ax, %ss
 	mov $0x4000, %esp                 		# Set up a new stack pointer. Ferrum places it conveniently
+	mov %esp, %ebp
 													# below the EBDA area.
 	call stage2
