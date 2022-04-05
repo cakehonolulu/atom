@@ -27,7 +27,7 @@ endif
 
 OBJCOPY = objcopy
 
-CFLAGS := -ffreestanding -fno-builtin -nostdlib -Iinitium -Istage2/libstage2/include
+CFLAGS := -ffreestanding -fno-builtin -nostdlib -Iinitium -Istage2/libstage2/include -g
 
 ifeq ($(ARCH), i386)
 CFLAGS += --target=i686-pc-none-elf -march=i686
