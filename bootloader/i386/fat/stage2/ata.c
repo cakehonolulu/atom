@@ -3,42 +3,50 @@
 #include <io.h>
 
 /*
-	ata_check_busy
+	ata_check_bsy
 
 	Function information:
 	Waits for ATA to be ready to send/recieve data
 
 	Parameters:
-	none
+	m_bit -> set for 1, clear for 0
 
 	Return:
 	none
 */
-void ata_check_busy()
+void ata_check_bsy(m_bit_status m_bit)
 {
-	while(inb(ATA_CMD_STA_REG) & BSY)
+	if (m_bit == set)
 	{
-		puts("Drive busy!\n");
+		while(inb(ATA_CMD_STA_REG) & BSY);
+	}
+	else
+	{
+		while(!(inb(ATA_CMD_STA_REG) & BSY));
 	}
 }
 
 /*
-	ata_check_ready
+	ata_check_rdy
 
 	Function information:
 	Waits for ATA to be operative again (Not spinning)
 
 	Parameters:
-	none
+	m_bit -> set for 1, clear for 0
 
 	Return:
 	none
 */
-void ata_check_ready()
+void ata_check_rdy(m_bit_status m_bit)
 {
-	while(!(inb(ATA_CMD_STA_REG) & RDY))
+	if (m_bit == set)
 	{
-		puts("Drive still spinning!\n");
+		while(inb(ATA_CMD_STA_REG) & RDY);
+	}
+	else
+	{
+		while(!(inb(ATA_CMD_STA_REG) & RDY));
 	}
 }
 
@@ -49,16 +57,20 @@ void ata_check_ready()
 	Waits for ATA to have ERR bit toggled
 
 	Parameters:
-	none
+	m_bit -> set for 1, clear for 0
 
 	Return:
 	none
 */
-void ata_check_err()
+void ata_check_err(m_bit_status m_bit)
 {
-	while((inb(ATA_CMD_STA_REG) & ERR))
+	if (m_bit == set)
 	{
-		puts("Drive error!\n");
+		while(inb(ATA_CMD_STA_REG) & ERR);
+	}
+	else
+	{
+		while(!(inb(ATA_CMD_STA_REG) & ERR));
 	}
 }
 
@@ -69,16 +81,20 @@ void ata_check_err()
 	Waits for ATA to have PIO data to transfer or accept
 
 	Parameters:
-	none
+	m_bit -> set for 1, clear for 0
 
 	Return:
 	none
 */
-void ata_check_drq()
+void ata_check_drq(m_bit_status m_bit)
 {
-	while((inb(ATA_CMD_STA_REG) & DRQ))
+	if (m_bit == set)
 	{
-		puts("Drive not ready to transfer!\n");
+		while(inb(ATA_CMD_STA_REG) & DRQ);
+	}
+	else
+	{
+		while(!(inb(ATA_CMD_STA_REG) & DRQ));
 	}
 }
 
@@ -131,18 +147,22 @@ void atapio24_identify()
 	// Send the identify command to the register
 	outb(ATA_CMD_STA_REG, ATA_IDENTIFY_CMD);
 
-	m_status = inb(ATA_CMD_STA_REG);
+	do {
+		m_status = inb(ATA_CMD_STA_REG);
+	} while (m_status & BSY);
 
 	if (m_status != 0)
 	{
-		ata_check_busy();
+		do {
+			m_status = inb(ATA_CMD_STA_REG);
+		} while (m_status & BSY);
 
 		m_lba_mi = inb(ATA_CYL_LO_REG);
 		m_lba_hi = inb(ATA_CYL_HI_REG);
 
 		if (m_lba_mi == 0 && m_lba_hi == 0)
 		{
-			ata_check_err();
+			ata_check_err(set);
 			
 			puts("Drive has been initialized correctly!\n");
 		}
@@ -268,7 +288,7 @@ void atapio24_write(uint32_t *m_data, uint32_t m_lba, uint8_t m_sectsz)
 	unsigned int i, j;
 
 	// Check if drive is busy
-	ata_check_busy();
+	//ata_check_busy();
 
 	/*
 		TODO:
@@ -307,8 +327,8 @@ void atapio24_write(uint32_t *m_data, uint32_t m_lba, uint8_t m_sectsz)
 	for (i = 0; i < m_sectsz; i++)
 	{
 		// This is painfully slow, we should avoid ATA PIO
-		ata_check_busy();
-		ata_check_ready();
+		//ata_check_busy();
+		//ata_check_ready();
 
 		/*
 			TODO:
