@@ -1,4 +1,5 @@
 #include <ata.h>
+#include <textmode.h>
 #include <io.h>
 
 /*
@@ -37,7 +38,122 @@ void ata_check_ready()
 {
 	while(!(inb(ATA_CMD_STA_REG) & RDY))
 	{
-		puts("Drive not ready!\n");
+		puts("Drive still spinning!\n");
+	}
+}
+
+/*
+	ata_check_ready
+
+	Function information:
+	Waits for ATA to have ERR bit toggled
+
+	Parameters:
+	none
+
+	Return:
+	none
+*/
+void ata_check_err()
+{
+	while((inb(ATA_CMD_STA_REG) & ERR))
+	{
+		puts("Drive error!\n");
+	}
+}
+
+/*
+	ata_check_drq
+
+	Function information:
+	Waits for ATA to have PIO data to transfer or accept
+
+	Parameters:
+	none
+
+	Return:
+	none
+*/
+void ata_check_drq()
+{
+	while((inb(ATA_CMD_STA_REG) & DRQ))
+	{
+		puts("Drive not ready to transfer!\n");
+	}
+}
+
+/*
+	atapio24_identify
+
+	Function information:
+	Runs an ATA IDENTIFY command targetting a bus
+
+	Parameters:
+	none
+
+	Return:
+	none
+*/
+void atapio24_identify()
+{
+	uint8_t m_status, m_lba_mi, m_lba_hi;
+
+	/*
+		TODO:
+
+		Check for slave bit and send the corresponding value automatically.
+	
+		For now, use a define'd comparison.
+	*/
+	if (ATA_DEFAULT == ATA_PRIMARY)
+	{
+		// Sends the command to the master drive
+		outb(ATA_DRIVE_HEAD_REG, 0xA0);
+	}
+	else
+	{
+		// Sends the command to the slave drive
+		outb(ATA_DRIVE_HEAD_REG, 0xB0);
+	}
+
+	// Send the sector count size to the register
+	outb(ATA_SECT_CNT_REG, 0);
+	
+	// Sends bits [0:7] of the LBA value to the register
+	outb(ATA_SECT_NUM_REG, 0);
+	
+	// Sends bits [8:15] of the LBA value to the register
+	outb(ATA_CYL_LO_REG, 0);
+	
+	// Sends bits [16:23] of the LBA value to the register
+	outb(ATA_CYL_HI_REG, 0); 
+
+	// Send the identify command to the register
+	outb(ATA_CMD_STA_REG, ATA_IDENTIFY_CMD);
+
+	m_status = inb(ATA_CMD_STA_REG);
+
+	if (m_status != 0)
+	{
+		ata_check_busy();
+
+		m_lba_mi = inb(ATA_CYL_LO_REG);
+		m_lba_hi = inb(ATA_CYL_HI_REG);
+
+		if (m_lba_mi == 0 && m_lba_hi == 0)
+		{
+			ata_check_err();
+			
+			puts("Drive has been initialized correctly!\n");
+		}
+		else
+		{
+			puts("Selected drive is not ATA-compatible!\n");
+		}
+	}
+	else
+	{
+		puts("Selected drive doesn't exist!\n");
 	}
 }
 
@@ -73,7 +189,7 @@ void atapio24_read(uint8_t *m_dst, uint32_t m_lba, uint8_t m_sectsz)
 	
 		For now, use a define'd comparison.
 	*/
-	if (ATA_DEFAULT != ATA_SECONDARY)
+	if (ATA_DEFAULT == ATA_PRIMARY)
 	{
 		// Sends the command to the master drive
 		outb(ATA_DRIVE_HEAD_REG, 0xE0 | ((m_lba >> 24) & 0xF));
@@ -161,7 +277,7 @@ void atapio24_write(uint32_t *m_data, uint32_t m_lba, uint8_t m_sectsz)
 	
 		For now, use a define'd comparison.
 	*/
-	if (ATA_DEFAULT != ATA_SECONDARY)
+	if (ATA_DEFAULT == ATA_PRIMARY)
 	{
 		// Sends the command to the master drive
 		outb(ATA_DRIVE_HEAD_REG, 0xE0 | ((m_lba >> 24) & 0xF));

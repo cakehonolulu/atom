@@ -25,8 +25,9 @@
 #define ATA_CMD_STA_REG		(ATA_DEFAULT + 7)
 
 /* ATA Commands */
-#define ATA_READ_CMD	0x20
-#define ATA_WRITE_CMD	0x30
+#define ATA_READ_CMD		0x20
+#define ATA_WRITE_CMD		0x30
+#define ATA_IDENTIFY_CMD	0xEC
 
 /* Functions */
 void ata_check_busy();
