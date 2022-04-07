@@ -198,9 +198,6 @@ void atapio24_identify()
 */
 void atapio24_read(uint8_t *m_dst, uint32_t m_lba, uint8_t m_sectsz)
 {
-	// Disable interrupts before reading
-	__asm__ __volatile__ ("cli");
-
 	// Needed for the nested loop
 	unsigned int i, j;
 
@@ -266,8 +263,6 @@ void atapio24_read(uint8_t *m_dst, uint32_t m_lba, uint8_t m_sectsz)
 		// Point to the next 512 bytes
 		m_dst += 0x100;
 	}*/
-	// Enable interrupts after reading
-	__asm__ __volatile__("sti");
 }
 
 /*
@@ -286,9 +281,6 @@ void atapio24_read(uint8_t *m_dst, uint32_t m_lba, uint8_t m_sectsz)
 */
 void atapio24_write(uint32_t *m_data, uint32_t m_lba, uint8_t m_sectsz)
 {
-	// Disable interrupts before writing
-	__asm__ __volatile__ ("cli");
-
 	// For the nested loops
 	unsigned int i, j;
 
@@ -350,7 +342,4 @@ void atapio24_write(uint32_t *m_data, uint32_t m_lba, uint8_t m_sectsz)
 			outl(ATA_DATA_REG, m_data[j]);
 		}
 	}
-
-	// Enable interrupts after writing
-	__asm__ __volatile__("sti");
 }
