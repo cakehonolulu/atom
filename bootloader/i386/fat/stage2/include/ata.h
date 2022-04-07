@@ -37,5 +37,6 @@ void ata_check_bsy(m_bit_status m_bit);
 void ata_check_rdy(m_bit_status m_bit);
 void ata_check_err(m_bit_status m_bit);
 void ata_check_drq(m_bit_status m_bit);
+void atapio24_identify();
 void atapio24_read(uint8_t *m_dst, uint32_t m_lba, uint8_t m_sectsz);
 void atapio24_write(uint32_t *m_data, uint32_t m_lba, uint8_t m_sectsz);
