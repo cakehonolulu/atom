@@ -254,14 +254,11 @@ void atapio24_read(uint8_t *m_dst, uint32_t m_lba, uint8_t m_sectsz)
 			256 words (inw) = 512 bytes (Sector size)
 		*/
 
-		for(j = 0; j < 0x100; j++)
-		{
-			// Fill using Port I/O each memory location's contents
-			m_dst[j] = inw(ATA_DATA_REG);
-		}
+		// Fill using Port I/O each memory location's contents
+		insw(ATA_DATA_REG, m_dst, 256);
 
 		// Point to the next 512 bytes
-		m_dst += 0x100;
+		m_dst += 256;
 	}
 }
 
