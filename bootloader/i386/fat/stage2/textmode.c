@@ -177,7 +177,7 @@ void disable_cur()
 	Quirk [!]
 	Only accessible from within text mode functions
 */
-static void putc(char m_char)
+void putc(char m_char)
 {
 	// Calculate the offset to write to
 	uint16_t m_offset = ((m_x + (m_y * TEXT_MODE_WIDTH)) * 2);
