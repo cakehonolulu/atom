@@ -115,6 +115,10 @@ void atapio24_identify()
 	// Function's variables
 	uint8_t m_status, m_lba_mi, m_lba_hi;
 
+	// Check if drive is busy and if it's ready to process any new command queues
+	ata_check_bsy(set);
+	ata_check_drq(set);
+
 	/*
 		TODO:
 
@@ -201,9 +205,6 @@ void atapio24_read(uint8_t *m_dst, uint32_t m_lba, uint8_t m_sectsz)
 	// Needed for the nested loop
 	unsigned int i, j;
 
-	// Check if drive is busy
-	//ata_check_busy();
-
 	/*
 		TODO:
 
@@ -238,11 +239,10 @@ void atapio24_read(uint8_t *m_dst, uint32_t m_lba, uint8_t m_sectsz)
 	outb(ATA_CMD_STA_REG, ATA_READ_CMD);
 
 	// Do this for all the sectors needed
-	/*for (i = 0; i < m_sectsz; i++)
+	for (i = 0; i < m_sectsz; i++)
 	{
 		// This is painfully slow, we should avoid ATA PIO
-		//ata_check_busy();
-		//ata_check_ready();
+		ata_check_bsy(set);
 		
 		/*
 			TODO:
@@ -252,7 +252,7 @@ void atapio24_read(uint8_t *m_dst, uint32_t m_lba, uint8_t m_sectsz)
 
 			For now:
 			256 words (inw) = 512 bytes (Sector size)
-		
+		*/
 
 		for(j = 0; j < 0x100; j++)
 		{
@@ -262,7 +262,7 @@ void atapio24_read(uint8_t *m_dst, uint32_t m_lba, uint8_t m_sectsz)
 
 		// Point to the next 512 bytes
 		m_dst += 0x100;
-	}*/
+	}
 }
 
 /*
@@ -283,9 +283,6 @@ void atapio24_write(uint32_t *m_data, uint32_t m_lba, uint8_t m_sectsz)
 {
 	// For the nested loops
 	unsigned int i, j;
-
-	// Check if drive is busy
-	//ata_check_busy();
 
 	/*
 		TODO:
@@ -324,8 +321,7 @@ void atapio24_write(uint32_t *m_data, uint32_t m_lba, uint8_t m_sectsz)
 	for (i = 0; i < m_sectsz; i++)
 	{
 		// This is painfully slow, we should avoid ATA PIO
-		//ata_check_busy();
-		//ata_check_ready();
+		ata_check_bsy(set);
 
 		/*
 			TODO:
