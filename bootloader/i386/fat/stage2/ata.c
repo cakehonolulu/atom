@@ -112,6 +112,7 @@ void ata_check_drq(m_bit_status m_bit)
 */
 void atapio24_identify()
 {
+	// Function's variables
 	uint8_t m_status, m_lba_mi, m_lba_hi;
 
 	/*
@@ -147,21 +148,25 @@ void atapio24_identify()
 	// Send the identify command to the register
 	outb(ATA_CMD_STA_REG, ATA_IDENTIFY_CMD);
 
+	// Wait until Busy Bit is set
 	do {
 		m_status = inb(ATA_CMD_STA_REG);
 	} while (m_status & BSY);
 
+	// Check if status is different to 0, that would mean no drive is attached to that bus
 	if (m_status != 0)
 	{
-		do {
-			m_status = inb(ATA_CMD_STA_REG);
-		} while (m_status & BSY);
+		// Check if ATA is Busy processing commands
+		ata_check_bsy(set);
 
+		// LBA Mid and High values must be _both_ 0, else; drive isn't ATA
 		m_lba_mi = inb(ATA_CYL_LO_REG);
 		m_lba_hi = inb(ATA_CYL_HI_REG);
 
+		// Check for it
 		if (m_lba_mi == 0 && m_lba_hi == 0)
 		{
+			// Wait while ERR Bit is set
 			ata_check_err(set);
 			
 			puts("Drive has been initialized correctly!\n");
