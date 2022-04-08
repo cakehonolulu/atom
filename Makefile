@@ -14,7 +14,7 @@ all: disk_image
 .PHONY: bootloader
 
 ifeq ($(FILESYSTEM), FAT16)
-disk_image: bootloader
+disk_image: clean bootloader
 	-@echo " \033[0;34mDD \033[0mimage"
 	-@dd if=/dev/zero of=hdd.img bs=1 count=0 seek=10M status=none # 10485760 Bytes = 10 Mega Bytes
 	-@mkfs.fat -F 16 hdd.img >/dev/null
