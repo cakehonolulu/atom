@@ -294,15 +294,15 @@ void putc(char m_char)
 */
 void puts(const char *m_string)
 {
-	uint32_t i = 0;
-
 	// Iterate until null-byte is found
-	while (m_string[i] != '\0')
+	while (*m_string != '\0')
 	{
 		// Display each character
-		putc(m_string[i]);
-		i++;
-	}
+		putc(*m_string);
+
+		// Increment the string pointer
+		*m_string++;
+	} 
 
 	// Update the cursor accounting for next column and 0->79
 	update_cur(m_x, m_y);
