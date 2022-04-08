@@ -200,10 +200,10 @@ void atapio24_identify()
 	Return:
 	none
 */
-void atapio24_read(uint8_t *m_dst, uint32_t m_lba, uint8_t m_sectsz)
+void atapio24_read(uint32_t *m_dst, uint32_t m_lba, uint8_t m_sectsz)
 {
-	// Needed for the nested loop
-	unsigned int i, j;
+	// Needed for the loop
+	unsigned int i;
 
 	/*
 		TODO:
