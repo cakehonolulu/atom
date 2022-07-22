@@ -14,7 +14,7 @@ int stage2()
 
     uint8_t m_sect[512];
 
-    atapio24_read(m_sect, 0x0, 1);
+    atapio24_read((uint32_t *) m_sect, 0x0, 1);
 
     puts("Data read successfully\n");
 
