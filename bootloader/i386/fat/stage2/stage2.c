@@ -10,7 +10,7 @@ int stage2()
 
     puts("Hello from Stage 2!\n");
 
-    //atapio24_identify();
+    atapio24_identify();
 
     uint8_t m_sect[512];
 
