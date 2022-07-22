@@ -20,3 +20,4 @@ void init_text_mode();
 uint16_t get_cur_pos();
 void disable_cur();
 void puts(const char *m_string);
+void putc(char m_char);

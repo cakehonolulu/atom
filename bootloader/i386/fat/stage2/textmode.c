@@ -173,9 +173,6 @@ void disable_cur()
 
 	Return:
 	None
-
-	Quirk [!]
-	Only accessible from within text mode functions
 */
 void putc(char m_char)
 {
