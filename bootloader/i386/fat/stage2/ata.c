@@ -105,12 +105,13 @@ void ata_check_drq(m_bit_status m_bit)
 	Runs an ATA IDENTIFY command targetting a bus
 
 	Parameters:
-	none
+	m_dst -> pointer to a 512-byte memory area where the IDENTIFY
+	command will read the data to
 
 	Return:
 	none
 */
-void atapio24_identify()
+void atapio24_identify(uint32_t *m_dst)
 {
 	// Function's variables
 	uint8_t m_status, m_lba_mi, m_lba_hi, m_identify_data[512];
