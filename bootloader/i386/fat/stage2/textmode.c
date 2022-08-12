@@ -298,7 +298,7 @@ void puts(const char *m_string)
 		putc(*m_string);
 
 		// Increment the string pointer
-		*m_string++;
+		m_string++;
 	} 
 
 	// Update the cursor accounting for next column and 0->79
