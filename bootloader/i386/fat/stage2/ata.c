@@ -114,7 +114,7 @@ void ata_check_drq(m_bit_status m_bit)
 void atapio24_identify(uint32_t *m_dst)
 {
 	// Function's variables
-	uint8_t m_status, m_lba_mi, m_lba_hi, m_identify_data[512];
+	uint8_t m_status, m_lba_mi, m_lba_hi;
 
 	// Check if drive is busy and if it's ready to process any new command queues
 	ata_check_bsy(set);
@@ -175,7 +175,7 @@ void atapio24_identify(uint32_t *m_dst)
 			ata_check_err(set);
 			
 			// Fill using Port I/O each memory location's contents
-			insw(ATA_DATA_REG, (uint32_t *) m_identify_data, 256);
+			insw(ATA_DATA_REG, (uint32_t *) m_dst, 256);
 
 			puts("Drive has been initialized correctly!\n");
 		}
