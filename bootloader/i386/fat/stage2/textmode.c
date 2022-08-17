@@ -289,33 +289,36 @@ void putc(char m_char)
 	Return:
 	None
 */
-void puts(const char *m_string)
+void puts(const char *m_string, ...)
 {
+	char *m_char;
+	va_list m_arguments;
+    va_start(m_arguments, m_string);
+
 	// Iterate until null-byte is found
 	while (*m_string != '\0')
 	{
-		// Check if user wants to input a percentage sign
-		if ((*m_string == '%') && ((*m_string + 1) != '%'))
-		{
-			putc(*m_string);
-			m_string += 2;
-		}
-		else
-		// Format string modifiers
+		// Check if we're (Probably) dealing w/a format string modifier
 		if (*m_string == '%')
 		{
-			switch (*m_string + 1)
+			// Simple lookup that checks what kind of format modifier is (If it is)
+			switch (*++m_string)
 			{
-				case 'c':
-					putc(""/*, Placeholder */);
+				// Prints a percentage sign
+				case '%':
+					putc('%');
+					m_string++;
 					break;
 
+				// Not supported/unknown format string, print as-is
 				default:
+					putc(*--m_string);
+					m_string++;
 					break;
 			}
 		}
 
-		// Display each character
+		// Display the character
 		putc(*m_string);
 
 		// Increment the string pointer
@@ -324,4 +327,6 @@ void puts(const char *m_string)
 
 	// Update the cursor accounting for next column and 0->79
 	update_cur(m_x, m_y);
+
+	va_end(m_arguments);
 }
