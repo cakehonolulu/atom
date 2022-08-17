@@ -20,13 +20,8 @@ int stage2()
 
     puts("Data read successfully\n");
 
-    putc((char) m_sect[3]);
-    putc((char) m_sect[4]);
-    putc((char) m_sect[5]);
-    putc((char) m_sect[6]);
-    putc((char) m_sect[7]);
-    putc((char) m_sect[8]);
-    putc((char) m_sect[9]);
+    puts("%c%c%c%c%c%c%c\n", (char) m_sect[3], (char) m_sect[4], (char) m_sect[5], (char) m_sect[6],
+                             (char) m_sect[7], (char) m_sect[8], (char) m_sect[9]);
 
 	__asm__ __volatile__("cli; hlt");
 

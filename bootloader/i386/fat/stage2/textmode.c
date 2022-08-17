@@ -310,19 +310,25 @@ void puts(const char *m_string, ...)
 					m_string++;
 					break;
 
+				case 'c':
+					putc((char) va_arg(m_arguments, int));
+					m_string++;
+					break;
+				
 				// Not supported/unknown format string, print as-is
 				default:
-					putc(*--m_string);
-					m_string++;
+					putc((char) *m_string);
 					break;
 			}
 		}
+		else
+		{
+			// Display the character
+			putc(*m_string);
 
-		// Display the character
-		putc(*m_string);
-
-		// Increment the string pointer
-		m_string++;
+			// Increment the string pointer
+			m_string++;
+		}
 	} 
 
 	// Update the cursor accounting for next column and 0->79
