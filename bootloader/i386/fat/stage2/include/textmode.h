@@ -1,5 +1,6 @@
 #include <io.h>
 #include <stdint.h>
+#include <stdarg.h>
 
 /* Defines */
 
@@ -19,5 +20,5 @@ void enable_cur(uint8_t m_cur_start, uint8_t m_cur_end);
 void init_text_mode();
 uint16_t get_cur_pos();
 void disable_cur();
-void puts(const char *m_string);
+void puts(const char *m_string, ...);
 void putc(char m_char);
