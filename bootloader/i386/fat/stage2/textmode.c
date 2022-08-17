@@ -294,6 +294,27 @@ void puts(const char *m_string)
 	// Iterate until null-byte is found
 	while (*m_string != '\0')
 	{
+		// Check if user wants to input a percentage sign
+		if ((*m_string == '%') && ((*m_string + 1) != '%'))
+		{
+			putc(*m_string);
+			m_string += 2;
+		}
+		else
+		// Format string modifiers
+		if (*m_string == '%')
+		{
+			switch (*m_string + 1)
+			{
+				case 'c':
+					putc(""/*, Placeholder */);
+					break;
+
+				default:
+					break;
+			}
+		}
+
 		// Display each character
 		putc(*m_string);
 
