@@ -315,6 +315,11 @@ void puts(const char *m_string, ...)
 					m_string++;
 					break;
 				
+				case 's':
+					m_string++;
+					puts((const char *) va_arg(m_arguments, char *));
+					break;
+
 				// Not supported/unknown format string, print as-is
 				default:
 					putc((char) *m_string);
