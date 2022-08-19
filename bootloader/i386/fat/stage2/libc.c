@@ -38,8 +38,10 @@ unsigned int strlen(const char *m_string)
 	Return:
 	None
 */
-void reverse(char *m_string, int m_length)
+void reverse(char *m_string)
 {
+    unsigned int m_length = strlen(m_string);
+    
     // Reverse only positive-length stringh and strings w/more than 1 character
     if (m_length >= 2)
     {
