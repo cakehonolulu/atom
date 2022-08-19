@@ -41,7 +41,7 @@ unsigned int strlen(const char *m_string)
 void reverse(char *m_string)
 {
     unsigned int m_length = strlen(m_string);
-    
+
     // Reverse only positive-length stringh and strings w/more than 1 character
     if (m_length >= 2)
     {
@@ -59,4 +59,55 @@ void reverse(char *m_string)
 
         } while (m_start++ < m_end--);
     }
+}
+
+/*
+	itoa
+
+	Function information:
+	Converts a (Decimal, hexadecimal) number to a string
+
+	Parameters:
+	m_string -> string buffer
+    m_number -> decimal to put into the string
+    m_base   -> base of the number (Hexa, Deca...)
+
+	Return:
+	The numbered string
+*/
+char *itoa(char *m_string, int m_number, unsigned char m_base)
+{
+    unsigned int i = 0;
+    bool m_negative = false;
+ 
+    if (m_number == 0)
+    {
+        m_string[i++] = '0';
+        m_string[i] = '\0';
+        return m_string;
+    }
+
+    if (m_number < 0 && m_base == 10)
+    {
+        m_negative = true;
+        m_number = -m_number;
+    }
+
+    while (m_number != 0)
+    {
+        int m_remainder = m_number % m_base;
+        m_string[i++] = (m_remainder > 9) ? (m_remainder - 10) + 'a' : m_remainder + '0';
+        m_number = m_number / m_base;
+    }
+ 
+    if (m_negative)
+    {
+        m_string[i++] = '-';
+    }
+
+    m_string[i] = '\0';
+
+    reverse(m_string);
+ 
+    return m_string;
 }
