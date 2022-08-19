@@ -332,6 +332,13 @@ void puts(const char *m_string, ...)
 					puts(m_str);
 					break;
 
+				case 'X':
+					m_string++;
+					itoa(m_str, va_arg(m_arguments, int), 16);
+					toupper(m_str);
+					puts(m_str);
+					break;
+
 				// Not supported/unknown format string, print as-is
 				default:
 					putc((char) *m_string);
