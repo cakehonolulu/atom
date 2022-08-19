@@ -1,6 +1,31 @@
 #include <libc.h>
 
 /*
+	strlen
+
+	Function information:
+	Calculates the number of characters (Length) in a nullbyte-terminated C string
+
+	Parameters:
+	m_string -> string to calculate the length of
+
+	Return:
+	Number of characters (Length) in that string
+*/
+unsigned int strlen(const char *m_string)
+{
+    unsigned int m_length = 0;
+
+    while (*m_string != '\0')
+    {
+        m_length++;
+        m_string++;
+    }
+
+    return m_length;
+}
+
+/*
 	reverse
 
 	Function information:
