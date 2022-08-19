@@ -291,7 +291,7 @@ void putc(char m_char)
 */
 void puts(const char *m_string, ...)
 {
-	char *m_char;
+	char *m_str;
 	va_list m_arguments;
     va_start(m_arguments, m_string);
 
@@ -318,6 +318,12 @@ void puts(const char *m_string, ...)
 				case 's':
 					m_string++;
 					puts((const char *) va_arg(m_arguments, char *));
+					break;
+
+				case 'd':
+					//m_string++;
+					//itoa(...);
+					//puts(...);
 					break;
 
 				// Not supported/unknown format string, print as-is
