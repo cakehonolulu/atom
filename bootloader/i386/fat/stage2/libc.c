@@ -136,3 +136,28 @@ void toupper(char *m_string)
         m_string++;
     }
 }
+
+/*
+	tolower
+
+	Function information:
+	Converts the uppercase characters in a string to lowercase
+
+	Parameters:
+	m_string -> string to convert
+
+	Return:
+	None
+*/
+void tolower(char *m_string)
+{
+    while (*m_string != '\0')
+    {
+        if ((((char) *m_string) >= 'A') && (((char) *m_string) <= 'Z'))
+        {
+			*m_string += 32;
+		}
+
+        m_string++;
+    }
+}

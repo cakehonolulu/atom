@@ -7,3 +7,4 @@ unsigned int strlen(const char *m_string);
 void reverse(char *m_string);
 char *itoa(char *m_string, int m_number, unsigned char m_base);
 void toupper(char *m_string);
+void tolower(char *m_string);
