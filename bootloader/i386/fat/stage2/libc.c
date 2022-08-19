@@ -111,3 +111,28 @@ char *itoa(char *m_string, int m_number, unsigned char m_base)
  
     return m_string;
 }
+
+/*
+	toupper
+
+	Function information:
+	Converts the lowercase characters in a string to uppercase
+
+	Parameters:
+	m_string -> string to convert
+
+	Return:
+	None
+*/
+void toupper(char *m_string)
+{
+    while (*m_string != '\0')
+    {
+        if ((((char) *m_string) >= 'a') && (((char) *m_string) <= 'z'))
+        {
+			*m_string -= 32;
+		}
+
+        m_string++;
+    }
+}
