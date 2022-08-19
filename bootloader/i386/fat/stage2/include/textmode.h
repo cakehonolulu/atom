@@ -1,4 +1,5 @@
 #include <io.h>
+#include <libc.h>
 #include <stdint.h>
 #include <stdarg.h>
 
