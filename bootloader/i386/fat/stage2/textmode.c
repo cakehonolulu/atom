@@ -325,6 +325,12 @@ void puts(const char *m_string, ...)
 					itoa(m_str, va_arg(m_arguments, int), 10);
 					puts(m_str);
 					break;
+				
+				case 'x':
+					m_string++;
+					itoa(m_str, va_arg(m_arguments, int), 16);
+					puts(m_str);
+					break;
 
 				// Not supported/unknown format string, print as-is
 				default:
