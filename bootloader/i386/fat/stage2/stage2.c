@@ -1,5 +1,6 @@
 #include <textmode.h>
 #include <ata.h>
+#include <libc.h>
 
 int stage2()
 {
@@ -18,10 +19,11 @@ int stage2()
 
     atapio24_read((uint32_t *) m_sect, 0x0, 1);
 
-    puts("Data read successfully\n");
+    puts("Disk Volume Name: %c%c%c%c%c%c%c%c\n", (char) m_sect[3], (char) m_sect[4], (char) m_sect[5], (char) m_sect[6],
+                             (char) m_sect[7], (char) m_sect[8], (char) m_sect[9], (char) m_sect[10]);
 
-    puts("%c%c%c%c%c%c%c\n", (char) m_sect[3], (char) m_sect[4], (char) m_sect[5], (char) m_sect[6],
-                             (char) m_sect[7], (char) m_sect[8], (char) m_sect[9]);
+    puts("Filesystem: %c%c%c%c%c%c%c%c\n", (char) m_sect[0x36], (char) m_sect[0x37], (char) m_sect[0x38], (char) m_sect[0x39],
+                             (char) m_sect[0x3A], (char) m_sect[0x3B], (char) m_sect[0x3C], (char) m_sect[0x3D]);
 
 	__asm__ __volatile__("cli; hlt");
 
