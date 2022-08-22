@@ -20,7 +20,7 @@ init0_fat16:
 
 # Boot Parameter Block (BPB)
 bpb:
-  oem_string:				.ascii	"INITIUM1"		# OEM String, 8 char wide, INITIUM for the bootloader name, number 1 for the version
+  oem_string:				.ascii	"ATOM    "		# OEM String, 8 char wide, ATOM for the bootloader name
   sector_size:				.word	0x200			# How many bytes per sector (512 is the default)
   sectors_per_cluster:				.byte	4				# How many sectors per cluster
   reserved_sectors:			.word	4				# How many reserved sectors
