@@ -1,4 +1,4 @@
-
+<p align="center">
 <picture>
   <source srcset="https://raw.githubusercontent.com/cakehonolulu/atom/main/resources/logo_light.png"
           media="(prefers-color-scheme: light)">
@@ -6,6 +6,7 @@
           media="(prefers-color-scheme: dark)">
   <img alt="Atom Logo" />
 </picture>
+  </p>
 
 <h2 align="center">A simple, i386 2-stage bootloader written in C</h2>
 
