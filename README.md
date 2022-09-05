@@ -1,9 +1,9 @@
 
 <picture>
   <source srcset="https://raw.githubusercontent.com/cakehonolulu/atom/main/resources/logo_light.png"
-          media="(prefers-color-scheme: dark)">
-  <source srcset="https://raw.githubusercontent.com/cakehonolulu/atom/main/resources/logo_dark.png"
           media="(prefers-color-scheme: light)">
+  <source srcset="https://raw.githubusercontent.com/cakehonolulu/atom/main/resources/logo_dark.png"
+          media="(prefers-color-scheme: dark)">
   <img src="https://raw.githubusercontent.com/cakehonolulu/atom/main/resources/logo_dark.png" />
 </picture>
 
