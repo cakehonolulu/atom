@@ -1,17 +1,12 @@
 
 <picture>
-  <source media="(prefers-color-scheme: light)">
-  <p align="center">
-    <img src="https://raw.githubusercontent.com/cakehonolulu/atom/main/resources/logo_light.png" width="200px" height="200px">
-   </p>
-  </source>
-  <source media="(prefers-color-scheme: dark)">
-  <p align="center">
-    <img src="https://raw.githubusercontent.com/cakehonolulu/atom/main/resources/logo_dark.png" width="200px" height="200px">
-    </p>
-  </source>
-  <img alt="Logo">
+  <source srcset="https://raw.githubusercontent.com/cakehonolulu/atom/main/resources/logo_light.png"
+          media="(prefers-color-scheme: dark)">
+  <source srcset="https://raw.githubusercontent.com/cakehonolulu/atom/main/resources/logo_dark.png"
+          media="(prefers-color-scheme: light)">
+  <img src="https://raw.githubusercontent.com/cakehonolulu/atom/main/resources/logo_dark.png" />
 </picture>
+
 <h2 align="center">A simple, i386 2-stage bootloader written in C</h2>
 
 ## ✨ Features
