@@ -21,6 +21,22 @@
 </p>
 
 
+## 🏁 Compilation
+
+```bash
+$ git clone https://github.com/cakehonolulu/atom && cd atom/
+$ make
+```
+
+## 🔧 Dependencies
+
+```
+* mtools
+* clang
+* qemu
+```
+
+
 ## 👷🏼‍♂️ Roadmap
 * Stage-2 Protected Mode FAT16 kernel chainloading (Inside Stage 2)
 * Documentation
