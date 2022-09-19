@@ -13,15 +13,21 @@ SECTIONS {
         *(.text)
     }
 
+    . = ALIGN (4K);
+
     .rodata :
     {
         *(.rodata)
     }
 
+    . = ALIGN (4K);
+
     .data :
     {
         *(.data)
     }
+
+    . = ALIGN (4K);
 
     .bss :
     {
