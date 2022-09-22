@@ -37,6 +37,12 @@ REALMODE = -m16
 
 BINARY := boot0.elf
 
+LDFLAGS :=
+
+ifdef USE_LLDB
+LDFLAGS += -fuse-ld=lld
+endif
+
 .PHONY: stage2
 
 all: stage2 headers $(BINARY)
@@ -51,7 +57,7 @@ headers:
 
 $(BINARY): $(SOBJECTS)
 	@echo " \033[0;36mLD \033[0mboot0.elf"
-	@$(CC) -T linkboot0.ld -o $@ $(SOBJECTS) $(CFLAGS) $(REALMODE)
+	@$(CC) -T linkboot0.ld -o $@ $(SOBJECTS) $(CFLAGS) $(LDFLAGS) $(REALMODE)  -fuse.
 	@echo " \033[0;37mOC\033[0m boot0.bin"
 	@$(OBJCOPY) --only-keep-debug boot0.elf boot0.sym
 	@$(OBJCOPY) --strip-debug boot0.elf
