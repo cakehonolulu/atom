@@ -57,7 +57,7 @@ headers:
 
 $(BINARY): $(SOBJECTS)
 	@echo " \033[0;36mLD \033[0mboot0.elf"
-	@$(CC) -T linkboot0.ld -o $@ $(SOBJECTS) $(CFLAGS) $(LDFLAGS) $(REALMODE)  -fuse.
+	@$(CC) -T linkboot0.ld -o $@ $(SOBJECTS) $(CFLAGS) $(LDFLAGS) $(REALMODE)
 	@echo " \033[0;37mOC\033[0m boot0.bin"
 	@$(OBJCOPY) --only-keep-debug boot0.elf boot0.sym
 	@$(OBJCOPY) --strip-debug boot0.elf
