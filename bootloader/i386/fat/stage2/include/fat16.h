@@ -29,3 +29,7 @@
 #define BPB_VOLUMEIDLEN (BPB_VOLUMLB - BPB_VOLUMID)
 #define BPB_VOLUMELABELLEN (BPB_FILESYS - BPB_VOLUMLB)
 #define BPB_FSTYPELEN 0x08
+
+
+/* Functions */
+void fat16_parse(uint8_t *m_bpb);
