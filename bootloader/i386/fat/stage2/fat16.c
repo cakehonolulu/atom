@@ -17,4 +17,6 @@ void fat16_parse(uint8_t *m_bpb)
     {
         puts("%c", m_bpb[BPB_FILESYS + i]);
     }
+
+    puts("\nBPB Media Type: 0x%X", m_bpb[BPB_MEDIATP]);
 }
