@@ -57,7 +57,7 @@ void reverse(char *m_string)
             // Call to the swapping macro
             swap(char, *(m_string + m_start), *(m_string + m_end));
 
-        } while (m_start++ < m_end--);
+        } while (++m_start < --m_end);
     }
 }
 
