@@ -30,6 +30,7 @@ OBJCOPY = objcopy
 
 CFLAGS := -Wall -Wextra -pedantic -std=c2x -ffreestanding -fno-builtin -nostdlib -m32 -Iinclude -g -fno-pie
 
+# TODO: Add -no-pie
 LDFLAGS = -z noexecstack
 
 ifeq ($(ARCH), i386)
