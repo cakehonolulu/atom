@@ -38,8 +38,6 @@ endif
 
 BINARY := stage2.elf
 
-LDFLAGS :=
-
 ifdef USE_LLDB
 LDFLAGS += -fuse-ld=lld
 endif
