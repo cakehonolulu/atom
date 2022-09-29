@@ -36,10 +36,10 @@ endif
 
 BINARY := stage2.elf
 
-LDFLAGS := -z noexecstack -fno-pic -fno-pie
+LDFLAGS := -z noexecstack
 
 ifeq ($(CC), i686-elf-gcc)
-LDFLAGS += -no-pie
+LDFLAGS += -no-pie -nostdlib -static
 endif
 
 ifdef USE_LLDB
