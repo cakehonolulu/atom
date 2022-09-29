@@ -52,7 +52,7 @@ stage2:
 
 headers:
 	$(eval SIZE = $(shell sh -c "stat --printf="%s" stage2/stage2.bin"))
-	-@echo $$((( $(SIZE) + 511) / 512))
+	-@echo " \033[0;34m** \033[0mStage 2 Size: $$((( $(SIZE) + 511) / 512)) (Sectors)"
 	-@echo ".global boot1_size\nboot1_size:\n.int $(SIZE)" > boot1.h
 
 $(BINARY): $(SOBJECTS)
