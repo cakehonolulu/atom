@@ -28,16 +28,20 @@ endif
 
 OBJCOPY = objcopy
 
-CFLAGS := -Wall -Wextra -pedantic -std=c2x -ffreestanding -fno-builtin -nostdlib -m32 -Iinclude -g -fno-pie
+CFLAGS := -Wall -Wextra -pedantic -std=c2x -ffreestanding -fno-builtin -nostdlib -m32 -Iinclude -g -fno-pic -fno-pie
 
-# TODO: Add -no-pie
-LDFLAGS = -z noexecstack
-
-ifeq ($(ARCH), i386)
+ifeq ($(ARCH), clang)
 CFLAGS += --target=i686-pc-none-elf -march=i686
 endif
 
 BINARY := stage2.elf
+
+# TODO: Add -no-pie
+LDFLAGS := -z noexecstack -fno-pic -fno-pie
+
+ifeq ($(CC), i686-elf-gcc)
+LDFLAGS += -no-pie
+endif
 
 ifdef USE_LLDB
 LDFLAGS += -fuse-ld=lld
