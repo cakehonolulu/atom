@@ -27,7 +27,7 @@ endif
 
 OBJCOPY = objcopy
 
-CFLAGS := -ffreestanding -fno-builtin -nostdlib -Iinitium -Istage2/libstage2/include -g -fno-pic -fno-pie
+CFLAGS := -ffreestanding -fno-builtin -nostdlib -Iinitium -Istage2/libstage2/include -g -fno-pic -fno-pie 
 
 ifeq ($(CC), clang)
 CFLAGS += --target=i686-pc-none-elf -march=i686
@@ -37,11 +37,7 @@ REALMODE = -m16
 
 BINARY := boot0.elf
 
-LDFLAGS := -z noexecstack -fno-pic -fno-pie
-
-ifeq ($(CC), i686-elf-gcc)
-LDFLAGS += -no-pie
-endif
+LDFLAGS := -z noexecstack -no-pie
 
 ifdef USE_LLDB
 LDFLAGS += -fuse-ld=lld
