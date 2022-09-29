@@ -77,6 +77,15 @@ boot0:												# boot0 function
 
 
 
+   in $0x92, %al
+   test $2, %al
+   jnz after
+   or $2, %al
+   and $0xFE, %al
+   out %al, $0x92
+
+after:
+
 	mov %dl, bios_boot_drive
 
 	xor %dx, %dx
