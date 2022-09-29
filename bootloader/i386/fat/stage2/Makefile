@@ -36,7 +36,6 @@ endif
 
 BINARY := stage2.elf
 
-# TODO: Add -no-pie
 LDFLAGS := -z noexecstack -fno-pic -fno-pie
 
 ifeq ($(CC), i686-elf-gcc)
