@@ -1,7 +1,5 @@
 #include "boot1.h"
 
-.set STAGE2_size, 11
-
 .code16												# Compile 16-Bit Code (Targetting Real Mode)
 
 .set BOOT1_STARTING_SECTOR, 0x2						# This is a constant! It will always be the same!
