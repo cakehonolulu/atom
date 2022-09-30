@@ -51,10 +51,13 @@ all: $(BINARY)
 $(BINARY): $(COBJECTS) $(SOBJECTS)
 	@echo " \033[0;36mLD \033[0mstage2.elf"
 	@$(CC) -T linkstage2.ld -o $@ $(SOBJECTS) $(COBJECTS) $(CFLAGS) $(LDFLAGS)
+	@$(CC) $(CFLAGS) -c test.s -o test.o
 	@echo " \033[0;37mOC\033[0m stage2.bin"
 	@$(OBJCOPY) --only-keep-debug stage2.elf stage2.sym
 	@$(OBJCOPY) --strip-debug stage2.elf
+	@$(OBJCOPY) --strip-debug test.o
 	@$(OBJCOPY) -O binary stage2.elf stage2.bin
+	@$(OBJCOPY) -O binary test.o test.bin
 
 %.o: %.c
 	@$(CC) $(CFLAGS) -c $< -o $@

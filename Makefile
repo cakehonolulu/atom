@@ -19,9 +19,12 @@ disk_image: clean bootloader
 	-@dd if=/dev/zero of=hdd.img bs=1 count=0 seek=10M status=none # 10485760 Bytes = 10 Mega Bytes
 	-@mkfs.fat -F 16 hdd.img >/dev/null
 	-@cp bootloader/$(ARCH)/fat/stage2/stage2.bin STAGE2
-	-@mcopy -i hdd.img STAGE2 ::
+	-@cp bootloader/$(ARCH)/fat/stage2/test.bin TEST
+	-@mcopy -i hdd.img TEST ::/
+	-@mcopy -i hdd.img STAGE2 ::/
 	-@dd conv=notrunc if=bootloader/$(ARCH)/fat/boot0.bin of=hdd.img bs=512 seek=$(HDD_MBR_SECTOR) status=none
 	-@rm STAGE2
+	-@rm TEST
 	-@echo " \033[0;32mOK \033[0mhdd.img"
 
 bootloader:

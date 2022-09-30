@@ -63,6 +63,8 @@ void fat16_parse(uint8_t *m_bpb)
 
     data_sector_start = root_directory_start + root_directory_size;
 
+    puts("# of Root Directory Entries: %d\n", fat16->root_entry_count);
+
     puts("Root Directory Start: %d (LBA Sector)\n", root_directory_start);
     puts("Root Directory Size: %d (Sectors)\n", root_directory_size);
 
@@ -70,16 +72,17 @@ void fat16_parse(uint8_t *m_bpb)
 
     do
     {
-        atapio24_read((uint32_t *) m_sect, root_directory_start, 1);
+        atapio24_read((uint32_t *) m_sect, root_directory_start + i, 1);
         
-        if (memcmp("STAGE2     ", ((char *) (((fat16_entry_t *) m_sect)->filename)), 11) == 0)
+        if (memcmp("TEST       ", ((char *) (((fat16_entry_t *) m_sect)->filename)), 11) == 0)
         {
-            puts("Found STAGE2!\n");
+            puts("Found TEST!\n");
             m_cond = false;
         }
 
         if (i >= (fat16->root_entry_count - 1))
         {
+            puts("i: %d\n", i);
             m_cond = false;
         }
         else
