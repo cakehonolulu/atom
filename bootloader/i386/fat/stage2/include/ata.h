@@ -1,3 +1,6 @@
+#ifndef ATA_H
+#define ATA_H
+
 #include <stdint.h>
 
 /* Defines */
@@ -40,3 +43,5 @@ void ata_check_drq(m_bit_status m_bit);
 void atapio24_identify(uint32_t *m_dst);
 void atapio24_read(uint32_t *m_dst, uint32_t m_lba, uint8_t m_sectsz);
 void atapio24_write(uint32_t *m_data, uint32_t m_lba, uint8_t m_sectsz);
+
+#endif /* ATA_H */
