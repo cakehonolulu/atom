@@ -1,5 +1,7 @@
 #include <stdint.h>
+#include <ata.h>
 #include <textmode.h>
+
 
 /* Defines */
 
@@ -31,18 +33,17 @@
 #define BPB_VOLUMELABELLEN (BPB_FILESYS - BPB_VOLUMLB)
 #define BPB_FSTYPELEN 0x08
 
-
 typedef struct fat16_bpb
 {
 	uint8_t 		bootjmp[3];
 	uint8_t 		oem_name[8];
 	uint16_t 	    bytes_per_sector;
-	uint8_t		sectors_per_cluster;
+	uint8_t		    sectors_per_cluster;
 	uint16_t		reserved_sector_count;
-	uint8_t		table_count;
+	uint8_t		    table_count;
 	uint16_t		root_entry_count;
 	uint16_t		total_sectors_16;
-	uint8_t		media_type;
+	uint8_t		    media_type;
 	uint16_t		table_size_16;
 	uint16_t		sectors_per_track;
 	uint16_t		head_side_count;
@@ -52,6 +53,17 @@ typedef struct fat16_bpb
 }
 __attribute__((packed)) fat16_bpb_t;
 
+
+typedef struct {
+    uint8_t filename[8];
+    uint8_t ext[3];
+    uint8_t attributes;
+    uint8_t reserved[10];
+    uint16_t modify_time;
+    uint16_t modify_date;
+    uint16_t starting_cluster;
+    uint32_t file_size;
+} __attribute((packed)) fat16_entry_t;
 
 /* Functions */
 void fat16_parse(uint8_t *m_bpb);
