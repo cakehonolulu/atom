@@ -102,10 +102,12 @@ after:
 
 	mov sector_size, %ax
 	mov $0x20, %cx
+	xor %dx, %dx
 	div %cx
 
 	xchg %cx, %ax
 	mov total_fat_directory_entries, %ax
+	xor %dx, %dx
 	div %cx
 	add %bx, %ax
 	mov %ax, data_cluster_offset
