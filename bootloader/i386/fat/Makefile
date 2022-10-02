@@ -37,13 +37,9 @@ REALMODE = -m16
 
 BINARY := boot0.elf
 
-LDFLAGS := -z noexecstack
+LDFLAGS := -z noexecstack -no-pie -nostdlib -static
 
-ifeq ($(CC), i686-elf-gcc)
-LDFLAGS += -no-pie -nostdlib -static
-endif
-
-ifdef USE_LLDB
+ifeq ($(CC), clang)
 LDFLAGS += -fuse-ld=lld
 endif
 
