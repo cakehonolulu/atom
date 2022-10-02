@@ -214,10 +214,10 @@ bootstrap:
 
 error:
 	mov $0x0e, %ah
-	mov $0x45, %al # E
+	mov $'E', %al
 	int $0x10
-   cli
-   hlt
+	cli
+	hlt
 
 read_sectors:
    pusha
@@ -233,7 +233,7 @@ read_sectors:
    jnc .read_ok
 
    mov $0x0e, %ah
-   mov $0x52, %al # Read Failed, Retrying
+   mov $'R', %al # Read Failed, Retrying
    int $0x10
 
    xor %ax, %ax
