@@ -1,7 +1,7 @@
 # Target Architecture (Currently supports i386)
 ARCH ?= i386
 
-FILESYSTEM ?= FAT16
+FILESYSTEM ?= EXT2
 
 # For building a FAT16 Disk Image
 ifeq ($(FILESYSTEM), FAT16)
@@ -32,6 +32,23 @@ bootloader:
 
 clean:
 	-@make -C bootloader/$(ARCH) FILESYSTEM=FAT16 clean --no-print-directory
+	-@rm hdd.img
+endif
+
+ifeq ($(FILESYSTEM), EXT2)
+disk_image: clean bootloader
+	-@echo " \033[0;34mDD \033[0mimage"
+	-@dd if=/dev/zero of=hdd.img bs=1 count=0 seek=10M status=none # 10485760 Bytes = 10 Mega Bytes
+	-@mkfs -t ext2 hdd.img >/dev/null
+	-@fuseext2 hdd.img tmp/ -o rw+
+	-@umount tmp/
+	-@echo " \033[0;32mOK \033[0mhdd.img"
+
+bootloader:
+	-@make -C bootloader/$(ARCH) FILESYSTEM=EXT2 --no-print-directory
+
+clean:
+	-@make -C bootloader/$(ARCH) FILESYSTEM=EXT2 clean --no-print-directory
 	-@rm hdd.img
 endif
 
