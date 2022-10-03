@@ -33,7 +33,7 @@ ifeq ($(FILESYSTEM), EXT2)
 	-@mkfs -t ext2 hdd.img >/dev/null
 	-@fuseext2 hdd.img tmp/ -o rw+ >/dev/null
 	-@cp bootloader/$(ARCH)/ext2/stage2/stage2.bin tmp/STAGE2
-	-@umount tmp/
+	-@umount -l tmp/
 	-@dd conv=notrunc if=bootloader/$(ARCH)/ext2/boot0.bin of=hdd.img bs=512 seek=$(HDD_MBR_SECTOR) status=none
 	-@rm -R tmp/
 endif
