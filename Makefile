@@ -3,9 +3,11 @@ ARCH ?= i386
 
 FILESYSTEM ?= EXT2
 
-# For building a FAT16 Disk Image
+# For building a FAT16 or EXT2 Disk Image
 ifeq ($(FILESYSTEM), FAT16)
 # Constants
+HDD_MBR_SECTOR = 0
+else ifeq ($(FILESYSTEM), EXT2)
 HDD_MBR_SECTOR = 0
 endif
 
@@ -25,10 +27,15 @@ ifeq ($(FILESYSTEM), FAT16)
 	-@dd conv=notrunc if=bootloader/$(ARCH)/fat/boot0.bin of=hdd.img bs=512 seek=$(HDD_MBR_SECTOR) status=none
 	-@rm STAGE2
 	-@rm TEST
-else ifeq ($(FILESYSTEM), EXT2)
+endif
+ifeq ($(FILESYSTEM), EXT2)
+	-@mkdir tmp/
 	-@mkfs -t ext2 hdd.img >/dev/null
 	-@fuseext2 hdd.img tmp/ -o rw+ >/dev/null
+	-@cp bootloader/$(ARCH)/ext2/stage2/stage2.bin tmp/STAGE2
 	-@umount tmp/
+	-@dd conv=notrunc if=bootloader/$(ARCH)/ext2/boot0.bin of=hdd.img bs=512 seek=$(HDD_MBR_SECTOR) status=none
+	-@rm -R tmp/
 endif
 	-@echo " \033[0;32mOK \033[0mhdd.img"
 

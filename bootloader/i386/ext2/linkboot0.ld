@@ -1,4 +1,4 @@
-ENTRY(init0_fat16)
+ENTRY(init0_ext2)
 
 OUTPUT_FORMAT(elf32-i386)
 
