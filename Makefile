@@ -46,7 +46,21 @@ clean:
 	-@make -C bootloader/$(ARCH) FILESYSTEM=$(FILESYSTEM) clean --no-print-directory
 	-@rm hdd.img
 
-debug:
+qemu:
+	-@qemu-system-i386 -drive file=hdd.img,format=raw
+
+debug_qemu:
 	-@qemu-system-i386 -s -S -drive file=hdd.img,format=raw &
-	-@gdb -x scripts/gdb_debug
-	-@pkill -9 qemu-system-i38
+ifeq ($(FILESYSTEM), FAT16)
+	-@gdb -x scripts/gdb_debug_fat16
+endif
+ifeq ($(FILESYSTEM), EXT2)
+	-@gdb -x scripts/gdb_debug_ext2
+endif
+	-@pkill -9 "qemu-system-*"
+
+bochs:
+	-@bochs -f bochsrc.bxrc -q
+
+debug_bochs:
+	-@bochs -f bochsrc_dbg.bxrc -q
