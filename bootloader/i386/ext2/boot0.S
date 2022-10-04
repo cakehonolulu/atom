@@ -13,26 +13,26 @@ init0_ext2:
 	mov %sp, %bx
 	sti
 	cld
-    
-    mov $0x1, %ax
-    mov $0x4, %cx
+	
+	mov $0x1, %ax
+	mov $0x4, %cx
 	mov $0x7E00, %bx
-    call read_sectors
+	call read_sectors
    
-    # EXT2 Magic
-    mov (ext2_superblock + 56) , %ax
+	# EXT2 Magic
+	mov (ext2_superblock + 56) , %ax
 
-    # Check if matches
-    cmpw $0xEF53, %ax
-    je bootstrap
+	# Check if matches
+	cmpw $0xEF53, %ax
+	je bootstrap
 
 .disk_read_error:
-    mov $0x0e, %ah
-    # Read Failed, Exit
-    mov $'E', %al
-    int $0x10
-    cli
-    hlt
+	mov $0x0e, %ah
+	# Read Failed, Exit
+	mov $'E', %al
+	int $0x10
+	cli
+	hlt
 
 read_sectors:
    pusha
@@ -92,12 +92,12 @@ dap_sector_high:	.int 0x00		# Upper 32 bits of sector number
 													# booting of this bootloader
 
 bootstrap:
-    mov $0x0e, %ah
-    mov $'!', %al
-    int $0x10
+	mov $0x0e, %ah
+	mov $'!', %al
+	int $0x10
 
-    cli
-    hlt
-    
+	cli
+	hlt
+	
 .fill 1024 - (.-init0_ext2), 1, 0
 ext2_superblock:
