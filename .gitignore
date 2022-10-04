@@ -4,5 +4,8 @@
 *.sym
 *.img
 
+*.img.lock
+*.ini
+
 .vscode/
 
