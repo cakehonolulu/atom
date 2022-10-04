@@ -1,7 +1,11 @@
-.global boot1
 
-.code32
+.section .text
+
+.global boot1
 boot1:
-    movw $0x621,0xb866A
-	cli
+    movl $0xb8000,%ebx
+    movb $'!', %al
+    movb $0x0F,%ah
+    movw %ax,(%ebx)
+    cli
     hlt
