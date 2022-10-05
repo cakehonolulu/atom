@@ -45,26 +45,26 @@ endif
 
 .PHONY: stage2
 
-all: stage2 headers $(BINARY)
+all: stage2 $(BINARY)
 
 stage2:
 	-@make -C stage2/ --no-print-directory
 
-headers:
-	$(eval SIZE = $(shell sh -c "stat --printf="%s" stage2/stage2.bin"))
-	-@echo " \033[0;34m** \033[0mStage 2 Size: $$((( $(SIZE) + 511) / 512)) (Sectors)"
-	-@echo ".set STAGE2_SIZE, $$((( $(SIZE) + 511) / 512))" > boot1.h
-
 $(BINARY): $(SOBJECTS)
 	@echo " \033[0;36mLD \033[0mboot0.elf"
-	@$(CC) -T linkboot0.ld -o $@ $(SOBJECTS) $(CFLAGS) $(LDFLAGS) $(REALMODE)
+	@$(CC) -T linkboot0.ld -o boot0.elf boot0.o $(CFLAGS) $(LDFLAGS) $(REALMODE)
 	@echo " \033[0;37mOC\033[0m boot0.bin"
 	@$(OBJCOPY) --only-keep-debug boot0.elf boot0.sym
 	@$(OBJCOPY) --strip-debug boot0.elf
 	@$(OBJCOPY) -O binary --only-section=.text boot0.elf boot0.bin
 
+	@echo " \033[0;37mOC\033[0m boot1.bin"
+	@$(OBJCOPY) --only-keep-debug boot1.o boot1.sym
+	@$(OBJCOPY) --strip-debug boot1.o
+	@$(OBJCOPY) -O binary --only-section=.text boot1.o boot1.bin
+
 %.o: %.S
-	@$(CC) $(CFLAGS) $(REALMODE) -c $< -o $@
+	@$(CC) $(CFLAGS) -c $< -o $@
 	@echo " \033[0;35mAS\033[0m $<"
 
 clean:
