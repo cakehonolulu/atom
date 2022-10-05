@@ -255,9 +255,58 @@ stage2_found:
     int $0x10
     mov $0x0A, %al
     int $0x10
+
+    mov  %gs:Inode_Number_Offset(%bx), %eax
+	
+	call get_inode
+	
+	movw $Stage2_File_Offset, (_Disk_Address_Packet + 4)
+	movw $Stage2_File_Base, (_Disk_Address_Packet + 6)
+	
+	call loade_file
+
+    int $0x10
+    mov $0x0D, %al
+    int $0x10
+    mov $0x0A, %al
+    int $0x10
+
+    jmp stage2_loaded
+
+stage2_loaded:
+	mov $0x0e, %ah
+	mov $'S', %al
+	int $0x10
+    mov $'t', %al
+	int $0x10
+    mov $'a', %al
+	int $0x10
+    mov $'g', %al
+	int $0x10
+    mov $'e', %al
+	int $0x10
+	mov $' ', %al
+	int $0x10
+    mov $'2', %al
+	int $0x10
+    mov $' ', %al
+	int $0x10
+    mov $'L', %al
+	int $0x10
+    mov $'o', %al
+	int $0x10
+    mov $'a', %al
+	int $0x10
+    mov $'d', %al
+	int $0x10
+    mov $'e', %al
+	int $0x10
+    mov $'d', %al
+	int $0x10
+    mov $'!', %al
+	int $0x10
     cli
     hlt
-
 
 disk_error:
 	mov $0x0e, %ah
@@ -331,9 +380,64 @@ get_inode:
 	ret
 
 
+loade_file:
+    push %bx
+    mov  %es:Inode_Blocks(%bx), %ecx
+    cmpl $24,%ecx
+    jbe     direct_block
+    movl    $24,%ecx
 
+direct_block:
+    movb $0x2, (_Disk_Address_Packet + 2)
 
+read_direct_block:
+    mov  %es:Inode_Block(%bx), %eax
+    addw $4,%bx
+    addl %eax,%eax
+    movl %eax, (_Disk_Address_Packet + 8)
+	
+	call read_sector
+    addw $0x400, (_Disk_Address_Packet + 4)
 
+    subl $2,%ecx
+    ja      read_direct_block
+    movw %bx,%ax
 
+    popw %bx
+    mov  %es:Inode_Blocks(%bx), %ecx
+    cmpl $24,%ecx
+    jbe     loade_file_end
+    subl $24,%ecx
 
+    movw %ax,%bx
 
+    push (_Disk_Address_Packet + 4)
+    push (_Disk_Address_Packet + 6)
+    mov  %es:Inode_Block(%bx), %eax
+    add %eax, %eax
+
+    movl %eax, (_Disk_Address_Packet + 8)
+    movw $First_Index_Block_Offset, (_Disk_Address_Packet + 4)
+    movw $First_Index_Block_Base, (_Disk_Address_Packet + 6)
+	call read_sector
+
+    movw $First_Index_Block_Base, %ax
+    movw %ax,%es
+
+    movw $First_Index_Block_Offset, %bx
+    pop (_Disk_Address_Packet + 6)
+    pop (_Disk_Address_Packet + 4)
+
+read_first_index_block:
+    mov %es:(%bx), %eax
+    addw $4,%bx
+
+    addl %eax,%eax
+    movl %eax, (_Disk_Address_Packet + 8)
+    call read_sector
+    addw $0x400, (_Disk_Address_Packet + 4)
+    subl $2,%ecx
+    ja      read_first_index_block
+
+loade_file_end: 
+    ret
