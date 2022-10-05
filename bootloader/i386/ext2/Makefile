@@ -58,10 +58,12 @@ $(BINARY): $(SOBJECTS)
 	@$(OBJCOPY) --strip-debug boot0.elf
 	@$(OBJCOPY) -O binary --only-section=.text boot0.elf boot0.bin
 
+	@echo " \033[0;36mLD \033[0mboot1.elf"
+	@$(CC) -T linkboot1.ld -o boot1.elf boot1.o $(CFLAGS) $(LDFLAGS) $(REALMODE)
 	@echo " \033[0;37mOC\033[0m boot1.bin"
-	@$(OBJCOPY) --only-keep-debug boot1.o boot1.sym
-	@$(OBJCOPY) --strip-debug boot1.o
-	@$(OBJCOPY) -O binary --only-section=.text boot1.o boot1.bin
+	@$(OBJCOPY) --only-keep-debug boot1.elf boot1.sym
+	@$(OBJCOPY) --strip-debug boot1.elf
+	@$(OBJCOPY) -O binary --only-section=.text boot1.elf boot1.bin
 
 %.o: %.S
 	@$(CC) $(CFLAGS) -c $< -o $@
