@@ -31,7 +31,7 @@ endif
 ifeq ($(FILESYSTEM), EXT2)
 	-@mkfs.ext2 -I 128 -b 1024 -F hdd.img >/dev/null
 	-@dd if=bootloader/$(ARCH)/ext2/boot0.bin of=hdd.img bs=512 count=1 conv=notrunc status=none
-	-@e2cp -v bootloader/$(ARCH)/ext2/boot1.o hdd.img:/loader.bin
+	-@e2cp -v bootloader/$(ARCH)/ext2/boot1.bin hdd.img:/loader.bin
 	-@e2cp -v bootloader/$(ARCH)/ext2/stage2/stage2.elf hdd.img:/kernel.bin
 endif
 	-@echo " \033[0;32mOK \033[0mhdd.img"
