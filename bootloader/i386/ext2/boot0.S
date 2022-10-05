@@ -62,9 +62,6 @@ boot_start:
 	movw %ax,%ss
 	movw $Stack_Base, %sp
 
-	call clear_screen
-
-
 	call read_sector
 
 	movw $GroupDescriptors_Offset, (disk_address_packet + 4)
@@ -159,6 +156,15 @@ file_not_match:
 
 
 loader_not_found:
+	mov $0x0e, %ah
+	mov $'L', %al
+	int $0x10
+	mov $' ', %al
+	int $0x10
+	mov $'N', %al
+	int $0x10
+	mov $'F', %al
+	int $0x10
 	cli
 	hlt
 
@@ -174,19 +180,6 @@ loader_found:
 	call loade_file
 	
 	ljmp $Loader_Base, $Loader_Offset
-
-	
-
-clear_screen:
-	pusha
-	movw $0x600,%ax
-	movw $0x7,%bx
-	movw $0,%cx
-	movw $0x184f,%dx
-	int $0x10
-	popa
-
-	ret
 
 
 read_sector:
