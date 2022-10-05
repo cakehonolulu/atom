@@ -65,7 +65,7 @@ init1:
 	_Init_Kernel_Success: .asciz "jojo! kernel is ready !!!"
 	_Mem_Info_Title: .asciz "BaseAddrL BaseAddrH LengthLow LengthHigh   Type"
 	_Mem_Size_Title: .asciz "Memory size: "
-    Kernel_File_Name: .ascii "kernel.bin"
+    Kernel_File_Name: .ascii "stage2.elf"
 
 
 .set Disk_Address_Packet, Loader_Phy_Address + _Disk_Address_Packet
