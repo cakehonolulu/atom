@@ -8,10 +8,10 @@ init1:
 .set Loader_Base, 0x9000		 
 .set Loader_Offset, 0x0
 .set Loader_Phy_Address, Loader_Base * 0x10 + Loader_Offset
-.set Kernel_File_Base, 0x7000
-.set Kernel_File_Offset, 0
-.set Kernel_File_Phy_Addr, Kernel_File_Base * 0x10
-.set Kernel_Enter_point, 0x1000
+.set Stage2_File_Base, 0x7000
+.set Stage2_File_Offset, 0
+.set Stage2_File_Phy_Addr, Stage2_File_Base * 0x10
+.set Stage2_Enter_point, 0x1000
 .set SuperBlock_Base, 0x70		
 .set SuperBlock_Offset, 0x0
 .set GroupDescriptors_Base, 0x90
@@ -38,8 +38,7 @@ init1:
 .set ELF_Program_Header_p_offset, 0x4
 .set ELF_Program_Header_p_vaddr, 0x8
 
-.set Kernel_File_Name, "kernel.bin"
-.set Kernel_File_Name_Length, 10
+.set Stage2_File_Name_Length, 10
 
 .set Message_Length, 13
 
@@ -62,10 +61,10 @@ init1:
 	_Char_Return: .byte 0xA, 0
 	_Test_message: .asciz "jojo!  Protect Mode !!!"
 	_Page_Init_Success: .asciz "jojo! Page init successfully !!!"
-	_Init_Kernel_Success: .asciz "jojo! kernel is ready !!!"
+	_Init_Stage2_Success: .asciz "jojo! stage2 is ready !!!"
 	_Mem_Info_Title: .asciz "BaseAddrL BaseAddrH LengthLow LengthHigh   Type"
 	_Mem_Size_Title: .asciz "Memory size: "
-    Kernel_File_Name: .ascii "stage2.elf"
+    Stage2_File_Name: .ascii "stage2.elf"
 
 
 .set Disk_Address_Packet, Loader_Phy_Address + _Disk_Address_Packet
@@ -76,7 +75,7 @@ init1:
 .set RAM_Size_Title, Loader_Phy_Address + _Mem_Size_Title
 .set Mem_Size, Loader_Phy_Address + _Mem_Size
 .set Page_Init_Success, Loader_Phy_Address + _Page_Init_Success
-.set Init_Kernel_Success, Loader_Phy_Address + _Init_Kernel_Success
+.set Init_Stage2_Success, Loader_Phy_Address + _Init_Stage2_Success
 
 bootstrap:
     movw %cs,%ax
@@ -129,7 +128,7 @@ bootstrap:
 
 root_dir_read:
 	cmpw $0, %cx
-	je kernel_not_found
+	je stage2_not_found
 	call read_sector
 	decw %cx
 
@@ -139,7 +138,7 @@ root_dir_read:
 	mov %eax, (_Disk_Address_Packet + 8)
 root_dir_search:
     pusha
-    movw $Kernel_File_Name, %si
+    movw $Stage2_File_Name, %si
     movl $RootDir_Base, %eax
     movl %eax,%gs
 
@@ -147,12 +146,12 @@ root_dir_search:
 root_file_match:
 file_length_cmp: 
     xorw %cx,%cx
-    movb $Kernel_File_Name_Length, %cl
+    movb $Stage2_File_Name_Length, %cl
 
     cmp %gs:Name_Len_Offset(%bx), %cl
     jnz file_not_match
 
-    movw $Kernel_File_Name, %si
+    movw $Stage2_File_Name, %si
     pushw %bx
 file_name_cmp: 
     lodsb
@@ -167,7 +166,7 @@ file_name_cmp_end:
     popw %bx
     cmpb $0,%cl
     jnz file_not_match
-    jmp kernel_found
+    jmp stage2_found
 
 file_not_match:
     add  %gs:Record_Length_Offset(%bx), %bx
@@ -177,7 +176,7 @@ file_not_match:
 
     jmp root_dir_read
 
-kernel_not_found:
+stage2_not_found:
 	mov $0x0e, %ah
 	mov $'S', %al
 	int $0x10
@@ -222,7 +221,7 @@ kernel_not_found:
 	cli
     hlt
 
-kernel_found:
+stage2_found:
 	mov $0x0e, %ah
 	mov $'S', %al
 	int $0x10
