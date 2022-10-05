@@ -30,7 +30,7 @@ ifeq ($(FILESYSTEM), FAT16)
 endif
 ifeq ($(FILESYSTEM), EXT2)
 	-@mkfs.ext2 -I 128 -b 1024 -F hdd.img >/dev/null
-	-@dd if=bootloader/$(ARCH)/ext2/boot0.o of=hdd.img bs=512 count=1 conv=notrunc
+	-@dd if=bootloader/$(ARCH)/ext2/boot0.bin of=hdd.img bs=512 count=1 conv=notrunc status=none
 	-@e2cp -v bootloader/$(ARCH)/ext2/boot1.o hdd.img:/loader.bin
 	-@e2cp -v bootloader/$(ARCH)/ext2/stage2/stage2.elf hdd.img:/kernel.bin
 endif
