@@ -98,7 +98,7 @@ boot_start:
 	movw $12,%cx
 
 root_dir_read:
-	cmpw $0,%cx
+	cmpw $0, %cx
 	je loader_not_found
 	call read_sector
 	decw %cx
@@ -159,8 +159,6 @@ file_not_match:
 
 
 loader_not_found:
-
-
 	cli
 	hlt
 
@@ -227,13 +225,27 @@ get_inode:
 
 	call read_sector
 
+	# movw $InodeTable_Base, %bx
+	# movw %bx,%es
+	# movb %cl,%al
+	# movb $Inode_Length, %bl
+	# mulb %bl
+	# movw %ax,%bx
+
+	# Set ax to 0
+	# Fill the low half of cx with cl's value
+
 	movw $InodeTable_Base, %bx
 	movw %bx,%es
-	movb %cl,%al
-	movb $Inode_Length, %bl
-	mulb %bl
-
+	mov %cl, %al
+	movw $Inode_Length, %cx
+	mul %cx
 	movw %ax,%bx
+
+
+
+
+
 
 	ret
 
