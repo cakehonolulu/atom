@@ -187,13 +187,17 @@ gdt:
 	.long gdt_start
 
 bootstrap:
-	mov $0x0600, %ax
+    mov $0x0600, %ax
 	mov $0x0F, %bh
-	
-	mov $0x0000, %cx
-	mov $0X184F, %dx
-	
+    xor %cx, %cx
+    mov $0x184F, %dx
 	int $0x10
+
+    mov $0, %dl
+    mov $0, %dh
+    mov $0, %bx
+    mov $0x02, %ah
+    int $0x10
 
 	clc
 
