@@ -178,7 +178,11 @@ loader_found:
 	movw $Loader_Base, (disk_address_packet + 6)
 	
 	call loade_file
-	
+
+	mov $0x0e, %ah
+	mov $'J', %al
+	int $0x10
+
 	ljmp $Loader_Base, $Loader_Offset
 
 
@@ -203,15 +207,11 @@ get_inode:
 	divb %bl
 	movb %ah,%cl
 	xorb %ah,%ah
+
 	movw $GroupDescriptors_Base, %bx
 	movw %bx,%es
-
-	# TODO?
 	movw $GroupDescriptors_Offset, %bx
-
 	mov  %es:0x8(%bx), %ebx
-
-
 	addl %ebx,%eax
 	addl %eax,%eax
 	mov %eax, (disk_address_packet + 8)
@@ -234,11 +234,6 @@ get_inode:
 	movw $Inode_Length, %cx
 	mul %cx
 	movw %ax,%bx
-
-
-
-
-
 
 	ret
 
