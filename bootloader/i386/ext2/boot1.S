@@ -65,6 +65,7 @@ init1:
 	_Init_Kernel_Success: .asciz "jojo! kernel is ready !!!"
 	_Mem_Info_Title: .asciz "BaseAddrL BaseAddrH LengthLow LengthHigh   Type"
 	_Mem_Size_Title: .asciz "Memory size: "
+    Kernel_File_Name: .ascii "kernel.bin"
 
 
 .set Disk_Address_Packet, Loader_Phy_Address + _Disk_Address_Packet
@@ -86,6 +87,19 @@ bootstrap:
 
     movw $Stack_Top, %sp
 	
+    # Set video mode, cursor location and bg/fg attr.
+    mov $0x0600, %ax
+	mov $0x0F, %bh
+    xor %cx, %cx
+    mov $0x184F, %dx
+	int $0x10
+
+    mov $0, %dl
+    mov $0, %dh
+    mov $0, %bx
+    mov $0x02, %ah
+    int $0x10
+
     mov $0x2, %eax
 	call get_inode
 
@@ -105,7 +119,7 @@ bootstrap:
     
 	mov %es:Inode_Blocks(%bx), %eax
 
-	shrl  $0x1, %eax
+	shrl %eax
     movw %ax,%cx
     cmpw $12,%cx
       
@@ -114,47 +128,155 @@ bootstrap:
     movw $12,%cx
 
 root_dir_read:
-
-	cmp	$0, %cx
-	je	kernel_not_found
-
-    call read_sector
-    
+	cmpw $0, %cx
+	je kernel_not_found
+	call read_sector
 	decw %cx
-    addw $4,%bx
-    mov  %es:(%bx), %eax
-    addl %eax,%eax
-    
-	movl %eax, (_Disk_Address_Packet + 8)
 
-	movl $2,%eax
-    
-    mov $0x0e, %ah
-	mov $'L', %al
-	int $0x10
+	addw $4,%bx
+	movl %es:(%bx), %eax
+	addl %eax,%eax
+	mov %eax, (_Disk_Address_Packet + 8)
+root_dir_search:
+    pusha
+    movw $Kernel_File_Name, %si
+    movl $RootDir_Base, %eax
+    movl %eax,%gs
 
-    cli
-    hlt
+    movw $RootDir_Offset, %bx
+root_file_match:
+file_length_cmp: 
+    xorw %cx,%cx
+    movb $Kernel_File_Name_Length, %cl
 
+    cmp %gs:Name_Len_Offset(%bx), %cl
+    jnz file_not_match
+
+    movw $Kernel_File_Name, %si
+    pushw %bx
+file_name_cmp: 
+    lodsb
+    cmp %gs:File_Name_Offset(%bx), %al
+    jnz file_name_cmp_end
+    decb %cl
+    jz file_name_cmp_end
+    incw %bx
+    jmp file_name_cmp
+
+file_name_cmp_end: 
+    popw %bx
+    cmpb $0,%cl
+    jnz file_not_match
+    jmp kernel_found
+
+file_not_match:
+    add  %gs:Record_Length_Offset(%bx), %bx
+    cmpw $1024,%bx
+    jl root_file_match
+    popa
+
+    jmp root_dir_read
 
 kernel_not_found:
 	mov $0x0e, %ah
-	mov $'K', %al
+	mov $'S', %al
 	int $0x10
-	mov $' ', %al
+    mov $'t', %al
 	int $0x10
-	mov $'N', %al
+    mov $'a', %al
+	int $0x10
+    mov $'g', %al
+	int $0x10
+    mov $'e', %al
+	int $0x10
+    mov $' ', %al
+	int $0x10
+    mov $'2', %al
+	int $0x10
+    mov $' ', %al
+    int $0x10
+    mov $'n', %al
+	int $0x10
+    mov $'o', %al
+	int $0x10
+    mov $'t', %al
+	int $0x10
+    mov $' ', %al
 	int $0x10
 	mov $'F', %al
 	int $0x10
+    mov $'o', %al
+	int $0x10
+    mov $'u', %al
+	int $0x10
+    mov $'n', %al
+	int $0x10
+    mov $'d', %al
+	int $0x10
+    mov $'!', %al
+	int $0x10
+    mov $0x0D, %al
+    int $0x10
+    mov $0x0A, %al
+    int $0x10
+	cli
+    hlt
+
+kernel_found:
+	mov $0x0e, %ah
+	mov $'S', %al
+	int $0x10
+    mov $'t', %al
+	int $0x10
+    mov $'a', %al
+	int $0x10
+    mov $'g', %al
+	int $0x10
+    mov $'e', %al
+	int $0x10
+    mov $' ', %al
+	int $0x10
+    mov $'2', %al
+	int $0x10
+    mov $' ', %al
+	int $0x10
+	mov $'F', %al
+	int $0x10
+    mov $'o', %al
+	int $0x10
+    mov $'u', %al
+	int $0x10
+    mov $'n', %al
+	int $0x10
+    mov $'d', %al
+	int $0x10
+    mov $'!', %al
+	int $0x10
+    mov $0x0D, %al
+    int $0x10
+    mov $0x0A, %al
+    int $0x10
     cli
     hlt
+
 
 disk_error:
 	mov $0x0e, %ah
 	mov $'D', %al
 	int $0x10
+    mov $'i', %al
+	int $0x10
+    mov $'s', %al
+	int $0x10
+    mov $'k', %al
+	int $0x10
+    mov $' ', %al
+	int $0x10
 	mov $'E', %al
+	int $0x10
+    mov $'r', %al
+	int $0x10
+    mov $'r', %al
 	int $0x10
     cli
     hlt
