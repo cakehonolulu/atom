@@ -218,16 +218,6 @@ get_inode:
 
 	call read_sector
 
-	# movw $InodeTable_Base, %bx
-	# movw %bx,%es
-	# movb %cl,%al
-	# movb $Inode_Length, %bl
-	# mulb %bl
-	# movw %ax,%bx
-
-	# Set ax to 0
-	# Fill the low half of cx with cl's value
-
 	movw $InodeTable_Base, %bx
 	movw %bx,%es
 	mov %cl, %al

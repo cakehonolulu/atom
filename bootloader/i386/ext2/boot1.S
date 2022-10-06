@@ -85,14 +85,6 @@ gdt:
 	.word ((Loader_Phy_Address+gdt_end) - (Loader_Phy_Address+gdt_start) - 1)
 	.long (Loader_Phy_Address+gdt_start)
 
-	_Disp_Pos: .int (80 * 6 + 0) * 2
-
-	_Char_Return: .byte 0xA, 0
-	_Test_message: .asciz "jojo!  Protect Mode !!!"
-	_Page_Init_Success: .asciz "jojo! Page init successfully !!!"
-	_Init_Stage2_Success: .asciz "jojo! stage2 is ready !!!"
-	_Mem_Info_Title: .asciz "BaseAddrL BaseAddrH LengthLow LengthHigh   Type"
-	_Mem_Size_Title: .asciz "Memory size: "
     Stage2_File_Name: .ascii "stage2.elf"
 
 
@@ -482,16 +474,6 @@ get_inode:
 	mov %eax, (_Disk_Address_Packet + 8)
 
 	call read_sector
-
-	# movw $InodeTable_Base, %bx
-	# movw %bx,%es
-	# movb %cl,%al
-	# movb $Inode_Length, %bl
-	# mulb %bl
-	# movw %ax,%bx
-
-	# Set ax to 0
-	# Fill the low half of cx with cl's value
 
 	movw $InodeTable_Base, %bx
 	movw %bx,%es
