@@ -57,7 +57,7 @@ endif
 	-@pkill -9 "qemu-system-*"
 
 bochs:
-	-@bochs -f bochsrc.bxrc -q
+	-@bochs -rc scripts/bochsrun -f bochsrc.bxrc -q -unlock
 
 debug_bochs:
-	-@bochs -f bochsrc_dbg.bxrc -q
+	-@bochs -f bochsrc_dbg.bxrc -q -unlock
