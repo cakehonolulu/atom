@@ -14,3 +14,4 @@ ata0-master: type=disk, path="hdd.img", mode=flat, cylinders=20, heads=16, spt=6
 sound: waveoutdrv=sdl
 speaker: enabled=false
 magic_break: enabled=1
+cpu: reset_on_triple_fault=0
