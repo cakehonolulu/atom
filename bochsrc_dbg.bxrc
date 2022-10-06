@@ -13,3 +13,4 @@ ata0: enabled=true, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
 ata0-master: type=disk, path="hdd.img", mode=flat, cylinders=20, heads=16, spt=63, sect_size=512, model="Generic 1234", biosdetect=auto, translation=auto, 
 sound: waveoutdrv=sdl
 speaker: enabled=false
+magic_break: enabled=1
