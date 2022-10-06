@@ -56,6 +56,35 @@ init1:
 			.int 0
 			.int 0
 
+
+gdt_start:
+gdt_null:
+	.long 0
+	.long 0
+gdt_code:
+	.word 0xFFFF
+	.word 0x0
+	.byte 0x0
+	.byte 0b10011010
+	.byte 0b11001111
+	.byte 0x0
+
+gdt_data:
+	.word 0xffff
+	.word 0x0
+	.byte 0x0
+	.byte 0b10010010
+	.byte 0b11001111
+	.byte 0x0
+
+gdt_end:
+.set GDT_CODE_SEGMENT, gdt_code - gdt_start
+.set GDT_DATA_SEGMENT, gdt_data - gdt_start
+
+gdt:
+	.word ((Loader_Phy_Address+gdt_end) - (Loader_Phy_Address+gdt_start) - 1)
+	.long (Loader_Phy_Address+gdt_start)
+
 	_Disp_Pos: .int (80 * 6 + 0) * 2
 
 	_Char_Return: .byte 0xA, 0
@@ -271,8 +300,40 @@ stage2_found:
     mov $0x0A, %al
     int $0x10
 
-    jmp stage2_loaded
+    call stage2_loaded
 
+    xchg %bx, %bx
+
+    in $0x92, %al
+    test $2, %al
+    jnz after
+    or $2, %al
+    and $0xFE, %al
+    out %al, $0x92
+    jmp after
+
+    
+after:
+    lgdt gdt
+	mov %cr0, %eax
+	or $0x1, %al
+	mov %eax, %cr0
+
+	ljmpl $GDT_CODE_SEGMENT, $(Loader_Phy_Address+boot1ProtectedMode)
+
+.code32
+.global boot1TemporalProtectedMode
+
+boot1ProtectedMode:
+	mov $GDT_DATA_SEGMENT, %ax
+	mov %ax, %ds
+	mov %ax, %es
+	mov %ax, %ss
+	mov %ax, %es
+	cli
+    hlt
+
+.code16
 stage2_loaded:
 	mov $0x0e, %ah
 	mov $'S', %al
@@ -305,8 +366,7 @@ stage2_loaded:
 	int $0x10
     mov $'!', %al
 	int $0x10
-    cli
-    hlt
+    ret
 
 disk_error:
 	mov $0x0e, %ah
@@ -441,3 +501,4 @@ read_first_index_block:
 
 loade_file_end: 
     ret
+
