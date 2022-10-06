@@ -302,8 +302,6 @@ stage2_found:
 
     call stage2_loaded
 
-    xchg %bx, %bx
-
     in $0x92, %al
     test $2, %al
     jnz after
@@ -330,8 +328,73 @@ boot1ProtectedMode:
 	mov %ax, %es
 	mov %ax, %ss
 	mov %ax, %es
+    
+    mov $0x7C00, %esp
+
+    call InitKernel
+
+    ljmpl $GDT_CODE_SEGMENT, $Stage2_Enter_point
 	cli
     hlt
+
+MemCpy:
+    pushl   %ebp
+    movl    %esp,%ebp
+
+    pushl   %esi
+    pushl   %edi
+    pushl   %ecx
+
+    movl    8(%ebp),%edi                                     # Destination
+    movl    12(%ebp),%esi                           # Source
+    movl    16(%ebp),%ecx                              # Counter
+transfer: 
+    cmpl    $0,%ecx
+    jz      transfer_end
+
+    mov  %ds:(%esi), %al
+    incl    %esi
+    movb  %al, %es:(%edi)
+    incl    %edi
+
+    decl    %ecx
+    jmp     transfer
+
+transfer_end: 
+    movl    8(%ebp),%eax
+
+    popl    %ecx
+    popl    %edi
+    popl    %esi
+    movl    %ebp,%esp
+    popl    %ebp
+
+    ret
+
+InitKernel:
+    xor %esi, %esi
+    mov (Stage2_File_Phy_Addr+ELF_Header_e_phnum), %cx
+    movzx %cx, %ecx
+    mov (Stage2_File_Phy_Addr+ELF_Header_e_phoff), %esi
+    add $Stage2_File_Phy_Addr, %esi
+deal_with_one_program_header_table_entry:
+    mov  (%esi), %eax
+    cmpl    $0,%eax
+
+    jz      init_next_section
+    pushl ELF_Program_Header_p_size(%esi)
+    mov  ELF_Program_Header_p_offset(%esi), %eax
+    add $Stage2_File_Phy_Addr, %eax
+    push %eax
+    pushl ELF_Program_Header_p_vaddr(%esi)
+    call MemCpy
+    addl    $12,%esp
+
+init_next_section: 
+    addl    $0x20,%esi
+    decl    %ecx
+    jnz     deal_with_one_program_header_table_entry
+    ret
 
 .code16
 stage2_loaded:
@@ -501,4 +564,3 @@ read_first_index_block:
 
 loade_file_end: 
     ret
-
