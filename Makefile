@@ -1,13 +1,11 @@
 # Target Architecture (Currently supports i386)
 ARCH ?= i386
 
+# Default Filesystem, can be changed w/make parameters
 FILESYSTEM ?= EXT2
 
 # For building a FAT16 or EXT2 Disk Image
-ifeq ($(FILESYSTEM), FAT16)
-# Constants
-HDD_MBR_SECTOR = 0
-else ifeq ($(FILESYSTEM), EXT2)
+ifeq ($(FILESYSTEM),$(filter $(FILESYSTEM),FAT16 EXT2))
 HDD_MBR_SECTOR = 0
 endif
 
