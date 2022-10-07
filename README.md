@@ -12,8 +12,8 @@
 
 ## ✨ Features
 * MBR support
-* FAT16 File Loading (In Stage 1 and 2)
-* EXT2 File Loading (In the works)
+* FAT16 Read-Only Filesystem Support (Stage 1 and 2)
+* EXT2 Read-Only Filesystem Support (Stage 1.5 and 2)
 * Simple ATAPIO 24-bit disk driver
 * Built with ❤️ for i386
 
@@ -34,8 +34,8 @@ $ make
 ```
 * mtools
 * mkfs.fat
-* fuseext2
 * mkfs.ext2
+* e2tools
 * clang
 * gcc
 * qemu
@@ -44,5 +44,6 @@ $ make
 
 
 ## 👷🏼‍♂️ Roadmap
-* Stage-2 Protected Mode FAT16 kernel chainloading (Inside Stage 2)
+
+
 * Documentation
