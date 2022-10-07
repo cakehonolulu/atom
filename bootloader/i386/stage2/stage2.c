@@ -12,7 +12,7 @@ int stage2()
 
     puts("Hello from Stage 2!\n");
 
-    uint8_t m_sect[512];
+    /*uint8_t m_sect[512];
 
     uint8_t m_ata_ident[512];
 
@@ -20,7 +20,7 @@ int stage2()
 
     atapio24_read((uint32_t *) m_sect, 0x0, 1);
 
-    fat16_parse(&m_sect[0]);
+    fat16_parse(&m_sect[0]);*/
 
 	__asm__ __volatile__("cli; hlt");
 

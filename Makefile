@@ -18,8 +18,8 @@ disk_image: clean bootloader
 	-@dd if=/dev/zero of=hdd.img bs=1 count=0 seek=10M status=none # 10485760 Bytes = 10 Mega Bytes
 ifeq ($(FILESYSTEM), FAT16)
 	-@mkfs.fat -F 16 hdd.img >/dev/null
-	-@cp bootloader/$(ARCH)/fat/stage2/stage2.bin STAGE2
-	-@cp bootloader/$(ARCH)/fat/stage2/test.bin TEST
+	-@cp bootloader/$(ARCH)/stage2/stage2.bin STAGE2
+	-@cp bootloader/$(ARCH)/stage2/fat/test.bin TEST
 	-@mcopy -i hdd.img TEST ::/
 	-@mcopy -i hdd.img STAGE2 ::/
 	-@dd conv=notrunc if=bootloader/$(ARCH)/fat/boot0.bin of=hdd.img bs=512 seek=$(HDD_MBR_SECTOR) status=none
@@ -30,7 +30,7 @@ ifeq ($(FILESYSTEM), EXT2)
 	-@mkfs.ext2 -I 128 -b 1024 -F hdd.img >/dev/null
 	-@dd if=bootloader/$(ARCH)/ext2/boot0.bin of=hdd.img bs=512 count=1 conv=notrunc status=none
 	-@e2cp -v bootloader/$(ARCH)/ext2/boot1.bin hdd.img:/loader.bin
-	-@e2cp -v bootloader/$(ARCH)/ext2/stage2/stage2.elf hdd.img:/stage2.elf
+	-@e2cp -v bootloader/$(ARCH)/stage2/stage2.elf hdd.img:/stage2.elf
 endif
 	-@echo " \033[0;32mOK \033[0mhdd.img"
 
