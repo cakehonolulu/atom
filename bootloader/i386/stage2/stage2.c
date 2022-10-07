@@ -10,7 +10,16 @@ int stage2()
 
 	init_text_mode();
 
-    puts("Hello from Stage 2!\n");
+    puts("atom: stage2 initialized!\n");
+
+    puts("atom: Booted from %s filesystem\n", 
+#ifdef FAT16
+        "FAT16"
+#endif
+#ifdef EXT2
+        "EXT2"
+#endif
+    );
 
     uint8_t m_sect[512];
 
