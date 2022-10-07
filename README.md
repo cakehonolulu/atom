@@ -12,8 +12,8 @@
 
 ## ✨ Features
 * MBR support
-* FAT16 Read-Only Filesystem Support (Stage 1 and 2)
-* EXT2 Read-Only Filesystem Support (Stage 1.5 and 2)
+* FAT16 Read-Only Filesystem Support
+* EXT2 Read-Only Filesystem Support
 * Simple ATAPIO 24-bit disk driver
 * Built with ❤️ for i386
 
