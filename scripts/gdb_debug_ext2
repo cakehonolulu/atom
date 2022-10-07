@@ -1,0 +1,7 @@
+target remote :1234
+add-symbol-file bootloader/i386/ext2/boot0.sym
+add-symbol-file bootloader/i386/ext2/boot1.sym
+add-symbol-file bootloader/i386/ext2/stage2/stage2.sym
+b boot0.S:186
+# 0x7d0e
+c

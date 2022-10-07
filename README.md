@@ -12,7 +12,8 @@
 
 ## ✨ Features
 * MBR support
-* FAT16 File Loading (In Stage 1)
+* FAT16 File Loading (In Stage 1 and 2)
+* EXT2 File Loading (In the works)
 * Simple ATAPIO 24-bit disk driver
 * Built with ❤️ for i386
 
@@ -32,8 +33,13 @@ $ make
 
 ```
 * mtools
+* mkfs.fat
+* fuseext2
+* mkfs.ext2
 * clang
+* gcc
 * qemu
+* bochs
 ```
 
 
