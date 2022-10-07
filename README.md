@@ -8,7 +8,7 @@
 </picture>
   </p>
 
-<h2 align="center">A simple, i386 2-stage bootloader written in C</h2>
+<h2 align="center">An x86 2-stage bootloader written in Assembly and C</h2>
 
 ## ✨ Features
 * MBR support
