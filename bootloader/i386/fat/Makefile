@@ -17,12 +17,12 @@ ifeq ($(HOST), Linux)
 endif
 
 
-ifdef USE_GCC
-# Use GNU's GCC Compiler
-CC = i686-elf-gcc
-else
+ifdef USE_CLANG
 # Use LLVM's frontend CLANG
 CC = clang
+else
+# Use GNU's GCC Compiler
+CC = i686-elf-gcc
 endif
 
 OBJCOPY = objcopy
