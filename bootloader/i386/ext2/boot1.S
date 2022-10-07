@@ -312,7 +312,7 @@ after:
 	ljmpl $GDT_CODE_SEGMENT, $(Loader_Phy_Address+boot1ProtectedMode)
 
 .code32
-.global boot1TemporalProtectedMode
+.global boot1ProtectedMode
 
 boot1ProtectedMode:
 	mov $GDT_DATA_SEGMENT, %ax
@@ -323,7 +323,7 @@ boot1ProtectedMode:
     
     mov $0x7C00, %esp
 
-    call InitKernel
+    call parseStage2Elf
 
     ljmpl $GDT_CODE_SEGMENT, $Stage2_Enter_point
 	cli
@@ -363,7 +363,7 @@ transfer_end:
 
     ret
 
-InitKernel:
+parseStage2Elf:
     xor %esi, %esi
     mov (Stage2_File_Phy_Addr+ELF_Header_e_phnum), %cx
     movzx %cx, %ecx
