@@ -1,4 +1,5 @@
 #include <textmode.h>
+#include <stddef.h>
 
 // Current VGA Text Mode Matrix 'x'
 uint8_t m_x = 0;
@@ -289,11 +290,38 @@ void putc(char m_char)
 	Return:
 	None
 */
+char* strncpy(char* destination, const char* source, size_t num)
+{
+    // return if no memory is allocated to the destination
+    if (destination == NULL) {
+        return NULL;
+    }
+ 
+    // take a pointer pointing to the beginning of the destination string
+    char* ptr = destination;
+ 
+    // copy first `num` characters of C-string pointed by source
+    // into the array pointed by destination
+    while (*source && num--)
+    {
+        *destination = *source;
+        destination++;
+        source++;
+    }
+ 
+    // null terminate destination string
+    *destination = '\0';
+ 
+    // the destination is returned by standard `strncpy()`
+    return ptr;
+}
+
 void puts(const char *m_string, ...)
 {
 	char *m_str = 0;
 	va_list m_arguments;
     va_start(m_arguments, m_string);
+	uint32_t m_padding = 0, m_length = 0;
 
 	// Iterate until null-byte is found
 	while (*m_string != '\0')
@@ -326,6 +354,66 @@ void puts(const char *m_string, ...)
 					puts(m_str);
 					break;
 				
+				case '0':
+					m_string++;
+					m_padding = (uint32_t) (*m_string - '0');
+					
+					m_string++;
+					char hexType = *m_string;
+					m_string++;
+			
+					switch (hexType)
+					{
+						uint32_t m_res;
+
+						case 'x':
+							itoa(m_str, va_arg(m_arguments, int), 16);
+
+							m_length = strlen(m_str);
+
+							if (__builtin_sub_overflow (m_padding, m_length, &m_res))
+							{
+								puts(m_str);
+								break;
+							}
+
+							if ((m_padding - m_length))
+							{
+								for (uint32_t i = 0; i < (m_padding - m_length); i++)
+								{
+									puts("0");
+								}
+							}
+
+							puts(m_str);
+
+							break;
+
+						case 'X':
+							itoa(m_str, va_arg(m_arguments, int), 16);
+
+							m_length = strlen(m_str);
+
+							if (__builtin_sub_overflow (m_padding, m_length, &m_res))
+							{
+								puts(m_str);
+								break;
+							}
+
+							if ((m_padding - m_length))
+							{
+								for (uint32_t i = 0; i < (m_padding - m_length); i++)
+								{
+									puts("0");
+								}
+							}
+
+							toupper(m_str);
+							puts(m_str);
+							break;
+						}
+					break;
+
 				case 'x':
 					m_string++;
 					itoa(m_str, va_arg(m_arguments, int), 16);
