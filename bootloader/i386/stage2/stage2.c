@@ -2,6 +2,7 @@
 #include <ata.h>
 #include <libc.h>
 #include <fat16.h>
+#include <mmap.h>
 
 int stage2()
 {
@@ -29,8 +30,10 @@ int stage2()
 
     atapio24_read((uint32_t *) m_sect, 0x0, 1);
 
+    parse_mmap();
+
 #ifdef FAT16
-    fat16_parse(&m_sect[0]);
+    //fat16_parse(&m_sect[0]);
 #endif
 
 	__asm__ __volatile__("cli; hlt");
