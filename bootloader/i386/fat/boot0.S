@@ -3,6 +3,7 @@
 .code16												# Compile 16-Bit Code (Targetting Real Mode)
 
 .set BOOT1_STARTING_SECTOR, 0x2						# This is a constant! It will always be the same!
+.set MEMORY_MAP, 0x0500
 
 .global boot0										# Make our functions globally available
 
@@ -77,6 +78,8 @@ boot0:												# boot0 function
 
 
 
+
+
    in $0x92, %al
    test $2, %al
    jnz after
@@ -85,7 +88,6 @@ boot0:												# boot0 function
    out %al, $0x92
 
 after:
-
 	mov %dl, bios_boot_drive
 
 	xor %dx, %dx
@@ -199,7 +201,37 @@ bootstrap:
     mov $0x02, %ah
     int $0x10
 
-	clc
+
+	xor %ebx, %ebx
+    xor %bp, %bp
+    
+    mov $MEMORY_MAP + 8, %di // Destination Location (Add 8 to MEMORY_MAP else int15 will freeze after adding entries)
+0:
+    movl $1, %es:20(%di)
+    mov $0x534d4150, %edx
+    mov $24, %ecx
+    mov $0xe820, %eax
+    int $0x15
+    jc mmap_err
+    cmp $0x534d4150, %eax
+    jne mmap_err
+1:
+    jcxz 3f                 // ignore if bytes=0
+    cmp $20, %cl            // or "ignore" ACPI 3.x attribute is 1
+    jbe 2f
+    testb $1, %es:20(%di)
+    jz 3f
+2:
+    mov %es:8(%di), %ecx    // ignore if length=0
+    or %es:12(%di), %ecx
+    jz 3f
+    inc %bp
+    add $24, %di
+3:
+    test %ebx, %ebx         // ebx=0 if end of list
+    jnz 0b
+    mov %bp, (MEMORY_MAP)
+    clc
 
 	cli
 
@@ -261,6 +293,10 @@ read_sectors:
 
 read_sectors_exit:
    ret
+
+mmap_err:
+	cli
+	hlt
 
 root_dir_offset: .word 0x0000	# Address of root directory
 data_cluster_offset: .word 0x0000	# offset of the first cluster
