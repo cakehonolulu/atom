@@ -6,9 +6,9 @@ OUTPUT_ARCH(i386)
 
 SECTIONS {
 
-	. = 0x1000;
-    
-    .text :
+    . = 0x1000;
+
+    .text : AT(0x1000)
     {
         *(.text)
     }
@@ -16,6 +16,7 @@ SECTIONS {
     .rodata :
     {
         *(.rodata)
+        *(.rodata.*)
     }
 
     .data :
@@ -30,7 +31,10 @@ SECTIONS {
 
     /DISCARD/ :
     {
-      *(.kernel_discard)
+        *(.note*);
+        *(.iplt*);
+        *(.igot*);
+        *(.rel*);
+        *(.comment);
     }
-
 }
