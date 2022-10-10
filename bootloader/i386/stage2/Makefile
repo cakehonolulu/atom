@@ -2,9 +2,8 @@ include make.mk
 
 all: $(BINARY)
 
-prepare:
+filesystem:
 	-@mkdir -p build/
-	@echo $(BUILDDIR)
 ifeq ($(FILESYSTEM), FAT16)
 	@$(MAKE) -C fat/
 endif
@@ -12,12 +11,12 @@ ifeq ($(FILESYSTEM), EXT2)
 	@$(MAKE) -C ext2/
 endif
 
-$(BINARY): prepare $(COBJECTS) $(SOBJECTS)
+$(BINARY): filesystem $(COBJECTS) $(SOBJECTS)
 	@echo " \033[0;36mLD \033[0mstage2.elf"
 ifeq ($(FILESYSTEM), FAT16)
 	@$(OBJCOPY) --strip-debug build/test.o
 	@$(OBJCOPY) -O binary build/test.o build/test.bin
-	@$(CC) -T fat/linkstage2.ld -o $@ $(shell find build/ -name '*.o') $(CFLAGS) $(LDFLAGS)
+	@$(CC) -T fat/linkstage2.ld -o $@ $(shell find build/ -name '*.o' ! -iname "test.o") $(CFLAGS) $(LDFLAGS)
 endif
 ifeq ($(FILESYSTEM), EXT2)
 	@$(CC) -T ext2/linkstage2.ld -o $@ $(shell find build/ -name '*.o') $(CFLAGS) $(LDFLAGS)
