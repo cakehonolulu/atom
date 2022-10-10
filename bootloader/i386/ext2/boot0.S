@@ -283,8 +283,8 @@ read_block:
 	ja read_block
 
 	ret
-	Loader_Name:	.ascii	"loader.bin"
 
+Loader_Name:	.ascii	"loader.bin"
 
 disk_address_packet:
 				.byte	0x10
@@ -295,5 +295,3 @@ disk_address_packet:
 				.word	SuperBlock_Base
 				.int	SuperBlock_LBA_L
 				.int	SuperBlock_LBA_H
-
-

@@ -8,29 +8,37 @@ SECTIONS {
 
     . = 0x7C00;
 
-    .text :
+    .text : AT(0x7C00)
     {
         *(.text)
     }
-
-    . = ALIGN (4K);
 
     .rodata :
     {
         *(.rodata)
     }
 
-    . = ALIGN (4K);
-
     .data :
     {
         *(.data)
     }
 
-    . = ALIGN (4K);
-
     .bss :
     {
         *(.bss)
+    }
+
+    .sig : AT(0x7DFE)
+    {
+        SHORT(0xaa55);
+    }
+    
+    /DISCARD/ :
+    {
+        *(.note*);
+        *(.iplt*);
+        *(.igot*);
+        *(.rel*);
+        *(.comment);
     }
 }
