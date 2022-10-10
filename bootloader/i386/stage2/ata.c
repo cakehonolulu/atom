@@ -177,16 +177,16 @@ void atapio24_identify(uint32_t *m_dst)
 			// Fill using Port I/O each memory location's contents
 			insw(ATA_DATA_REG, (uint32_t *) m_dst, 256);
 
-			puts("Drive has been initialized correctly!\n");
+			puts("ata : Drive init successful!\n");
 		}
 		else
 		{
-			puts("Selected drive is not ATA-compatible!\n");
+			puts("ata : Drive isn't ATA-compatible!\n");
 		}
 	}
 	else
 	{
-		puts("Selected drive doesn't exist!\n");
+		puts("ata : Drive doesn't exist!\n");
 	}
 }
 
