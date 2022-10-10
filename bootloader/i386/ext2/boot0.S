@@ -1,61 +1,48 @@
+#define BootMessage_Length 12
+#define Loader_Name_Length 10
 
-.set BootMessage_Length, 12
-.set Loader_Name_Length, 10
+#define Loader_Base 0x9000
+#define Loader_Offset 0x0
+#define SuperBlock_LBA_L 0x2
+#define SuperBlock_LBA_H 0x0
 
-.set Loader_Base, 0x9000
-.set Loader_Offset, 0x0
-.set SuperBlock_LBA_L, 0x2
-.set SuperBlock_LBA_H, 0x0
+#define Stack_Base 0x7c00
 
-.set Stack_Base, 0x7c00
+#define GroupDescriptors_Base 0x90
+#define GroupDescriptors_Offset 0x0
+#define GroupDescriptors_LBA_L 0x4
+#define GroupDescriptors_LBA_H 0x0
 
-.set GroupDescriptors_Base, 0x90
-.set GroupDescriptors_Offset, 0x0
-.set GroupDescriptors_LBA_L, 0x4
-.set GroupDescriptors_LBA_H, 0x0
+#define RootDir_Base 0x110
+#define RootDir_Offset 0x0
 
-.set RootDir_Base, 0x110
-.set RootDir_Offset, 0x0
-
-.set InodeTable_Base, 0xd0
-.set InodeTable_Offset, 0x0
+#define InodeTable_Base 0xd0
+#define InodeTable_Offset 0x0
 
 
-.set Inode_Blocks, 28
-.set Inode_Block, 40
+#define Inode_Blocks 28
+#define Inode_Block 40
 
-.set SuperBlock_Base, 0x70		
-.set SuperBlock_Offset, 0x0
+#define SuperBlock_Base 0x70		
+#define SuperBlock_Offset 0x0
 
-.set Name_Len_Offset, 6
-.set File_Type_Offset, 7
-.set File_Name_Offset, 8
+#define Name_Len_Offset 6
+#define File_Type_Offset 7
+#define File_Name_Offset 8
 
-.set Inode_Number_Offset, 0
+#define Inode_Number_Offset 0
 
-.set Record_Length_Offset, 4
+#define Record_Length_Offset 4
 
-.set Inode_Length, 128
+#define Inode_Length 128
 
-.set MEMORY_MAP, 0x0500
+#define MEMORY_MAP 0x0500
 
 .global init0_ext2
 .code16
 .section .text
 init0_ext2:
 	jmp boot_start
-	
-disk_address_packet:
-				.byte	0x10
-				.byte	0
-				.byte	2
-				.byte	0
-				.word	SuperBlock_Offset
-				.word	SuperBlock_Base
-				.int	SuperBlock_LBA_L
-				.int	SuperBlock_LBA_H
-
-	Loader_Name:	.ascii	"loader.bin"
 
 boot_start:
 	movw %cs,%ax
@@ -94,6 +81,7 @@ boot_start:
     jnz 0b
     mov %bp, (MEMORY_MAP)
     clc
+
 
 	call read_sector
 
@@ -206,9 +194,10 @@ mmap_err:
 	mov $'M', %al
 	int $0x10
 	mov $'M', %al
-	int $0x10
+    int $0x10
 	cli
 	hlt
+
 
 loader_found:
 
@@ -294,7 +283,17 @@ read_block:
 	ja read_block
 
 	ret
+	Loader_Name:	.ascii	"loader.bin"
 
-.fill 510-(.-init0_ext2), 1, 0
 
-.word 0xAA55
+disk_address_packet:
+				.byte	0x10
+				.byte	0
+				.byte	2
+				.byte	0
+				.word	SuperBlock_Offset
+				.word	SuperBlock_Base
+				.int	SuperBlock_LBA_L
+				.int	SuperBlock_LBA_H
+
+
