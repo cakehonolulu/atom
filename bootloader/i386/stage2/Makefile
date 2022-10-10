@@ -36,6 +36,8 @@ endif
 
 BINARY := stage2.elf
 
+BUILDDIR := build/
+
 LDFLAGS := -z noexecstack -no-pie -nostdlib -static
 
 ifeq ($(CC), clang)
@@ -44,7 +46,10 @@ endif
 
 all: $(BINARY)
 
-$(BINARY): $(COBJECTS) $(SOBJECTS)
+prepare:
+	-@mkdir $(BUILDDIR)
+
+$(BINARY): prepare $(COBJECTS) $(SOBJECTS)
 	@echo " \033[0;36mLD \033[0mstage2.elf"
 ifeq ($(FILESYSTEM), FAT16)
 	@$(CC) $(CFLAGS) -c fat/boot1.S -o boot1.o
@@ -64,15 +69,16 @@ endif
 	@$(OBJCOPY) -O binary stage2.elf stage2.bin
 	
 %.o: %.c
-	@$(CC) $(CFLAGS) -c $< -o $@
+	@$(CC) $(CFLAGS) -c $< -o $(BUILDDIR)$@
 	@echo " \033[0;35mCC\033[0m $<"
 
 %.o: %.S
-	@$(CC) $(CFLAGS) -c $< -o $@
+	@$(CC) $(CFLAGS) -c $< -o $(BUILDDIR)$@
 	@echo " \033[0;35mAS\033[0m $<"
 
 clean:
 	@echo " 🧹 Cleaning Stage 2 Bootloader Objects..."
+	-@rm -rf $(BUILDDIR) ||:
 	-@rm -rf $(BINARY) ||:
 	-@rm -rf $(COBJECTS) ||:
 	-@rm -rf $(SOBJECTS) ||:
