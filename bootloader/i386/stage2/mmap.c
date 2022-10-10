@@ -29,7 +29,20 @@ void parse_mmap()
 
     e820_mmap_total_entries = *(uintptr_t*)MEMORY_MAP_LOCATION;
 
-    puts("Start     | End       | Size      | Type\n");
+    cputs("Start", 0x0B);
+    puts("     ");
+    cputs("|", 0x0B);
+    puts(" ");
+    cputs("End", 0x0B);
+    puts("       ");
+    cputs("|", 0x0B);
+    puts(" ");
+    cputs("Size", 0x0B);
+    puts("      ");
+    cputs("|", 0x0B);
+    puts(" ");
+    cputs("Type", 0x0B);
+    puts("\n");
 
     while (--e820_mmap_total_entries != 0)
     {

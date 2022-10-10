@@ -13,14 +13,18 @@ int stage2()
 
     puts("atom: stage2 initialized!\n");
 
-    puts("atom: Booted from %s filesystem\n", 
+    puts("atom: Booted from ");
+    cputs(
 #ifdef FAT16
         "FAT16"
 #endif
 #ifdef EXT2
         "EXT2"
 #endif
+        , 0x0A
     );
+
+    puts(" filesystem\n"); 
 
     uint8_t m_sect[512];
 
