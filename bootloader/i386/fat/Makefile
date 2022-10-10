@@ -17,17 +17,17 @@ ifeq ($(HOST), Linux)
 endif
 
 
-ifdef USE_GCC
-# Use GNU's GCC Compiler
-CC = i686-elf-gcc
-else
+ifdef USE_CLANG
 # Use LLVM's frontend CLANG
 CC = clang
+else
+# Use GNU's GCC Compiler
+CC = i686-elf-gcc
 endif
 
 OBJCOPY = objcopy
 
-CFLAGS := -ffreestanding -fno-builtin -nostdlib -Iinitium -Istage2/libstage2/include -g -fno-pic -fno-pie
+CFLAGS := -ffreestanding -fno-builtin -nostdlib -Iinitium -g -fno-pic -fno-pie
 
 ifeq ($(CC), clang)
 CFLAGS += --target=i686-pc-none-elf -march=i686
@@ -43,15 +43,10 @@ ifeq ($(CC), clang)
 LDFLAGS += -fuse-ld=lld
 endif
 
-.PHONY: stage2
-
-all: stage2 headers $(BINARY)
-
-stage2:
-	-@make -C stage2/ --no-print-directory
+all: headers $(BINARY)
 
 headers:
-	$(eval SIZE = $(shell sh -c "stat --printf="%s" stage2/stage2.bin"))
+	$(eval SIZE = $(shell sh -c "stat --printf="%s" ../stage2/stage2.bin"))
 	-@echo " \033[0;34m** \033[0mStage 2 Size: $$((( $(SIZE) + 511) / 512)) (Sectors)"
 	-@echo ".set STAGE2_SIZE, $$((( $(SIZE) + 511) / 512))" > boot1.h
 
@@ -74,4 +69,3 @@ clean:
 	-@rm -rf *.bin ||:
 	-@rm -rf *.o ||:
 	-@rm -f boot1.h
-	-@make -C stage2/ clean --no-print-directory

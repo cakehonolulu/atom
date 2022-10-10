@@ -10,7 +10,16 @@ int stage2()
 
 	init_text_mode();
 
-    puts("Hello from Stage 2!\n");
+    puts("atom: stage2 initialized!\n");
+
+    puts("atom: Booted from %s filesystem\n", 
+#ifdef FAT16
+        "FAT16"
+#endif
+#ifdef EXT2
+        "EXT2"
+#endif
+    );
 
     uint8_t m_sect[512];
 
@@ -20,7 +29,9 @@ int stage2()
 
     atapio24_read((uint32_t *) m_sect, 0x0, 1);
 
+#ifdef FAT16
     fat16_parse(&m_sect[0]);
+#endif
 
 	__asm__ __volatile__("cli; hlt");
 

@@ -17,12 +17,12 @@ ifeq ($(HOST), Linux)
 endif
 
 
-ifdef USE_GCC
-# Use GNU's GCC Compiler
-CC = i686-elf-gcc
-else
+ifdef USE_CLANG
 # Use LLVM's frontend CLANG
 CC = clang
+else
+# Use GNU's GCC Compiler
+CC = i686-elf-gcc
 endif
 
 OBJCOPY = objcopy
@@ -43,12 +43,7 @@ ifeq ($(CC), clang)
 LDFLAGS += -fuse-ld=lld
 endif
 
-.PHONY: stage2
-
-all: stage2 $(BINARY)
-
-stage2:
-	-@make -C stage2/ --no-print-directory
+all: $(BINARY)
 
 $(BINARY): $(SOBJECTS)
 	@echo " \033[0;36mLD \033[0mboot0.elf"
@@ -76,4 +71,3 @@ clean:
 	-@rm -rf *.bin ||:
 	-@rm -rf *.o ||:
 	-@rm -f boot1.h
-	-@make -C stage2/ clean --no-print-directory
