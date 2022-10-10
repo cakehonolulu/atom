@@ -28,7 +28,9 @@ endif
 
 OBJCOPY = objcopy
 
-CFLAGS := -Wall -Wextra -pedantic -std=c2x -ffreestanding -fno-builtin -nostdlib -m32 -I$(dir $(lastword $(MAKEFILE_LIST)))include -g -fno-pic -fno-pie -D$(FILESYSTEM)
+COMMIT := "$(shell git describe --always --dirty --match 'NOT A TAG')"
+
+CFLAGS := -Wall -Wextra -pedantic -std=c2x -ffreestanding -fno-builtin -nostdlib -m32 -I$(dir $(lastword $(MAKEFILE_LIST)))include -g -fno-pic -fno-pie -D$(FILESYSTEM) -DCOMMIT=\"$(COMMIT)\"
 
 ifeq ($(CC), clang)
 CFLAGS += --target=i686-pc-none-elf -march=i686

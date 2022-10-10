@@ -1,8 +1,4 @@
-#include <textmode.h>
-#include <ata.h>
-#include <libc.h>
-#include <fat16.h>
-#include <mmap.h>
+#include <stage2.h>
 
 int stage2()
 {
@@ -12,6 +8,29 @@ int stage2()
 	init_text_mode();
 
     puts("atom: stage2 initialized!\n");
+
+    puts("atom: Built with ");
+    cputs(
+#if defined(__GNUC__) && !defined(__clang__)
+    "gcc "
+#else
+    "clang "
+#endif
+        , 0x0E
+    );
+
+    cputs(
+#if defined(__GNUC__) && !defined(__clang__)
+    VER_STRING(__GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__)
+#else
+    VER_STRING(__clang_major__, __clang_minor__, __clang_patchlevel__)
+#endif
+        , 0x0E
+    );
+
+    puts(" stdc ver. %d\n", __STDC_VERSION__);
+
+    puts("atom: Compiled %s %s, commit %s\n", __DATE__, __TIME__, COMMIT);
 
     puts("atom: Booted from ");
     cputs(
