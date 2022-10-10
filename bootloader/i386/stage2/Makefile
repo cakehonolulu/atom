@@ -1,67 +1,26 @@
-# Host variable
-HOST =
-
-# Check if we're compiling under Windows or UNIX
-ifeq ($(OS), Windows_NT)
-	HOST = Windows
-else
-	UNAME := $(shell uname -s)
-	ifeq ($(UNAME), Linux)
-		HOST = Linux
-	endif
-endif
-
-ifeq ($(HOST), Linux)
-	CFILES := $(notdir $(wildcard *.c))
-	SFILES := $(notdir $(wildcard *.S))
-	COBJECTS := $(CFILES:.c=.o)
-	SOBJECTS := $(SFILES:.S=.o)
-endif
-
-ifdef USE_CLANG
-# Use LLVM's frontend CLANG
-CC = clang
-else
-# Use GNU's GCC Compiler
-CC = i686-elf-gcc
-endif
-
-OBJCOPY = objcopy
-
-CFLAGS := -Wall -Wextra -pedantic -std=c2x -ffreestanding -fno-builtin -nostdlib -m32 -Iinclude -g -fno-pic -fno-pie -D$(FILESYSTEM)
-
-ifeq ($(ARCH), clang)
-CFLAGS += --target=i686-pc-none-elf -march=i686
-endif
-
-BINARY := stage2.elf
-
-BUILDDIR := build/
-
-LDFLAGS := -z noexecstack -no-pie -nostdlib -static
-
-ifeq ($(CC), clang)
-LDFLAGS += -fuse-ld=lld
-endif
+include make.mk
 
 all: $(BINARY)
 
 prepare:
-	-@mkdir $(BUILDDIR)
+	-@mkdir -p build/
+	@echo $(BUILDDIR)
+ifeq ($(FILESYSTEM), FAT16)
+	@$(MAKE) -C fat/
+endif
+ifeq ($(FILESYSTEM), EXT2)
+	@$(MAKE) -C ext2/
+endif
 
 $(BINARY): prepare $(COBJECTS) $(SOBJECTS)
 	@echo " \033[0;36mLD \033[0mstage2.elf"
 ifeq ($(FILESYSTEM), FAT16)
-	@$(CC) $(CFLAGS) -c fat/boot1.S -o boot1.o
-	@$(CC) $(CFLAGS) -c fat/test.S -o fat/test.o
-	@$(CC) $(CFLAGS) -c fat/fat16.c -o fat16.o
-	@$(OBJCOPY) --strip-debug fat/test.o
-	@$(OBJCOPY) -O binary fat/test.o fat/test.bin
-	@$(CC) -T fat/linkstage2.ld -o $@ $(shell find -maxdepth 1 -name '*.o') $(CFLAGS) $(LDFLAGS)
+	@$(OBJCOPY) --strip-debug build/test.o
+	@$(OBJCOPY) -O binary build/test.o build/test.bin
+	@$(CC) -T fat/linkstage2.ld -o $@ $(shell find build/ -name '*.o') $(CFLAGS) $(LDFLAGS)
 endif
 ifeq ($(FILESYSTEM), EXT2)
-	@$(CC) $(CFLAGS) -c ext2/boot1.S -o boot1.o
-	@$(CC) -T ext2/linkstage2.ld -o $@ $(shell find -maxdepth 1 -name '*.o') $(CFLAGS) $(LDFLAGS)
+	@$(CC) -T ext2/linkstage2.ld -o $@ $(shell find build/ -name '*.o') $(CFLAGS) $(LDFLAGS)
 endif
 	@echo " \033[0;37mOC\033[0m stage2.bin"
 	@$(OBJCOPY) --only-keep-debug stage2.elf stage2.sym
@@ -69,11 +28,11 @@ endif
 	@$(OBJCOPY) -O binary stage2.elf stage2.bin
 	
 %.o: %.c
-	@$(CC) $(CFLAGS) -c $< -o $(BUILDDIR)$@
+	@$(CC) $(CFLAGS) -c $< -o $(BUILDDIR)/$@
 	@echo " \033[0;35mCC\033[0m $<"
 
 %.o: %.S
-	@$(CC) $(CFLAGS) -c $< -o $(BUILDDIR)$@
+	@$(CC) $(CFLAGS) -c $< -o $(BUILDDIR)/$@
 	@echo " \033[0;35mAS\033[0m $<"
 
 clean:

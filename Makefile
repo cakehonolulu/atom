@@ -19,7 +19,7 @@ disk_image: clean bootloader
 ifeq ($(FILESYSTEM), FAT16)
 	-@mkfs.fat -F 16 hdd.img >/dev/null
 	-@cp bootloader/$(ARCH)/stage2/stage2.bin STAGE2
-	-@cp bootloader/$(ARCH)/stage2/fat/test.bin TEST
+	-@cp bootloader/$(ARCH)/stage2/build/test.bin TEST
 	-@mcopy -i hdd.img TEST ::/
 	-@mcopy -i hdd.img STAGE2 ::/
 	-@dd conv=notrunc if=bootloader/$(ARCH)/fat/boot0.bin of=hdd.img bs=512 seek=$(HDD_MBR_SECTOR) status=none
