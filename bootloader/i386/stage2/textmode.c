@@ -175,7 +175,7 @@ void disable_cur()
 	Return:
 	None
 */
-void putc(char m_char)
+void putc(char m_char, uint8_t m_attr)
 {
 	// Calculate the offset to write to
 	uint16_t m_offset = ((m_x + (m_y * TEXT_MODE_WIDTH)) * 2);
@@ -232,7 +232,7 @@ void putc(char m_char)
 
 		case '\b':
 			m_text_mode_buffer[m_offset - 2] = ' ';
-			m_text_mode_buffer[m_offset - 1] = 0x0F;
+			m_text_mode_buffer[m_offset - 1] = m_attr;
 
 			if (m_x < 1)
 			{
@@ -250,7 +250,7 @@ void putc(char m_char)
 			m_text_mode_buffer[m_offset] = m_char;
 
 			// offset + 1 contains the colour attribute
-			m_text_mode_buffer[m_offset + 1] = 0x0F;
+			m_text_mode_buffer[m_offset + 1] = m_attr;
 
 			// Check if we've finished the text mode column (80)
 			if (m_x > 79)
@@ -316,6 +316,15 @@ char* strncpy(char* destination, const char* source, size_t num)
     return ptr;
 }
 
+void cputs(const char *m_string, uint8_t m_attr)
+{
+	while (*m_string != '\0')
+	{
+		putc(*m_string, m_attr);
+		m_string++;
+	}
+}
+
 void puts(const char *m_string, ...)
 {
 	char *m_str = 0;
@@ -334,12 +343,12 @@ void puts(const char *m_string, ...)
 			{
 				// Prints a percentage sign
 				case '%':
-					putc('%');
+					PUTC('%');
 					m_string++;
 					break;
 
 				case 'c':
-					putc((char) va_arg(m_arguments, int));
+					PUTC((char) va_arg(m_arguments, int));
 					m_string++;
 					break;
 				
@@ -429,14 +438,14 @@ void puts(const char *m_string, ...)
 
 				// Not supported/unknown format string, print as-is
 				default:
-					putc((char) *m_string);
+					PUTC((char) *m_string);
 					break;
 			}
 		}
 		else
 		{
 			// Display the character
-			putc(*m_string);
+			PUTC(*m_string);
 
 			// Increment the string pointer
 			m_string++;

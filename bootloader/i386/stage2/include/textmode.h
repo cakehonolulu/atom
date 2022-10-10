@@ -15,6 +15,8 @@
 
 #define TEXT_MODE_WIDTH 80
 
+#define PUTC(c) putc(c, 0x0F)
+
 /* Functions */
 uint16_t update_cur(uint8_t m_x, uint8_t m_y);
 void enable_cur(uint8_t m_cur_start, uint8_t m_cur_end);
@@ -22,4 +24,5 @@ void init_text_mode();
 uint16_t get_cur_pos();
 void disable_cur();
 void puts(const char *m_string, ...);
-void putc(char m_char);
+void putc(char m_char, uint8_t m_attr);
+void cputs(const char *m_string, uint8_t m_attr);
