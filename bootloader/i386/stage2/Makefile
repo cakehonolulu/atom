@@ -16,10 +16,12 @@ $(BINARY): filesystem $(COBJECTS) $(SOBJECTS)
 ifeq ($(FILESYSTEM), FAT16)
 	@$(OBJCOPY) --strip-debug build/test.o
 	@$(OBJCOPY) -O binary build/test.o build/test.bin
-	@$(CC) -T fat/linkstage2.ld -o $@ $(shell find build/ -name '*.o' ! -iname "test.o") $(CFLAGS) $(LDFLAGS)
+	-@echo LOCATION = 0x7E00\; > link_header.h
+	@$(CC) -T linkstage2.ld -o $@ $(shell find build/ -name '*.o' ! -iname "test.o") $(CFLAGS) $(LDFLAGS)
 endif
 ifeq ($(FILESYSTEM), EXT2)
-	@$(CC) -T ext2/linkstage2.ld -o $@ $(shell find build/ -name '*.o') $(CFLAGS) $(LDFLAGS)
+	-@echo LOCATION = 0x1000\; > link_header.h
+	@$(CC) -T linkstage2.ld -o $@ $(shell find build/ -name '*.o') $(CFLAGS) $(LDFLAGS)
 endif
 	@echo " \033[0;37mOC\033[0m stage2.bin"
 	@$(OBJCOPY) --only-keep-debug stage2.elf stage2.sym
@@ -36,6 +38,7 @@ endif
 
 clean:
 	@echo " 🧹 Cleaning Stage 2 Bootloader Objects..."
+	-@rm -rf link_header.h ||:
 	-@rm -rf $(BUILDDIR) ||:
 	-@rm -rf $(BINARY) ||:
 	-@rm -rf $(COBJECTS) ||:

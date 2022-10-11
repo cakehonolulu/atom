@@ -4,11 +4,13 @@ OUTPUT_FORMAT(elf32-i386)
 
 OUTPUT_ARCH(i386)
 
+INCLUDE "link_header.h"
+
 SECTIONS {
 
-	. = 0x7E00;
+	. = LOCATION;
     
-    .text : AT(0x7E00)
+    .text : AT(LOCATION)
     {
         *(.text)
     }
