@@ -8,7 +8,7 @@ SECTIONS {
 
     . = 0x00;
 
-    .text :
+    .text : AT(0x00)
     {
         *(.text)
     }
@@ -26,5 +26,14 @@ SECTIONS {
     .bss :
     {
         *(.bss)
+    }
+
+    /DISCARD/ :
+    {
+        *(.note*);
+        *(.iplt*);
+        *(.igot*);
+        *(.rel*);
+        *(.comment);
     }
 }
