@@ -56,7 +56,7 @@ $(BINARY): $(SOBJECTS)
 	@echo " \033[0;37mOC\033[0m boot0.bin"
 	@$(OBJCOPY) --only-keep-debug boot0.elf boot0.sym
 	@$(OBJCOPY) --strip-debug boot0.elf
-	@$(OBJCOPY) -O binary --only-section=.text boot0.elf boot0.bin
+	@$(OBJCOPY) -O binary boot0.elf boot0.bin
 
 %.o: %.S
 	@$(CC) $(CFLAGS) $(REALMODE) -c $< -o $@
