@@ -8,7 +8,7 @@ SECTIONS {
 
 	. = 0x7E00;
     
-    .text :
+    .text : AT(0x7E00)
     {
         *(.text)
     }
@@ -18,6 +18,7 @@ SECTIONS {
     .rodata :
     {
         *(.rodata)
+        *(.rodata.*)
     }
 
     . = ALIGN (4K);
@@ -36,7 +37,10 @@ SECTIONS {
 
     /DISCARD/ :
     {
-      *(.kernel_discard)
+        *(.note*);
+        *(.iplt*);
+        *(.igot*);
+        *(.rel*);
+        *(.comment);
     }
-
 }
