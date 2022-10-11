@@ -8,10 +8,12 @@ SECTIONS {
 
     . = 0x1000;
 
-    .text : AT(0x1000)
+    .text (ALIGN (4K)) : AT(0x1000)
     {
         *(.text)
     }
+
+    . = ALIGN (4K);
 
     .rodata :
     {
@@ -19,10 +21,14 @@ SECTIONS {
         *(.rodata.*)
     }
 
+    . = ALIGN (4K);
+
     .data :
     {
         *(.data)
     }
+
+    . = ALIGN (4K);
 
     .bss :
     {
