@@ -286,6 +286,7 @@ stage2_found:
 	
 	call loade_file
 
+    mov $0x0e, %ah
     int $0x10
     mov $0x0D, %al
     int $0x10
