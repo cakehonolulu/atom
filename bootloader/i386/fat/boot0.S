@@ -100,14 +100,14 @@ after:
 	add reserved_sectors, %ax
 	mov %ax, root_dir_offset
 
-	# xchg %bx, %ax
+	xchg %bx, %ax
 
 	mov sector_size, %ax
 	mov $0x20, %cx
 	xor %dx, %dx
 	div %cx
 
-	# xchg %cx, %ax
+	xchg %cx, %ax
 	mov total_fat_directory_entries, %ax
 	xor %dx, %dx
 	div %cx
