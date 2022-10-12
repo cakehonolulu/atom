@@ -149,12 +149,31 @@ after:
    jmp error
 
 .match:
-	# xchg %bx, %bx
+   # Get the file size
+
+   # File size is at offset 0x1C of the FAT Entry
+   # 4 byte long, we'll get the 2 MSBs
+   movw 0x1C(%bx), %ax
+   
+   # Divisor is 512 bytes
+   mov $0x200, %cx
+ 
+   # 16-bit integer division:
+   # ax: dividend
+   # cx: divisor
+   # result -> ax; remainder -> dx
+   div %cx
+
+   # Add 1 sector to wrap the (possible) remainder
+   add $1, %ax
+
+   # Move the sectors value to %cx
+   mov %ax, %cx
+
 	movw 0x1A(%bx),%ax
 	sub $0x02, %ax
 	mulb sectors_per_cluster
 	add data_cluster_offset, %ax
-	mov $STAGE2_SIZE, %cx # STAGE 2 Size
 	mov $0x7E00, %bx
 	call read_sectors
    call bootstrap
@@ -169,7 +188,7 @@ gdt_code:
 	.word 0x0
 	.byte 0x0
 	.byte 0b10011010
-	.byte 0b10001111
+	.byte 0b11001111
 	.byte 0x0
 
 gdt_data:
@@ -177,7 +196,7 @@ gdt_data:
 	.word 0x0
 	.byte 0x0
 	.byte 0b10010010
-	.byte 0b10001111
+	.byte 0b11001111
 	.byte 0x0
 
 gdt_end:
@@ -239,10 +258,6 @@ bootstrap:
 	or $1, %eax
 	mov %eax, %cr0
 
-	mov $0b11001111, %al
-	mov %al, (gdt_code + 6)										# We dynamically modify the GDT structure to try optimizing
-	mov %al, (gdt_data + 6)										# the size, change both segment's bitmode to 32-bit.
-	
 	lgdt gdt
 	
 	ljmpl $GDT_CODE_SEGMENT, $0x7E00
