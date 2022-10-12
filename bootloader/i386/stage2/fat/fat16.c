@@ -75,9 +75,11 @@ void fat16_parse(uint8_t *m_bpb)
         atapio24_read((uint32_t *) m_sect, root_directory_start + i, 1);
         
         if (memcmp("TEST       ", ((char *) (((fat16_entry_t *) m_sect)->filename)), 11) == 0)
-        {
+        {            
             puts("Found TEST @ %d (LBA), FAT Cluster: %d\n", (((data_sector_start) + ((((fat16_entry_t *) m_sect)->starting_cluster) - 2))), (((fat16_entry_t *) m_sect)->starting_cluster));
 
+            puts("File size: %d (bytes)\n", (((fat16_entry_t *) m_sect)->file_size));
+            
             puts("Reading from 0x%X...\n", ((((data_sector_start) + ((((fat16_entry_t *) m_sect)->starting_cluster) - 2)) )) * 512 );
 
 
