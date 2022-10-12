@@ -122,6 +122,7 @@ after:
    push %dx
    # xchg %bx, %bx
    call read_sectors
+
    # xchg %bx, %bx
 
    mov $0x0600, %bx
@@ -176,35 +177,6 @@ after:
 	call read_sectors
    call bootstrap
 
-/* Basic GDT. set-up for Unreal Mode, change descriptor 1 & 2 alongside 16->32 bit segment mode later on */
-gdt_start:
-gdt_null:
-	.long 0
-	.long 0
-gdt_code:
-	.word 0xFFFF
-	.word 0x0
-	.byte 0x0
-	.byte 0b10011010
-	.byte 0b11001111
-	.byte 0x0
-
-gdt_data:
-	.word 0xffff
-	.word 0x0
-	.byte 0x0
-	.byte 0b10010010
-	.byte 0b11001111
-	.byte 0x0
-
-gdt_end:
-.set GDT_CODE_SEGMENT, gdt_code - gdt_start
-.set GDT_DATA_SEGMENT, gdt_data - gdt_start
-
-gdt:
-	.word (gdt_end - gdt_start - 1)
-	.long gdt_start
-
 bootstrap:
     mov $0x0600, %ax
 	mov $0x0F, %bh
@@ -250,15 +222,8 @@ bootstrap:
     mov %bp, (MEMORY_MAP)
     clc
 
-	cli
-
-	mov %cr0, %eax
-	or $1, %eax
-	mov %eax, %cr0
-
-	lgdt gdt
 	
-	ljmpl $GDT_CODE_SEGMENT, $0x7E00
+	ljmpl $0x0, $0x7E00
 
 
 error:
@@ -313,7 +278,7 @@ mmap_err:
 
 root_dir_offset: .word 0x0000	# Address of root directory
 data_cluster_offset: .word 0x0000	# offset of the first cluster
-stage2_name: 	.ascii "STAGE2"	# name of stage2 loader in root directory
+stage2_name: 	.ascii "LOADER"	# name of stage2 loader in root directory
 stage2_cur_offset: .word 0x0000	# Current offset in memory
 stage2_cur_segment: .word 0x0000	# Current segment in memory
 
