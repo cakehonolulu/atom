@@ -56,7 +56,7 @@ int stage2()
     parse_mmap();
 
 #ifdef FAT16
-    //fat16_parse(&m_sect[0]);
+    fat16_parse(&m_sect[0]);
 #endif
 
 	__asm__ __volatile__("cli; hlt");
