@@ -43,12 +43,7 @@ ifeq ($(CC), clang)
 LDFLAGS += -fuse-ld=lld
 endif
 
-all: headers $(BINARY)
-
-headers:
-	$(eval SIZE = $(shell sh -c "stat --printf="%s" ../stage2/stage2.bin"))
-	-@echo " \033[0;34m** \033[0mStage 2 Size: $$((( $(SIZE) + 511) / 512)) (Sectors)"
-	-@echo ".set STAGE2_SIZE, $$((( $(SIZE) + 511) / 512))" > boot1.h
+all: $(BINARY)
 
 $(BINARY): $(SOBJECTS)
 	@echo " \033[0;36mLD \033[0mboot0.elf"
