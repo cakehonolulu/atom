@@ -1,12 +1,12 @@
 
-.section .text
+.section .text.bootstrap
 
 .extern stage2
 
 .code32
 
-.global boot1
-boot1:
+.global bootstrap
+bootstrap:
     call stage2
     cli
     hlt

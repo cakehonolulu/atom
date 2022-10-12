@@ -1,4 +1,4 @@
-ENTRY(boot1)
+ENTRY(bootstrap)
 
 OUTPUT_FORMAT(elf32-i386)
 
@@ -12,6 +12,7 @@ SECTIONS {
     
     .text : AT(LOCATION)
     {
+        *(.text.bootstrap)
         *(.text)
     }
 
