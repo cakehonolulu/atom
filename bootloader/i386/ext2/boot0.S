@@ -42,9 +42,6 @@
 .code16
 .section .text
 init0_ext2:
-	jmp boot_start
-
-boot_start:
 	movw %cs,%ax
 	movw %ax,%ds
 	movw %ax,%es
@@ -81,14 +78,6 @@ boot_start:
     jnz 0b
     mov %bp, (MEMORY_MAP)
     clc
-
-
-	call read_sector
-
-	movw $GroupDescriptors_Offset, (disk_address_packet + 4)
-	movw $GroupDescriptors_Base, (disk_address_packet + 6)
-	movl $GroupDescriptors_LBA_L, (disk_address_packet + 8)
-	movl $GroupDescriptors_LBA_H, (disk_address_packet + 12)
 
 	call read_sector
 
@@ -291,7 +280,7 @@ disk_address_packet:
 				.byte	0
 				.byte	2
 				.byte	0
-				.word	SuperBlock_Offset
-				.word	SuperBlock_Base
-				.int	SuperBlock_LBA_L
-				.int	SuperBlock_LBA_H
+				.word	GroupDescriptors_Offset
+				.word	GroupDescriptors_Base
+				.int	GroupDescriptors_LBA_L
+				.int	GroupDescriptors_LBA_H
