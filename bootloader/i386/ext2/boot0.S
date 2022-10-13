@@ -215,6 +215,8 @@ printchar:
 
 read_sector:
 	pusha
+	// 5 tries
+	mov $5, %cx
 .extended_read:
 	xorl %ebx,%ebx
 	movb $0x42,%ah
@@ -223,8 +225,11 @@ read_sector:
 	int $0x13
 	jnc .read_ok
 
-	mov $'R', %al # Read Failed, Retrying
+	dec %cx
+	mov $'R', %al
 	call printchar
+	cmp $0, %cx
+	je halt
 
 	xor %ax, %ax
 	int $0x13
