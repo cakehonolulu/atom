@@ -215,11 +215,22 @@ printchar:
 
 read_sector:
 	pusha
+.extended_read:
 	xorl %ebx,%ebx
 	movb $0x42,%ah
 	movb $0x80,%dl
 	movw $disk_address_packet, %si
 	int $0x13
+	jnc .read_ok
+
+	mov $'R', %al # Read Failed, Retrying
+	call printchar
+
+	xor %ax, %ax
+	int $0x13
+	jmp .extended_read
+
+.read_ok:
 	popa
 	
 	ret
