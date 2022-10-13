@@ -9,7 +9,6 @@
 
 .global bootstrap
 bootstrap:
-
 	mov $GDT_DATA_SEGMENT, %ax
 	mov %ax, %ds
 	mov %ax, %es

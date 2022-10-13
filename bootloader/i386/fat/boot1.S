@@ -220,7 +220,7 @@ bootstrap:
 
 	lgdt gdt
 	
-    xchg %bx, %bx
+    # xchg %bx, %bx
 
 	ljmpl $GDT_CODE_SEGMENT, $boot1ProtectedMode
 
@@ -310,11 +310,11 @@ boot1ProtectedMode:
     
     mov $0x7C00, %esp
 
-    xchg %bx, %bx
+    # xchg %bx, %bx
 
     call parseStage2Elf
 
-    xchg %bx, %bx
+    # xchg %bx, %bx
 
     ljmpl $GDT_CODE_SEGMENT, $Stage2_Enter_point
 	cli
@@ -328,7 +328,7 @@ MemCpy:
     pushl   %edi
     pushl   %ecx
 
-    xchg %bx, %bx
+    # xchg %bx, %bx
 
     movl    8(%ebp),%edi                                     # Destination
     movl    12(%ebp),%esi                           # Source
@@ -368,7 +368,7 @@ deal_with_one_program_header_table_entry:
 
     jz      init_next_section
 
-    xchg %bx, %bx
+    # xchg %bx, %bx
 
     pushl ELF_Program_Header_p_size(%esi)
     mov  ELF_Program_Header_p_offset(%esi), %eax
