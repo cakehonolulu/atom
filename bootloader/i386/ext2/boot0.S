@@ -130,7 +130,7 @@ root_dir_search:
 	pusha
 	movw $Loader_Name, %si
 	movl $RootDir_Base, %eax
-	movl %eax,%gs
+	movl %eax,%es
 
 	movw $RootDir_Offset, %bx
 
@@ -140,7 +140,7 @@ file_length_cmp:
 	xorw %cx,%cx
 	movb $Loader_Name_Length, %cl
 
-	cmpb  %gs:Name_Len_Offset(%bx), %cl
+	cmpb  %es:Name_Len_Offset(%bx), %cl
 	
 	jnz file_not_match
 
@@ -149,7 +149,7 @@ file_length_cmp:
 file_name_cmp:
 	lodsb
 	
-	cmpb  %gs:File_Name_Offset(%bx), %al
+	cmpb  %es:File_Name_Offset(%bx), %al
 
 
 	jnz file_name_cmp_end
@@ -166,7 +166,7 @@ file_name_cmp_end:
 	jmp loader_found
 
 file_not_match:
-	add  %gs:Record_Length_Offset(%bx), %bx
+	add  %es:Record_Length_Offset(%bx), %bx
 
 
 	cmpw $1024,%bx
@@ -201,7 +201,7 @@ mmap_err:
 
 loader_found:
 
-	mov  %gs:Inode_Number_Offset(%bx), %eax
+	mov  %es:Inode_Number_Offset(%bx), %eax
 	
 	call get_inode
 	

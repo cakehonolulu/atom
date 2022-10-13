@@ -161,7 +161,7 @@ root_dir_search:
     pusha
     movw $Stage2_File_Name, %si
     movl $RootDir_Base, %eax
-    movl %eax,%gs
+    movl %eax,%es
 
     movw $RootDir_Offset, %bx
 root_file_match:
@@ -169,14 +169,14 @@ file_length_cmp:
     xorw %cx,%cx
     movb $Stage2_File_Name_Length, %cl
 
-    cmp %gs:Name_Len_Offset(%bx), %cl
+    cmp %es:Name_Len_Offset(%bx), %cl
     jnz file_not_match
 
     movw $Stage2_File_Name, %si
     pushw %bx
 file_name_cmp: 
     lodsb
-    cmp %gs:File_Name_Offset(%bx), %al
+    cmp %es:File_Name_Offset(%bx), %al
     jnz file_name_cmp_end
     decb %cl
     jz file_name_cmp_end
@@ -190,7 +190,7 @@ file_name_cmp_end:
     jmp stage2_found
 
 file_not_match:
-    add  %gs:Record_Length_Offset(%bx), %bx
+    add  %es:Record_Length_Offset(%bx), %bx
     cmpw $1024,%bx
     jl root_file_match
     popa
@@ -277,7 +277,7 @@ stage2_found:
     mov $0x0A, %al
     int $0x10
 
-    mov  %gs:Inode_Number_Offset(%bx), %eax
+    mov  %es:Inode_Number_Offset(%bx), %eax
 	
 	call get_inode
 	
