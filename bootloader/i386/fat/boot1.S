@@ -17,6 +17,10 @@
 // 1 byte
 #define BPB_BOOTDR (BPB_SECPFT + 14)
 
+.set Loader_Base, 0x7E00		 
+.set Loader_Offset, 0x0
+.set Loader_Phy_Address, Loader_Base * 0x10 + Loader_Offset
+
 .code16
 
 .global init1
@@ -192,7 +196,7 @@ gdt_end:
 .set GDT_DATA_SEGMENT, gdt_data - gdt_start
 
 gdt:
-	.word (gdt_end - gdt_start - 1)
+	.word gdt_end - gdt_start - 1
 	.long gdt_start
 
 bootstrap:
@@ -216,7 +220,9 @@ bootstrap:
 
 	lgdt gdt
 	
-	ljmpl $GDT_CODE_SEGMENT, $0x9000
+    xchg %bx, %bx
+
+	ljmpl $GDT_CODE_SEGMENT, $boot1ProtectedMode
 
 
 error:
@@ -281,3 +287,99 @@ dap_offset:		.word 0x1000	# Offset. (Already set with default)
 dap_segment:		.word 0x00		# Segment
 dap_sector_low:		.int 0x01		# Lower 32 bits of sector number
 dap_sector_high:	.int 0x00		# Upper 32 bits of sector number
+
+.code32
+
+.set ELF_Header_e_phnum, 0x2c
+.set ELF_Header_e_phoff, 0x1c
+.set ELF_Program_Header_p_size, 0x10
+.set ELF_Program_Header_p_offset, 0x4
+.set ELF_Program_Header_p_vaddr, 0x8
+
+.set Stage2_File_Base, 0x9000
+.set Stage2_File_Offset, 0
+.set Stage2_File_Phy_Addr, Stage2_File_Base
+.set Stage2_Enter_point, 0x1000
+
+boot1ProtectedMode:
+    mov $GDT_DATA_SEGMENT, %ax
+	mov %ax, %ds
+	mov %ax, %es
+	mov %ax, %ss
+	mov %ax, %es
+    
+    mov $0x7C00, %esp
+
+    xchg %bx, %bx
+
+    call parseStage2Elf
+
+    xchg %bx, %bx
+
+    ljmpl $GDT_CODE_SEGMENT, $Stage2_Enter_point
+	cli
+    hlt
+
+MemCpy:
+    pushl   %ebp
+    movl    %esp,%ebp
+
+    pushl   %esi
+    pushl   %edi
+    pushl   %ecx
+
+    xchg %bx, %bx
+
+    movl    8(%ebp),%edi                                     # Destination
+    movl    12(%ebp),%esi                           # Source
+    movl    16(%ebp),%ecx                              # Counter
+transfer: 
+    cmpl    $0,%ecx
+    jz      transfer_end
+
+    mov  %ds:(%esi), %al
+    incl    %esi
+    movb  %al, %es:(%edi)
+    incl    %edi
+
+    decl    %ecx
+    jmp     transfer
+
+transfer_end: 
+    movl    8(%ebp),%eax
+
+    popl    %ecx
+    popl    %edi
+    popl    %esi
+    movl    %ebp,%esp
+    popl    %ebp
+
+    ret
+
+parseStage2Elf:
+    xor %esi, %esi
+    mov (Stage2_File_Phy_Addr+ELF_Header_e_phnum), %cx
+    movzx %cx, %ecx
+    mov (Stage2_File_Phy_Addr+ELF_Header_e_phoff), %esi
+    add $Stage2_File_Phy_Addr, %esi
+deal_with_one_program_header_table_entry:
+    mov  (%esi), %eax
+    cmpl    $0,%eax
+
+    jz      init_next_section
+
+    xchg %bx, %bx
+
+    pushl ELF_Program_Header_p_size(%esi)
+    mov  ELF_Program_Header_p_offset(%esi), %eax
+    add $Stage2_File_Phy_Addr, %eax
+    push %eax
+    pushl ELF_Program_Header_p_vaddr(%esi)
+    call MemCpy
+    addl    $12,%esp
+
+init_next_section: 
+    addl    $0x20,%esi
+    decl    %ecx
+    jnz     deal_with_one_program_header_table_entry
+    ret

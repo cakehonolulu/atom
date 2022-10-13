@@ -4,13 +4,11 @@ OUTPUT_FORMAT(elf32-i386)
 
 OUTPUT_ARCH(i386)
 
-INCLUDE "link_header.h"
-
 SECTIONS {
 
-	. = LOCATION;
+	. = 0x1000;
     
-    .text : AT(LOCATION)
+    .text : AT(0x1000)
     {
         *(.text.bootstrap)
         *(.text)

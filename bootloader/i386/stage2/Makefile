@@ -16,11 +16,9 @@ $(BINARY): filesystem $(COBJECTS) $(SOBJECTS)
 ifeq ($(FILESYSTEM), FAT16)
 	@$(OBJCOPY) --strip-debug build/test.o
 	@$(OBJCOPY) -O binary build/test.o build/test.bin
-	-@echo LOCATION = 0x9000\; > link_header.h
 	@$(CC) -T linkstage2.ld -o $@ $(shell find build/ -name '*.o' ! -iname "test.o") $(CFLAGS) $(LDFLAGS)
 endif
 ifeq ($(FILESYSTEM), EXT2)
-	-@echo LOCATION = 0x1000\; > link_header.h
 	@$(CC) -T linkstage2.ld -o $@ $(shell find build/ -name '*.o') $(CFLAGS) $(LDFLAGS)
 endif
 	@echo " \033[0;37mOC\033[0m stage2.bin"
