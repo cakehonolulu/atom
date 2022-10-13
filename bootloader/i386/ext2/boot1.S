@@ -447,14 +447,39 @@ disk_error:
 
 read_sector:
 	pusha
-    xorl %ebx,%ebx
-    movb $0x42,%ah
-    movb $0x80,%dl
-    movw $_Disk_Address_Packet, %si
-    int $0x13
-    jc disk_error
-    popa
-    ret
+	// 5 tries
+	mov $5, %cx
+.extended_read:
+	xorl %ebx,%ebx
+	movb $0x42,%ah
+	movb $0x80,%dl
+	movw $_Disk_Address_Packet, %si
+	int $0x13
+	jnc .read_ok
+
+	dec %cx
+	mov $'R', %al
+	call printchar
+	cmp $0, %cx
+	je halt
+
+	xor %ax, %ax
+	int $0x13
+	jmp .extended_read
+
+.read_ok:
+	popa
+	
+	ret
+
+printchar:
+	mov $0x0e, %ah
+	int $0x10
+	ret
+
+halt:
+    cli
+    hlt
 
 get_inode:
 	movw $InodeTable_Offset, (_Disk_Address_Packet + 4)
