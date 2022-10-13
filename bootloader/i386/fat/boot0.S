@@ -255,6 +255,7 @@ extensions_not_supported:
 
 read_sectors:
    pusha
+   mov $5, %cx
    mov %eax, dap_sector_low
    mov %es, dap_segment
    mov %bx, dap_offset
@@ -266,9 +267,12 @@ read_sectors:
    # xchg %bx, %bx
    jnc .read_ok
 
+   dec %cx
    mov $0x0e, %ah
    mov $'R', %al # Read Failed, Retrying
    int $0x10
+   cmp $0, %cx
+	je halt
 
    xor %ax, %ax
    int $0x13
@@ -291,6 +295,10 @@ read_sectors:
 
 read_sectors_exit:
    ret
+
+halt:
+   cli
+   hlt
 
 mmap_err:
 	cli
