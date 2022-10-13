@@ -166,24 +166,17 @@ file_not_match:
 
 
 loader_not_found:
-	mov $0x0e, %ah
 	mov $'L', %al
-	int $0x10
-	mov $' ', %al
-	int $0x10
-	mov $'N', %al
-	int $0x10
-	mov $'F', %al
-	int $0x10
-	cli
-	hlt
+	call printchar
+	jmp halt
 
 mmap_err:
-	mov $0x0e, %ah
 	mov $'M', %al
-	int $0x10
-	mov $'M', %al
+	call printchar
     int $0x10
+	jmp halt
+
+halt:
 	cli
 	hlt
 
@@ -199,12 +192,16 @@ loader_found:
 	
 	call loade_file
 
-	mov $0x0e, %ah
 	mov $'J', %al
-	int $0x10
+	call printchar
 
 	ljmp $Loader_Base, $Loader_Offset
 
+
+printchar:
+	mov $0x0e, %ah
+	int $0x10
+	ret
 
 read_sector:
 	pusha
