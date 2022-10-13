@@ -48,6 +48,12 @@ init0_ext2:
 	movw %ax,%ss
 	movw $Stack_Base, %sp
 
+	mov $0x41, %ah
+	mov $0x55AA, %bx
+	mov $0x80, %dl
+	int $0x13
+	jc extensions_not_supported
+
 	xor %ebx, %ebx
     xor %bp, %bp
     
@@ -173,7 +179,11 @@ loader_not_found:
 mmap_err:
 	mov $'M', %al
 	call printchar
-    int $0x10
+	jmp halt
+
+extensions_not_supported:
+	mov $'X', %al
+	call printchar
 	jmp halt
 
 halt:
