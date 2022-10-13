@@ -75,8 +75,11 @@ boot0:												# boot0 function
 													# contents, in order to make 0 assumptions on how the BIOS leaves this value.
 
 
-
-
+   mov $0x41, %ah
+   mov $0x55AA, %bx
+   mov $0x80, %dl
+   int $0x13
+   jc extensions_not_supported
 
    in $0x92, %al
    test $2, %al
@@ -229,6 +232,23 @@ bootstrap:
 error:
 	mov $0x0e, %ah
 	mov $'E', %al
+	int $0x10
+	cli
+	hlt
+
+extensions_not_supported:
+   mov $0x0e, %ah
+	mov $'E', %al
+	int $0x10
+   mov $'x', %al
+	int $0x10
+   mov $'t', %al
+	int $0x10
+   mov $' ', %al
+	int $0x10
+   mov $'N', %al
+	int $0x10
+   mov $'S', %al
 	int $0x10
 	cli
 	hlt
