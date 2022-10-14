@@ -20,14 +20,14 @@ ifeq ($(FILESYSTEM), FAT16)
 	-@mkfs.fat -F 16 hdd.img >/dev/null
 	-@cp bootloader/$(ARCH)/fat/boot1.bin LOADER
 	-@cp bootloader/$(ARCH)/stage2/stage2.elf STAGE2.ELF
-	-@cp bootloader/$(ARCH)/stage2/build/test.bin TEST
-	-@mcopy -i hdd.img TEST ::/
+	-@cp bootloader/$(ARCH)/stage2/build/test.bin KERNEL.BIN
+	-@mcopy -i hdd.img KERNEL.BIN ::/
 	-@mcopy -i hdd.img STAGE2.ELF ::/
 	-@mcopy -i hdd.img LOADER ::/
 	-@dd conv=notrunc if=bootloader/$(ARCH)/fat/boot0.bin of=hdd.img bs=512 seek=$(HDD_MBR_SECTOR) status=none
 	-@rm LOADER
 	-@rm STAGE2.ELF
-	-@rm TEST
+	-@rm KERNEL.BIN
 endif
 ifeq ($(FILESYSTEM), EXT2)
 	-@mkfs.ext2 -I 128 -b 1024 -F hdd.img >/dev/null
