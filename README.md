@@ -42,6 +42,11 @@ $ make
 * bochs
 ```
 
+## 🌊 Constraints
+
+* Processor: i386 or higher
+* Memory: 1 megabyte or more
+* BIOS: INT13 Extensions Support
 
 ## 👷🏼‍♂️ Roadmap
 
