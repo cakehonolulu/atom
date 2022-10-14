@@ -45,6 +45,8 @@ int stage2()
 
     puts(" filesystem\n"); 
 
+    parse_mmap();
+    
     uint8_t m_sect[512];
 
     uint8_t m_ata_ident[512];
@@ -52,8 +54,6 @@ int stage2()
     atapio24_identify((uint32_t *) m_ata_ident);
 
     atapio24_read((uint32_t *) m_sect, 0x0, 1);
-
-    parse_mmap();
 
 #ifdef FAT16
     fat16_parse(&m_sect[0]);
