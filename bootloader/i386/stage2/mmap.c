@@ -20,7 +20,7 @@ void parse_mmap()
     const char* t;
 
     // Count total available entries
-    while (e820_mmap_total_entries_for_counting-- != 0)
+    while (--e820_mmap_total_entries_for_counting != 0)
     {
         e820_counted_entries++;
     }
