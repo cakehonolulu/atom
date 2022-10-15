@@ -82,8 +82,8 @@ gdt_end:
 .set GDT_DATA_SEGMENT, gdt_data - gdt_start
 
 gdt:
-	.word ((Loader_Phy_Address+gdt_end) - (Loader_Phy_Address+gdt_start) - 1)
-	.long (Loader_Phy_Address+gdt_start)
+	.word ((gdt_end) - (gdt_start) - 1)
+	.long (gdt_start)
 
     Stage2_File_Name: .ascii "stage2.elf"
 
@@ -99,7 +99,7 @@ gdt:
 .set Init_Stage2_Success, Loader_Phy_Address + _Init_Stage2_Success
 
 bootstrap:
-    movw %cs,%ax
+    movw $0, %ax
     movw %ax,%ds
     movw %ax,%es
     movw $Stack_Base, %ax
@@ -310,7 +310,7 @@ after:
 	or $0x1, %al
 	mov %eax, %cr0
 
-	ljmpl $GDT_CODE_SEGMENT, $(Loader_Phy_Address+boot1ProtectedMode)
+	ljmpl $GDT_CODE_SEGMENT, $(boot1ProtectedMode)
 
 .code32
 .global boot1ProtectedMode

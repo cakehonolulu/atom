@@ -42,7 +42,10 @@
 .code16
 .section .text
 init0_ext2:
-	movw %cs,%ax
+	ljmp $0, $bootstrap
+
+bootstrap:
+	xor %eax, %eax
 	movw %ax,%ds
 	movw %ax,%es
 	movw %ax,%ss
@@ -197,15 +200,17 @@ loader_found:
 	
 	call get_inode
 	
-	movw $Loader_Offset, (disk_address_packet + 4)
-	movw $Loader_Base, (disk_address_packet + 6)
+	movw $Loader_Base, (disk_address_packet + 4)
+	movw $Loader_Offset, (disk_address_packet + 6)
 	
 	call loade_file
 
 	mov $'J', %al
 	call printchar
 
-	ljmp $Loader_Base, $Loader_Offset
+	xchg %bx, %bx
+
+	ljmp $Loader_Offset, $Loader_Base
 
 
 printchar:
