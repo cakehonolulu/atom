@@ -11,16 +11,16 @@ endif
 
 all: disk_image
 
-.PHONY: bootloader
+.PHONY: bootloader stage2
 
-disk_image: clean bootloader
+disk_image: clean stage2 bootloader
 	-@echo " \033[0;34mDD \033[0mimage"
 	-@dd if=/dev/zero of=hdd.img bs=1 count=0 seek=10M status=none # 10485760 Bytes = 10 Mega Bytes
 ifeq ($(FILESYSTEM), FAT16)
 	-@mkfs.fat -F 16 hdd.img >/dev/null
 	-@cp bootloader/$(ARCH)/fat/boot1.bin LOADER
-	-@cp bootloader/$(ARCH)/stage2/stage2.elf STAGE2.ELF
-	-@cp bootloader/$(ARCH)/stage2/build/test.bin KERNEL.BIN
+	-@cp stage2/stage2.elf STAGE2.ELF
+	-@cp stage2/build/test.bin KERNEL.BIN
 	-@mcopy -i hdd.img KERNEL.BIN ::/
 	-@mcopy -i hdd.img STAGE2.ELF ::/
 	-@mcopy -i hdd.img LOADER ::/
@@ -33,15 +33,19 @@ ifeq ($(FILESYSTEM), EXT2)
 	-@mkfs.ext2 -I 128 -b 1024 -F hdd.img >/dev/null
 	-@dd if=bootloader/$(ARCH)/ext2/boot0.bin of=hdd.img bs=512 count=1 conv=notrunc status=none
 	-@e2cp -v bootloader/$(ARCH)/ext2/boot1.bin hdd.img:/loader.bin
-	-@e2cp -v bootloader/$(ARCH)/stage2/stage2.elf hdd.img:/stage2.elf
+	-@e2cp -v stage2/stage2.elf hdd.img:/stage2.elf
 endif
 	-@echo " \033[0;32mOK \033[0mhdd.img"
 
 bootloader:
 	-@make -C bootloader/$(ARCH) FILESYSTEM=$(FILESYSTEM) --no-print-directory
 
+stage2:
+	-@make -C stage2/ all FILESYSTEM=$(FILESYSTEM) --no-print-directory
+
 clean:
 	-@make -C bootloader/$(ARCH) FILESYSTEM=$(FILESYSTEM) clean --no-print-directory
+	-@make -C stage2/ clean FILESYSTEM=$(FILESYSTEM) --no-print-directory
 	-@rm -f hdd.img
 
 qemu:
