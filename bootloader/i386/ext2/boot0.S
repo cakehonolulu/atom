@@ -36,10 +36,10 @@
 
 #define Inode_Length 128
 
-.global init0_ext2
+.global init0
 .code16
 .section .text
-init0_ext2:
+init0:
 	ljmp $0, $bootstrap
 
 bootstrap:

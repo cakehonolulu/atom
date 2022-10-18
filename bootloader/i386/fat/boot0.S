@@ -5,15 +5,15 @@
 
 .global boot0										# Make our functions globally available
 
-.global init0_fat16
+.global init0
 
 
                                 # Number of 512 byte sectors stage2 uses.
 
 .section .text										# Text section
 
-# init0_fat16 function
-init0_fat16:
+# init0 function
+init0:
 # Shorthand encoding for a short jmp to init code and nop
 	.byte 0xEB
 	.byte 0x3C
@@ -286,10 +286,3 @@ dap_offset:		.word 0x1000	# Offset. (Already set with default)
 dap_segment:		.word 0x00		# Segment
 dap_sector_low:		.int 0x01		# Lower 32 bits of sector number
 dap_sector_high:	.int 0x00		# Upper 32 bits of sector number
-
-.fill 510-(.-init0_fat16), 1, 0						# Preprocessor directive from GNU as that fills 'x'
-													# count of bytes, with a 'y' size that has 'z' value.
-													# args: count, size, value
-
-.word 0xAA55										# BIOS 2-byte magic number that enables the proper
-													# booting of this bootloader

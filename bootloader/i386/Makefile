@@ -9,12 +9,7 @@ endif
 
 all: filesystem $(SOBJECTS)
 	@echo " \033[0;37mLD\033[0m boot0.elf"
-ifeq ($(FILESYSTEM), FAT16)
-	@$(CC) -T fat/linkboot0.ld -o $(BUILDDIR)/boot0.elf $(BUILDDIR)/boot0.o $(CFLAGS) $(LDFLAGS)
-endif
-ifeq ($(FILESYSTEM), EXT2)
-	@$(CC) -T ext2/linkboot0.ld -o $(BUILDDIR)/boot0.elf $(BUILDDIR)/boot0.o $(CFLAGS) $(LDFLAGS)
-endif
+	@$(CC) -T linkboot0.ld -o $(BUILDDIR)/boot0.elf $(BUILDDIR)/boot0.o $(CFLAGS) $(LDFLAGS)
 
 	@echo " \033[0;36mOC \033[0mboot0.bin"
 	@$(OBJCOPY) --only-keep-debug $(BUILDDIR)/boot0.elf $(BUILDDIR)/boot0.sym

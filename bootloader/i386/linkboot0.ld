@@ -1,4 +1,4 @@
-ENTRY(init0_ext2)
+ENTRY(init0)
 
 OUTPUT_FORMAT(elf32-i386)
 
