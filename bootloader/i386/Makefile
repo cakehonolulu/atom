@@ -23,7 +23,7 @@ endif
 
 	@echo " \033[0;37mLD\033[0m boot1.elf"
 ifeq ($(FILESYSTEM), FAT16)
-	@$(CC) -T fat/linkboot1.ld -o $(BUILDDIR)/boot1.elf $(BUILDDIR)/boot1.o $(CFLAGS) $(LDFLAGS)
+	@$(CC) -T fat/linkboot1.ld -o $(BUILDDIR)/boot1.elf $(BUILDDIR)/boot1.o $(BUILDDIR)/mmap.o $(CFLAGS) $(LDFLAGS)
 endif
 ifeq ($(FILESYSTEM), EXT2)
 	@$(CC) -T ext2/linkboot1.ld -o $(BUILDDIR)/boot1.elf $(BUILDDIR)/boot1.o $(BUILDDIR)/mmap.o $(CFLAGS) $(LDFLAGS)

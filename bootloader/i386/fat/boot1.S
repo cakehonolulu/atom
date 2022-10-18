@@ -45,7 +45,7 @@ bios_boot_drive:
   .space 1
 
 real_init:
-
+    
     // Get sector size
     mov $BPB_SECTSZ, %bx
     mov (%bx), %bx
@@ -211,6 +211,8 @@ bootstrap:
     mov $0, %bx
     mov $0x02, %ah
     int $0x10
+
+    call get_e820_mmap
 
 	cli
 
