@@ -273,7 +273,7 @@ mmap_err:
 
 root_dir_offset: .word 0x0000	# Address of root directory
 data_cluster_offset: .word 0x0000	# offset of the first cluster
-stage2_name: 	.ascii "LOADER"	# name of stage2 loader in root directory
+stage2_name: 	.ascii "STAGE1"	# name of stage2 loader in root directory
 stage2_cur_offset: .word 0x0000	# Current offset in memory
 stage2_cur_segment: .word 0x0000	# Current segment in memory
 

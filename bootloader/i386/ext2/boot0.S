@@ -266,7 +266,7 @@ read_block:
 
 	ret
 
-Loader_Name:	.ascii	"loader.bin"
+Loader_Name:	.ascii	"stage1.bin"
 
 disk_address_packet:
 				.byte	0x10

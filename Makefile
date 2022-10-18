@@ -18,21 +18,21 @@ disk_image: clean stage2 bootloader
 	-@dd if=/dev/zero of=hdd.img bs=1 count=0 seek=10M status=none # 10485760 Bytes = 10 Mega Bytes
 ifeq ($(FILESYSTEM), FAT16)
 	-@mkfs.fat -F 16 hdd.img >/dev/null
-	-@cp bootloader/$(ARCH)/build/boot1.bin LOADER
+	-@cp bootloader/$(ARCH)/build/boot1.bin STAGE1.BIN
 	-@cp stage2/stage2.elf STAGE2.ELF
 	-@cp stage2/build/test.bin KERNEL.BIN
 	-@mcopy -i hdd.img KERNEL.BIN ::/
 	-@mcopy -i hdd.img STAGE2.ELF ::/
-	-@mcopy -i hdd.img LOADER ::/
+	-@mcopy -i hdd.img STAGE1.BIN ::/
 	-@dd conv=notrunc if=bootloader/$(ARCH)/build/boot0.bin of=hdd.img bs=512 seek=$(HDD_MBR_SECTOR) status=none
-	-@rm LOADER
+	-@rm STAGE1.BIN
 	-@rm STAGE2.ELF
 	-@rm KERNEL.BIN
 endif
 ifeq ($(FILESYSTEM), EXT2)
 	-@mkfs.ext2 -I 128 -b 1024 -F hdd.img >/dev/null
 	-@dd if=bootloader/$(ARCH)/build/boot0.bin of=hdd.img bs=512 count=1 conv=notrunc status=none
-	-@e2cp -v bootloader/$(ARCH)/build/boot1.bin hdd.img:/loader.bin
+	-@e2cp -v bootloader/$(ARCH)/build/boot1.bin hdd.img:/stage1.bin
 	-@e2cp -v stage2/stage2.elf hdd.img:/stage2.elf
 endif
 	-@echo " \033[0;32mOK \033[0mhdd.img"
