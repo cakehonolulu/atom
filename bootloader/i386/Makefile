@@ -1,4 +1,4 @@
-.DEFAULT_GOAL := boot
+include make.mk
 
 ifeq ($(FILESYSTEM), FAT16)
 FS_DIR = fat
@@ -7,10 +7,45 @@ ifeq ($(FILESYSTEM), EXT2)
 FS_DIR = ext2
 endif
 
-boot: loader
+all: filesystem $(SOBJECTS)
+	@echo " \033[0;37mLD\033[0m boot0.elf"
+ifeq ($(FILESYSTEM), FAT16)
+	@$(CC) -T fat/linkboot0.ld -o $(BUILDDIR)/boot0.elf $(BUILDDIR)/boot0.o $(CFLAGS) $(LDFLAGS)
+endif
+ifeq ($(FILESYSTEM), EXT2)
+	@$(CC) -T ext2/linkboot0.ld -o $(BUILDDIR)/boot0.elf $(BUILDDIR)/boot0.o $(CFLAGS) $(LDFLAGS)
+endif
 
-loader:
-	-@make -C $(FS_DIR)/ all FILESYSTEM=$(FILESYSTEM) --no-print-directory
+	@echo " \033[0;36mOC \033[0mboot0.bin"
+	@$(OBJCOPY) --only-keep-debug $(BUILDDIR)/boot0.elf $(BUILDDIR)/boot0.sym
+	@$(OBJCOPY) --strip-debug $(BUILDDIR)/boot0.elf
+	@$(OBJCOPY) -O binary $(BUILDDIR)/boot0.elf $(BUILDDIR)/boot0.bin
+
+	@echo " \033[0;37mLD\033[0m boot1.elf"
+ifeq ($(FILESYSTEM), FAT16)
+	@$(CC) -T fat/linkboot1.ld -o $(BUILDDIR)/boot1.elf $(BUILDDIR)/boot1.o $(CFLAGS) $(LDFLAGS)
+endif
+ifeq ($(FILESYSTEM), EXT2)
+	@$(CC) -T ext2/linkboot1.ld -o $(BUILDDIR)/boot1.elf $(BUILDDIR)/boot1.o $(BUILDDIR)/mmap.o $(CFLAGS) $(LDFLAGS)
+endif
+
+	@echo " \033[0;36mOC \033[0mboot1.bin"
+	@$(OBJCOPY) --only-keep-debug $(BUILDDIR)/boot1.elf $(BUILDDIR)/boot1.sym
+	@$(OBJCOPY) --strip-debug $(BUILDDIR)/boot1.elf
+	@$(OBJCOPY) -O binary $(BUILDDIR)/boot1.elf $(BUILDDIR)/boot1.bin
+
+filesystem:
+	-@mkdir -p build/
+ifeq ($(FILESYSTEM), FAT16)
+	-@make -C $(FS_DIR)/
+endif
+ifeq ($(FILESYSTEM), EXT2)
+	-@make -C $(FS_DIR)/
+endif
 
 clean:
-	-@make -C $(FS_DIR)/ clean FILESYSTEM=$(FILESYSTEM) --no-print-directory
+	-@rm -rf $(BUILDDIR) ||:
+
+%.o: %.S
+	@$(CC) $(CFLAGS) -c $< -o $(BUILDDIR)/$@
+	@echo " \033[0;35mAS\033[0m $<"
