@@ -1,5 +1,7 @@
 .code16
 
+.extern get_e820_mmap
+
 .global init1
 
 init1:
@@ -24,35 +26,7 @@ init1:
     mov $0x02, %ah
     int $0x10
 
-
-    mov $MEMORY_MAP + 8, %di // Destination Location (Add 8 to MEMORY_MAP else int15 will freeze after adding entries)
-0:
-    movl $1, %es:20(%di)
-    mov $0x534d4150, %edx
-    mov $24, %ecx
-    mov $0xe820, %eax
-    int $0x15
-    jc mmap_err
-    cmp $0x534d4150, %eax
-    jne mmap_err
-1:
-    jcxz 3f                 // ignore if bytes=0
-    cmp $20, %cl            // or "ignore" ACPI 3.x attribute is 1
-    jbe 2f
-    testb $1, %es:20(%di)
-    jz 3f
-2:
-    mov %es:8(%di), %ecx    // ignore if length=0
-    or %es:12(%di), %ecx
-    jz 3f
-    inc %bp
-    add $24, %di
-3:
-    test %ebx, %ebx         // ebx=0 if end of list
-    jnz 0b
-    mov %bp, (MEMORY_MAP)
-    clc
-
+    call get_e820_mmap
 
     mov $0x2, %eax
 	call get_inode
@@ -327,14 +301,6 @@ stage2_found_msg:
     int $0x10
     ret
 
-
-mmap_err:
-    mov $0x0e, %ah
-	mov $'M', %al
-	int $0x10
-	cli
-    hlt
-
 stage2_not_found:
 	mov $0x0e, %ah
 	mov $'S', %al
@@ -560,9 +526,6 @@ init_next_section:
 
 .set Stack_Base, 0x2000
 .set Stack_Top, 0x400
-
-
-.set MEMORY_MAP, 0x0500
 
 _Disk_Address_Packet:
 	.byte 0x10
