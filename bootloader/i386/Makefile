@@ -17,12 +17,7 @@ all: filesystem $(SOBJECTS)
 	@$(OBJCOPY) -O binary $(BUILDDIR)/boot0.elf $(BUILDDIR)/boot0.bin
 
 	@echo " \033[0;37mLD\033[0m boot1.elf"
-ifeq ($(FILESYSTEM), FAT16)
-	@$(CC) -T fat/linkboot1.ld -o $(BUILDDIR)/boot1.elf $(BUILDDIR)/boot1.o $(BUILDDIR)/mmap.o $(CFLAGS) $(LDFLAGS)
-endif
-ifeq ($(FILESYSTEM), EXT2)
-	@$(CC) -T ext2/linkboot1.ld -o $(BUILDDIR)/boot1.elf $(BUILDDIR)/boot1.o $(BUILDDIR)/mmap.o $(CFLAGS) $(LDFLAGS)
-endif
+	@$(CC) -T linkboot1.ld -o $(BUILDDIR)/boot1.elf $(BUILDDIR)/boot1.o $(BUILDDIR)/mmap.o $(CFLAGS) $(LDFLAGS)
 
 	@echo " \033[0;36mOC \033[0mboot1.bin"
 	@$(OBJCOPY) --only-keep-debug $(BUILDDIR)/boot1.elf $(BUILDDIR)/boot1.sym

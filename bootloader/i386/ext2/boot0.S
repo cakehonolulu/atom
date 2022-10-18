@@ -1,7 +1,7 @@
 #define BootMessage_Length 12
 #define Loader_Name_Length 10
 
-#define Loader_Base 0x9000
+#define Loader_Base 0x7E00
 #define Loader_Offset 0x0
 #define SuperBlock_LBA_L 0x2
 #define SuperBlock_LBA_H 0x0
