@@ -55,6 +55,8 @@ bootstrap:
 	int $0x13
 	jc extensions_not_supported
 
+	movb $1, int13_ext_support
+
 	xor %ebx, %ebx
     xor %bp, %bp
     
@@ -277,3 +279,5 @@ disk_address_packet:
 				.word	GroupDescriptors_Base
 				.int	GroupDescriptors_LBA_L
 				.int	GroupDescriptors_LBA_H
+
+int13_ext_support: .byte 0
