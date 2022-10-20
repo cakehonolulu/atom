@@ -81,6 +81,8 @@ boot0:												# boot0 function
    int $0x13
    jc extensions_not_supported
 
+   movb $1, int13_ext_support
+
    in $0x92, %al
    test $2, %al
    jnz after
@@ -286,3 +288,5 @@ dap_offset:		.word 0x1000	# Offset. (Already set with default)
 dap_segment:		.word 0x00		# Segment
 dap_sector_low:		.int 0x01		# Lower 32 bits of sector number
 dap_sector_high:	.int 0x00		# Upper 32 bits of sector number
+
+int13_ext_support: .byte 0
