@@ -66,15 +66,15 @@ bootstrap:
 	call get_inode
 	
 
-	movw $RootDir_Offset, (disk_address_packet + 4)
-	movw $RootDir_Base, (disk_address_packet + 6)
+	movw $RootDir_Offset, dap_offset
+	movw $RootDir_Base, dap_segment
 
 	mov  %es:Inode_Block(%bx), %eax
 
 
 	add %eax, %eax
-	movl %eax, (disk_address_packet + 8)
-	movl $0x0, (disk_address_packet + 12)
+	movl %eax, dap_sector_low
+	movl $0x0, dap_sector_high
 
 	mov  %es:Inode_Blocks(%bx), %eax
 
@@ -94,7 +94,7 @@ root_dir_read:
 	addw $4,%bx
 	movl %es:(%bx), %eax
 	addl %eax,%eax
-	mov %eax, (disk_address_packet + 8)
+	movl %eax, dap_sector_low
 
 root_dir_search:
 	pusha
@@ -167,8 +167,8 @@ loader_found:
 	
 	call get_inode
 	
-	movw $Loader_Base, (disk_address_packet + 4)
-	movw $Loader_Offset, (disk_address_packet + 6)
+	movw $Loader_Base, dap_offset
+	movw $Loader_Offset, dap_segment
 	
 	call loade_file
 
@@ -214,8 +214,8 @@ read_sector:
 
 
 get_inode:
-	movw $InodeTable_Offset, (disk_address_packet + 4)
-	movw $InodeTable_Base, (disk_address_packet + 6)
+	movw $InodeTable_Offset, dap_offset
+	movw $InodeTable_Base, dap_segment
 
 	decl %eax
 	movb $8,%bl
@@ -229,7 +229,7 @@ get_inode:
 	mov  %es:0x8(%bx), %ebx
 	addl %ebx,%eax
 	addl %eax,%eax
-	mov %eax, (disk_address_packet + 8)
+	movl %eax, dap_sector_low
 
 	call read_sector
 
@@ -249,7 +249,7 @@ loade_file:
 
 	movl $24,%ecx
 valid_size:
-	movb $2, (disk_address_packet + 2)
+	movb $2, dap_block_count
 
 read_block:
 	mov  %es:Inode_Block(%bx), %eax
@@ -257,27 +257,25 @@ read_block:
 	addw $4,%bx
 
 	addl %eax,%eax
-	movl %eax, (disk_address_packet + 8)
+	movl %eax, dap_sector_low
 	
 	
 	call read_sector
-	addw $0x400, (disk_address_packet + 4)
+	addw $0x400, dap_offset
 
 	subl $2,%ecx
 	ja read_block
 
 	ret
 
-Loader_Name:	.ascii	"stage1.bin"
-
 disk_address_packet:
-				.byte	0x10
-				.byte	0
-				.byte	2
-				.byte	0
-				.word	GroupDescriptors_Offset
-				.word	GroupDescriptors_Base
-				.int	GroupDescriptors_LBA_L
-				.int	GroupDescriptors_LBA_H
+dap_size:			.byte	0x10
+dap_reserved:		.byte	0
+dap_block_count:	.word	0x02
+dap_offset:			.word	GroupDescriptors_Offset
+dap_segment:		.word	GroupDescriptors_Base
+dap_sector_low:		.int	GroupDescriptors_LBA_L
+dap_sector_high:	.int	GroupDescriptors_LBA_H
 
-int13_ext_support: .byte 0
+Loader_Name:		.ascii	"stage1.bin"
+int13_ext_support:	.byte 0
