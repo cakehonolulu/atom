@@ -44,9 +44,15 @@ $ make
 
 ## 🌊 Constraints
 
-* Processor: i386 or higher
-* Memory: 1 megabyte or more
-* BIOS: INT13 Extensions Support
+* Processor
+  * i386 or higher
+  
+* Memory
+  * 1 megabyte or more
+  
+* BIOS:
+  * INT13 Extensions Support
+  * Post '93-94 BIOS with E820 Memory Map support
 
 ## 👷🏼‍♂️ Roadmap
 
