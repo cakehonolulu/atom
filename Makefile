@@ -19,7 +19,7 @@ disk_image: clean stage2 bootloader
 ifeq ($(FILESYSTEM), FAT16)
 	-@mkfs.fat -F 16 hdd.img >/dev/null
 	-@cp bootloader/$(ARCH)/build/boot1.bin STAGE1.BIN
-	-@cp stage2/stage2.elf STAGE2.ELF
+	-@cp stage2/build/stage2.elf STAGE2.ELF
 	-@cp stage2/build/test.bin KERNEL.BIN
 	-@mcopy -i hdd.img KERNEL.BIN ::/
 	-@mcopy -i hdd.img STAGE2.ELF ::/
@@ -33,7 +33,7 @@ ifeq ($(FILESYSTEM), EXT2)
 	-@mkfs.ext2 -I 128 -b 1024 -F hdd.img >/dev/null
 	-@dd if=bootloader/$(ARCH)/build/boot0.bin of=hdd.img bs=512 count=1 conv=notrunc status=none
 	-@e2cp -v bootloader/$(ARCH)/build/boot1.bin hdd.img:/stage1.bin
-	-@e2cp -v stage2/stage2.elf hdd.img:/stage2.elf
+	-@e2cp -v stage2/build/stage2.elf hdd.img:/stage2.elf
 endif
 	-@echo " \033[0;32mOK \033[0mhdd.img"
 
@@ -53,12 +53,7 @@ qemu:
 
 debug_qemu:
 	-@qemu-system-i386 -s -S -drive file=hdd.img,format=raw &
-ifeq ($(FILESYSTEM), FAT16)
-	-@gdb -x scripts/gdb_debug_fat16
-endif
-ifeq ($(FILESYSTEM), EXT2)
-	-@gdb -x scripts/gdb_debug_ext2
-endif
+	-@gdb -x scripts/gdb_debug
 	-@pkill -9 "qemu-system-*"
 
 bochs:

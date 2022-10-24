@@ -16,15 +16,15 @@ $(BINARY): filesystem $(COBJECTS) $(SOBJECTS)
 ifeq ($(FILESYSTEM), FAT16)
 	@$(OBJCOPY) --strip-debug build/test.o
 	@$(OBJCOPY) -O binary build/test.o build/test.bin
-	@$(CC) -T linkstage2.ld -o $@ $(shell find build/ -name '*.o' ! -iname "test.o") $(CFLAGS) $(LDFLAGS)
+	@$(CC) -T linkstage2.ld -o build/$@ $(shell find build/ -name '*.o' ! -iname "test.o") $(CFLAGS) $(LDFLAGS)
 endif
 ifeq ($(FILESYSTEM), EXT2)
-	@$(CC) -T linkstage2.ld -o $@ $(shell find build/ -name '*.o') $(CFLAGS) $(LDFLAGS)
+	@$(CC) -T linkstage2.ld -o build/$@ $(shell find build/ -name '*.o') $(CFLAGS) $(LDFLAGS)
 endif
 	@echo " \033[0;37mOC\033[0m stage2.bin"
-	@$(OBJCOPY) --only-keep-debug stage2.elf stage2.sym
-	@$(OBJCOPY) --strip-debug stage2.elf
-	@$(OBJCOPY) -O binary stage2.elf stage2.bin
+	@$(OBJCOPY) --only-keep-debug build/stage2.elf build/stage2.sym
+	@$(OBJCOPY) --strip-debug build/stage2.elf
+	@$(OBJCOPY) -O binary build/stage2.elf build/stage2.bin
 	
 %.o: %.c
 	@$(CC) $(CFLAGS) -c $< -o $(BUILDDIR)/$@
