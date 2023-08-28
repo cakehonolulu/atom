@@ -70,6 +70,8 @@ void fat16_parse(uint8_t *m_bpb)
 
     puts("Data Sector Start: %d (LBA Sector), Offset: 0x%X\n", data_sector_start, (512 * data_sector_start));
 
+    uint32_t *m_entrypoint = 0x10000;
+
     do
     {
         atapio24_read((uint32_t *) m_sect, root_directory_start + i, 1);
@@ -78,17 +80,19 @@ void fat16_parse(uint8_t *m_bpb)
         {            
             puts("Found KERNEL @ %d (LBA), FAT Cluster: %d\n", (((data_sector_start) + ((((fat16_entry_t *) m_sect)->starting_cluster) - 2))), (((fat16_entry_t *) m_sect)->starting_cluster));
 
-            puts("File size: %d (bytes)\n", (((fat16_entry_t *) m_sect)->file_size));
+            uint32_t filesz = (((fat16_entry_t *) m_sect)->file_size);
+
+            puts("File size: %d (bytes)\n", filesz);
             
             puts("Reading from 0x%X...\n", ((((data_sector_start) + ((((fat16_entry_t *) m_sect)->starting_cluster) - 2)) )) * 512 );
 
 
-            atapio24_read((uint32_t *) m_sect, (data_sector_start + ((((fat16_entry_t *) m_sect)->starting_cluster) - 2)), 1);
+            atapio24_read(m_entrypoint, (data_sector_start + ((((fat16_entry_t *) m_sect)->starting_cluster) - 2)), ((filesz / 512) + 1));
 
-            puts("File read successful, jumping to entrypoint @ 0x%X\n", &m_sect[0]);
+            puts("File read successful (Sectors read: %d), jumping to entrypoint @ 0x%X\n", ((filesz / 512) + 1), m_entrypoint);
 
 
-            ((void(*)())m_sect)();
+            ((void(*)())m_entrypoint)();
 
             m_cond = false;
         }
