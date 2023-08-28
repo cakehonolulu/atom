@@ -1,4 +1,6 @@
 #include <fat16.h>
+#include <mmap.h>
+#include <external/grub/doc/multiboot.h>
 
 void fat16_file_info(fat16_entry_t *fat16_entry) {
     // Based on file's name
@@ -43,7 +45,7 @@ void fat16_file_info(fat16_entry_t *fat16_entry) {
     
 }
 
-void fat16_parse(uint8_t *m_bpb)
+void fat16_parse(uint8_t *m_bpb, uint32_t mmap_entries)
 {
     bool m_cond = true;
 
@@ -91,11 +93,17 @@ void fat16_parse(uint8_t *m_bpb)
 
             puts("File read successful (Sectors read: %d), jumping to entrypoint @ 0x%X\n", ((filesz / 512) + 1), m_entrypoint);
 
-            extern uint32_t mmap;
+            extern char mmap[];
+
+            multiboot_info_t multiboot_info = {0};
+
+            multiboot_info.mmap_addr = &mmap;
+            multiboot_info.mmap_length = mmap_entries;
+
             __asm__ __volatile__ (
                 "mov %[var], %%ebx"
                 : // No output operands
-                : [var] "r" (&mmap)
+                : [var] "r" (&multiboot_info)
             );
 
             ((void(*)())m_entrypoint)();

@@ -23,10 +23,5 @@ struct bios_memmap_entry
     uint32_t e820_entry_attribute;
 };
 
-struct e820_mmap_available_entries {
-   uintptr_t base_address;
-   uintptr_t end_address;
-};  
-
 /* Functions */
-void parse_mmap();
+uint32_t parse_mmap();

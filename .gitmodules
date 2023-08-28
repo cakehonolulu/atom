@@ -1,0 +1,3 @@
+[submodule "stage2/include/external/grub"]
+	path = stage2/include/external/grub
+	url = https://git.savannah.gnu.org/git/grub.git

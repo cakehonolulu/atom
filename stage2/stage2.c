@@ -45,7 +45,7 @@ int stage2()
 
     puts(" filesystem\n"); 
 
-    parse_mmap();
+    uint32_t mmap_entries = parse_mmap();
     
     uint8_t m_sect[512];
 
@@ -56,7 +56,7 @@ int stage2()
     atapio24_read((uint32_t *) m_sect, 0x0, 1);
 
 #ifdef FAT16
-    fat16_parse(&m_sect[0]);
+    fat16_parse(&m_sect[0], mmap_entries);
 #endif
 
 	__asm__ __volatile__("cli; hlt");

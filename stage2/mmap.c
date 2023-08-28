@@ -9,7 +9,7 @@ static const char* e820_type_string[] = {
     "Bad Memory"
 };
 
-void parse_mmap()
+uint32_t parse_mmap()
 {
     // Defined in the linker file
     extern char mmap[];
@@ -96,4 +96,6 @@ void parse_mmap()
         // Next entry
         entry++;
     }
+
+    return e820_counted_entries;
 }

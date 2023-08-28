@@ -66,4 +66,4 @@ typedef struct {
 } __attribute((packed)) fat16_entry_t;
 
 /* Functions */
-void fat16_parse(uint8_t *m_bpb);
+void fat16_parse(uint8_t *m_bpb, uint32_t mmap_entries);
