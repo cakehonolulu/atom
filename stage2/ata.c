@@ -262,7 +262,7 @@ void atapio24_read(uint32_t *m_dst, uint32_t m_lba, uint8_t m_sectsz)
 		insw(ATA_DATA_REG, m_dst, 256);
 
 		// Point to the next 512 bytes
-		m_dst += 256;
+		m_dst += 128;
 	}
 }
 
