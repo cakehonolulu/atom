@@ -91,6 +91,12 @@ void fat16_parse(uint8_t *m_bpb)
 
             puts("File read successful (Sectors read: %d), jumping to entrypoint @ 0x%X\n", ((filesz / 512) + 1), m_entrypoint);
 
+            extern uint32_t mmap;
+            __asm__ __volatile__ (
+                "mov %[var], %%ebx"
+                : // No output operands
+                : [var] "r" (&mmap)
+            );
 
             ((void(*)())m_entrypoint)();
 

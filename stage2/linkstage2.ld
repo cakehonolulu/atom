@@ -30,6 +30,8 @@ SECTIONS {
         *(.bss)
     }
 
+    mmap = .;
+
     /DISCARD/ :
     {
         *(.note*);
