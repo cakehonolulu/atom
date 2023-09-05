@@ -49,7 +49,7 @@ clean:
 	-@rm -f hdd.img
 
 qemu:
-	-@qemu-system-i386 -drive file=hdd.img,format=raw
+	-@qemu-system-i386 -drive file=hdd.img,format=raw -serial stdio
 
 debug_qemu:
 	-@qemu-system-i386 -s -S -drive file=hdd.img,format=raw &
