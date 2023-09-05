@@ -15,3 +15,4 @@ sound: waveoutdrv=sdl
 speaker: enabled=false
 magic_break: enabled=1
 cpu: reset_on_triple_fault=0
+port_e9_hack: enabled=1
