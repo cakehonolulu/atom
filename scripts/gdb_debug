@@ -1,6 +1,6 @@
 target remote :1234
 add-symbol-file bootloader/i386/build/boot0.sym
 add-symbol-file bootloader/i386/build/boot1.sym
-add-symbol-file stage2/stage2.sym
+add-symbol-file stage2/build/stage2.sym
 b *0x7C00
 c
